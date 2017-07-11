@@ -1,0 +1,24 @@
+{
+  "name": "shag",
+  "version": "0.1.0",
+  "description": "HTML templating and update engine",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zenparsing/shag.git"
+  },
+  "homepage": "https://github.com/zenparsing/shag",
+  "dependencies": {
+    "htmltag": "^0.1.6",
+    "symbol-observable": "^1.0.4",
+    "zen-observable": "^0.5.2"
+  },
+  "devDependencies": {
+    "esdown": "^1.1.18",
+    "eslint": "^4.2.0"
+  },
+  "scripts": {
+    "test": "eslint src/*.js",
+    "pack": "esdown - src/index.js dist/shag.js -b -g Shag"
+  }
+}

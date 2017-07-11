@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src='../dist/shag.js'></script>
+</head>
+<body>
+  <div id='mount'></div>
+  <script>
+
+  function PlanetList({ planets }) {
+    return Shag.html`
+      <ul class='planet-list'>
+        ${planets.map(name => Shag.html`
+          <li key=${name} onclick=${ () => console.log(name) }>
+            Hello <span style='color:blue'>${ name }</span>
+            (<span updateChildren=${false} onElementCreated=${e => e.innerText = name} />)
+          </li>
+        `)}
+      </ul>
+    `;
+  }
+
+  function Message(props) {
+    return Shag.html`
+      <p>Here is a message:</p>
+      <p>${props.children}</p>
+    `;
+  }
+
+  class NestedStore extends Shag.UI {
+    constructor() {
+      super();
+      this.store.update({ planets: ['Foo', 'Bar'] });
+      this.events.subscribe(event => {
+        switch (event.type) {
+          case 'add-planet':
+            this.store.update(data => ({ planets: [...data.planets, 'Bong'] }));
+            break;
+          case 'sort':
+            this.store.update(data => ({ planets: data.planets.sort() }));
+            break;
+        }
+      });
+    }
+
+    render(props, context) {
+      return Shag.html`
+        <${PlanetList} planets=${props.planets} />
+        <button onclick=${() => context.dispatchEvent('add-planet')}>Add</button>
+        <button onclick=${() => context.dispatchEvent('sort')}>Sort</button>
+      `;
+    }
+  }
+
+  class Clock extends Shag.UI {
+    constructor() {
+      super();
+      this.store.update({ time: new Date() });
+    }
+
+    onMount() {
+      this._interval = setInterval(() => {
+        this.store.update({ time: new Date() });
+      }, 1000);
+    }
+
+    onUnmount() {
+      clearInterval(this._interval);
+    }
+
+    static get targetElement() {
+      return 'span';
+    }
+
+    render(props) {
+      return Shag.html`
+        <p>Hello, world!</p>
+        <p>${props.time.toLocaleTimeString()}.</p>
+      `;
+    }
+  }
+
+  class App extends Shag.UI {
+    constructor() {
+      super();
+      this.store.update({ counter: 1 });
+      this.events.subscribe(event => {
+        switch (event.type) {
+          case 'refresh':
+            this.store.update({ counter: 1 });
+            break;
+          case 'increment':
+            this.store.update(data => ({ counter: data.counter + 1 }));
+            break;
+        }
+      });
+    }
+
+    render(props, context) {
+      return Shag.html`
+        <div>
+          <${PlanetList} key='heyhey' planets=${['Earth', 'Mars', 'Saturn']} />
+          <${Message}>
+            Hello World!
+          </${Message}>
+          <div>${Date.now()}</div>
+          <div>
+            ${props.counter}
+            <button onclick=${() => context.dispatchEvent('increment')}>Inc</button>
+          </div>
+        </div>
+        <${NestedStore} />
+        <${Clock} />
+        <button onclick=${() => context.dispatchEvent('refresh')}>Refresh</button>
+      `;
+    }
+  }
+
+  new App().mount('#mount');
+
+  let stringTarget = new Shag.StringTarget();
+  new App().mount(stringTarget);
+  console.log(String(stringTarget));
+
+  </script>
+</body>
+</html>

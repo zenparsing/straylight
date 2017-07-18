@@ -23,7 +23,7 @@ export class UI {
     this._pushStream = new PushStream();
     this._context = new UIContext(this);
     this._store = new Store();
-    this._store.subscribe(() => this.update());
+    this._store.subscribe(() => this._renderToTarget());
   }
 
   get events() {
@@ -49,10 +49,10 @@ export class UI {
       target = new DOMTarget(target);
     }
     this._target = target;
-    this.update();
     if (this.onMount) {
       this.onMount(target);
     }
+    this._renderToTarget();
   }
 
   unmount() {
@@ -65,7 +65,19 @@ export class UI {
     }
   }
 
-  update() {
+  getState(fn) {
+    return this.store.read(fn);
+  }
+
+  updateState(data) {
+    this.store.update(data);
+  }
+
+  render() {
+    throw new Error('Missing render method for UI class');
+  }
+
+  _renderToTarget() {
     if (this._target) {
       this._target.patch(this._store.read(data => {
         return Element
@@ -75,19 +87,14 @@ export class UI {
     }
   }
 
+  static get targetElement() {
+    throw new Error('Missing targetElement for UI class');
+  }
+
   static [symbols.renderElement](props) {
-    return new Element(this.targetElement || 'div', {
+    return new Element(this.targetElement, {
       key: props.key,
-      updateChildren: false,
-      onTargetCreated: (target, updates) => {
-        let ui = new this();
-        ui.store.update(props);
-        ui.mount(target);
-        updates.subscribe({
-          next(props) { ui.store.update(props); },
-          complete() { ui.unmount(); },
-        });
-      },
+      contentManager: this,
     });
   }
 

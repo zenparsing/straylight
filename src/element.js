@@ -20,19 +20,16 @@ export class Element {
     let node = this;
     // Execute rendering functions
     while (typeof node.tag !== 'string') {
-      let render;
-      let receiver;
-      if (node.tag && node.tag[symbols.renderElement]) {
-        render = node.tag[symbols.renderElement];
-        receiver = node.tag;
-      } else {
-        render = node.tag;
-        receiver = undefined;
+      let receiver = undefined;
+      let render = node.tag;
+      if (render && render[symbols.renderElement]) {
+        receiver = render;
+        render = render[symbols.renderElement];
       }
       if (typeof render !== 'function') {
-        throw new Error(`${render} is not a valid render function`);
+        throw new TypeError(`${render} is not a function`);
       }
-      node = Element.from(render.call(receiver, this.props, context));
+      node = Element.from(render.call(receiver, node.props, context));
     }
     if (node === this) {
       node = new Element(node.tag, node.props, node.children);
@@ -57,7 +54,7 @@ export class Element {
     } else if (Array.isArray(x)) {
       return new Element('#document-fragment', {}, x);
     }
-    throw new Error(`Cannot convert ${ x } to an Element`);
+    throw new TypeError(`Cannot convert ${ x } to an Element`);
   }
 
 }

@@ -1,5 +1,3 @@
-import { PushStream } from './PushStream.js';
-
 const HTML_ESCAPES = {
   '&': '&amp;',
   '<': '&lt;',
@@ -30,7 +28,7 @@ function propToAttributeName(name) {
   switch (name) {
     case 'key':
     case 'children':
-    case 'updateChildren':
+    case 'contentManager':
       return null;
   }
   return name;
@@ -40,13 +38,12 @@ function stringify(element) {
   if (element.tag === '#text') {
     return esc(element.props.text);
   }
-  let html = element.children.map(stringify).join('');
+
+  let html = element.props.contentManager ?
+    renderContentManager(new element.props.contentManager()) :
+    element.children.map(stringify).join('');
+
   if (element.tag !== '#document-fragment') {
-    if (element.props.onTargetCreated) {
-      let target = new StringTarget();
-      element.props.onTargetCreated.call(undefined, target, new PushStream().observable);
-      html = target.htmlString;
-    }
     let attributes = toAttributes(element.props);
     let open = element.tag;
     let pairs = Object.keys(attributes).map(k => `${esc(k)}="${esc(attributes[k])}"`);
@@ -55,6 +52,15 @@ function stringify(element) {
     }
     html = `<${open}>${html}</${element.tag}>`;
   }
+
+  return html;
+}
+
+function renderContentManager(ui) {
+  let target = new StringTarget();
+  ui.mount(target);
+  let html = target.htmlString;
+  ui.unmount();
   return html;
 }
 
@@ -74,6 +80,10 @@ export class StringTarget {
 
   toString() {
     return this._html;
+  }
+
+  static renderToString(manager) {
+    return renderContentManager(manager);
   }
 
 }

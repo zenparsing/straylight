@@ -13,7 +13,11 @@
         ${planets.map(name => Shag.html`
           <li key=${name} onclick=${ () => console.log(name) }>
             Hello <span style='color:blue'>${ name }</span>
-            (<span updateChildren=${false} onElementCreated=${e => e.innerText = name} />)
+            (<span contentManager=${class extends Shag.UI {
+              render() {
+                return name;
+              }
+            }} />)
           </li>
         `)}
       </ul>
@@ -50,12 +54,17 @@
         <button onclick=${() => context.dispatchEvent('sort')}>Sort</button>
       `;
     }
+
+    static get targetElement() {
+      return 'div';
+    }
   }
 
   class Clock extends Shag.UI {
     constructor() {
       super();
-      this.store.update({ time: new Date() });
+      this._interval = null;
+      this.updateState({ time: new Date() });
     }
 
     onMount() {
@@ -68,15 +77,15 @@
       clearInterval(this._interval);
     }
 
-    static get targetElement() {
-      return 'span';
-    }
-
-    render(props) {
+    render({ time }) {
       return Shag.html`
         <p>Hello, world!</p>
-        <p>${props.time.toLocaleTimeString()}.</p>
+        <p>${time.toLocaleTimeString()}.</p>
       `;
+    }
+
+    static get targetElement() {
+      return 'span';
     }
   }
 
@@ -118,9 +127,7 @@
 
   new App().mount('#mount');
 
-  let stringTarget = new Shag.StringTarget();
-  new App().mount(stringTarget);
-  console.log(String(stringTarget));
+  console.log(Shag.StringTarget.renderToString(new App()));
 
   </script>
 </body>

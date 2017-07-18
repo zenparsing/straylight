@@ -1,4 +1,3 @@
-import { PushStream } from './PushStream.js';
 import * as symbols from './symbols.js';
 
 function patchNode(target, element) {
@@ -22,11 +21,13 @@ function patchNode(target, element) {
 
   if (!sameTagName(target, element)) {
     target = target.ownerDocument.createElement(element.tag);
+    if (element.props.key) {
+      target[symbols.elementKey] = element.props.key;
+    }
   }
 
   patchAttributes(target, element);
-  let { updateChildren = true } = element.props;
-  if (updateChildren) {
+  if (!element.props.contentManager) {
     patchChildren(target, element.children);
   }
   return target;
@@ -37,32 +38,26 @@ function patchAttributes(target, element) {
   // Set attributes defined by the element
   Object.keys(element.props).forEach(key => {
     let name = propToAttributeName(key);
-    if (!name) {
+    let value = element.props[key];
+    if (!name || value === null || value === undefined) {
       return;
     }
-    let value = element.props[key];
     let assignProp = shouldAssignProperty(target, name, value);
     let attrValue = assignProp ? '' : value;
-    if ((value === null || value === undefined) && target.hasAttribute(name)) {
-      target.removeAttribute(name);
-    } else if (target.getAttribute(name) !== attrValue) {
+    if (target.getAttribute(name) !== attrValue) {
       target.setAttribute(name, attrValue);
     }
     if (assignProp) {
-      if (target[name] !== value) {
-        target[name] = value;
-      }
+      target[name] = value;
     }
     names.add(name);
   });
   // Remove attributes not defined by the element
   let { attributes } = target;
   for (let i = attributes.length - 1; i >= 0; --i) {
-    let { name, specified } = attributes[i];
+    let { name } = attributes[i];
     if (!names.has(name)) {
-      if (specified) {
-        target.removeAttribute(name);
-      }
+      target.removeAttribute(name);
       if (shouldAssignProperty(target, name)) {
         target[name] = undefined;
       }
@@ -70,33 +65,20 @@ function patchAttributes(target, element) {
   }
 }
 
-function lifecycle(event, node, props) {
-  if (event === 'created') {
-    let updates = null;
-    let observable = () => {
-      if (!updates) {
-        updates = node[symbols.targetUpdates] = new PushStream();
+function lifecycle(event, node, props = null) {
+  switch (event) {
+    case 'created':
+      if (props.contentManager) {
+        let manager = node[symbols.contentManager] = new props.contentManager();
+        manager.mount(new DOMTarget(node));
       }
-      return updates.observable;
-    };
-    if (props.onTargetCreated) {
-      props.onTargetCreated.call(undefined, new DOMTarget(node), observable());
-    }
-    if (props.onElementCreated) {
-      props.onElementCreated.call(undefined, node, observable());
-    }
-  } else {
-    let updates = node[symbols.targetUpdates];
-    if (updates) {
-      switch (event) {
-        case 'updated':
-          updates.push(props);
-          break;
-        case 'removed':
-          updates.end();
-          break;
-      }
-    }
+      break;
+    case 'updated':
+      // Not currently used
+      break;
+    case 'removed':
+      node[symbols.contentManager].unmount();
+      break;
   }
 }
 
@@ -125,8 +107,7 @@ function patchChildren(target, children) {
     if (patched !== sibling) {
       target.insertBefore(patched, sibling);
     }
-    let lifecycleEvent = patched === matched ? 'updated' : 'created';
-    lifecycle(lifecycleEvent, patched, child.props);
+    lifecycle(patched === matched ? 'updated' : 'created', patched, child.props);
     size += 1;
   });
   // Remove remaining children in the target node
@@ -147,11 +128,10 @@ function sameTagName(node, element) {
 
 function propToAttributeName(name) {
   switch (name) {
-    case 'key': return 'x-key';
-    case 'children': return null;
-    case 'updateChildren': return null;
-    case 'onTargetCreated': return null;
-    case 'onElementCreated': return null;
+    case 'key':
+    case 'children':
+    case 'contentManager':
+      return null;
   }
   return name;
 }
@@ -164,7 +144,7 @@ function shouldPatch(node, element) {
     return node.id === element.props.id;
   }
   if (element.props.key) {
-    return node.getAttribute('x-key') === element.props.key;
+    return node[symbols.elementKey] === element.props.key;
   }
   return true;
 }

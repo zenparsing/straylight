@@ -21,15 +21,15 @@ export class PushStream {
     return this._observable;
   }
 
-  end() {
-    forEachObserver(this._observers, observer => {
-      try { observer.complete(); } catch (e) { this._onError(e); }
-    });
-  }
-
   push(x) {
     forEachObserver(this._observers, observer => {
       try { observer.next(x); } catch (e) { this._onError(e); }
+    });
+  }
+
+  end() {
+    forEachObserver(this._observers, observer => {
+      try { observer.complete(); } catch (e) { this._onError(e); }
     });
   }
 

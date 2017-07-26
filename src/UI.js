@@ -1,5 +1,5 @@
+import Observable from 'zen-observable';
 import { Element } from './Element.js';
-import { DOMTarget } from './DOMTarget.js';
 import { PushStream } from './PushStream.js';
 import { Store } from './Store.js';
 import * as symbols from './symbols.js';
@@ -19,15 +19,24 @@ class UIContext {
 export class UI {
 
   constructor() {
-    this._target = null;
-    this._pushStream = new PushStream();
+    this._events = new PushStream();
     this._context = new UIContext(this);
     this._store = new Store();
-    this._store.subscribe(() => this._renderToTarget());
+
+    let updateStream = new PushStream();
+    this._store.subscribe(() => updateStream.push(this._renderTree()));
+    this._updates = new Observable(sink => {
+      sink.next(this._renderTree());
+      return updateStream.observable.subscribe(sink);
+    });
   }
 
   get events() {
-    return this._pushStream.observable;
+    return this._events.observable;
+  }
+
+  [symbols.observable]() {
+    return this._updates;
   }
 
   get store() {
@@ -38,31 +47,7 @@ export class UI {
     if (typeof event === 'string') {
       event = { type: event, detail };
     }
-    this._pushStream.push(event);
-  }
-
-  mount(target) {
-    if (this._target) {
-      throw new Error('UI instance already mounted');
-    }
-    if (typeof target === 'string' || target.nodeType) {
-      target = new DOMTarget(target);
-    }
-    this._target = target;
-    if (this.onMount) {
-      this.onMount(target);
-    }
-    this._renderToTarget();
-  }
-
-  unmount() {
-    if (this._target) {
-      let target = this._target;
-      this._target = null;
-      if (this.onUnmount) {
-        this.onUnmount(target);
-      }
-    }
+    this._events.push(event);
   }
 
   getState(fn) {
@@ -77,24 +62,29 @@ export class UI {
     throw new Error('Missing render method for UI class');
   }
 
-  _renderToTarget() {
-    if (this._target) {
-      this._target.patch(this._store.read(data => {
-        return Element
-          .from(this.render(data, this._context))
-          .evaluate(this._context);
-      }));
-    }
+  _renderTree() {
+    return this._store.read(data => {
+      return Element
+        .from(this.render(data, this._context))
+        .evaluate(this._context);
+    });
   }
 
   static get targetElement() {
     throw new Error('Missing targetElement for UI class');
   }
 
+  static [symbols.mapStateToContent](states) {
+    let ui = new this();
+    states.subscribe(state => ui.updateState(state));
+    return ui;
+  }
+
   static [symbols.renderElement](props) {
     return new Element(this.targetElement, {
       key: props.key,
       contentManager: this,
+      contentManagerState: props,
     });
   }
 

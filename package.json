@@ -14,7 +14,7 @@
     "zen-observable": "^0.5.2"
   },
   "devDependencies": {
-    "esdown": "^1.1.18",
+    "esdown": "^1.1.21",
     "eslint": "^4.2.0"
   },
   "scripts": {

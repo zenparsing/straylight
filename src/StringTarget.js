@@ -1,3 +1,7 @@
+import Observable from 'zen-observable';
+import { PushStream } from './PushStream.js';
+import * as symbols from './symbols.js';
+
 const HTML_ESCAPES = {
   '&': '&amp;',
   '<': '&lt;',
@@ -29,6 +33,7 @@ function propToAttributeName(name) {
     case 'key':
     case 'children':
     case 'contentManager':
+    case 'contentManagerState':
       return null;
   }
   return name;
@@ -39,43 +44,60 @@ function stringify(element) {
     return esc(element.props.text);
   }
 
-  let html = element.props.contentManager ?
-    renderContentManager(new element.props.contentManager()) :
-    element.children.map(stringify).join('');
+  let { tag, props, children } = element;
 
-  if (element.tag !== '#document-fragment') {
-    let attributes = toAttributes(element.props);
+  let html = props.contentManager ?
+    renderContentManager(props.contentManager, props.contentManagerState) :
+    children.map(stringify).join('');
+
+  if (tag !== '#document-fragment') {
+    let attributes = toAttributes(props);
     let open = element.tag;
     let pairs = Object.keys(attributes).map(k => `${esc(k)}="${esc(attributes[k])}"`);
     if (pairs.length > 0) {
       open += ' ' + pairs.join(' ');
     }
-    html = `<${open}>${html}</${element.tag}>`;
+    html = `<${open}>${html}</${tag}>`;
   }
 
   return html;
 }
 
-function renderContentManager(ui) {
+function renderContentManager(manager, state) {
   let target = new StringTarget();
-  ui.mount(target);
-  let html = target.htmlString;
-  ui.unmount();
-  return html;
+  let states = new PushStream();
+  let trees = manager[symbols.mapStateToContent](states.observable);
+  if (state) {
+    states.push(state);
+  }
+  target.mount(trees);
+  target.unmount();
+  return target.htmlString;
 }
 
 export class StringTarget {
 
   constructor() {
     this._html = '';
+    this._subscription = null;
   }
 
   get htmlString() {
     return this._html;
   }
 
-  patch(tree) {
-    this._html = stringify(tree);
+  mount(updates) {
+    if (this._subscription) {
+      throw new Error('Target already mounted');
+    }
+    this._subscription = Observable.from(updates).subscribe(tree => {
+      this._html = stringify(tree);
+    });
+  }
+
+  unmount() {
+    this._subscription.unsubscribe();
+    this._subscription = null;
   }
 
   toString() {

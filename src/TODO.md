@@ -26,14 +26,7 @@ Should we accept style objects and convert those values to style strings?
 
 https://github.com/facebook/react/blob/e6f1d29f072b2be2e9795ffc781a965cb69f0347/src/renderers/dom/shared/CSSPropertyOperations.js
 
-### Naming: UI.prototype.update
+### onMount and onUnmount
 
-We currently have an update method for both Store and UI, meaning very different things.
-Ideally these would be different names.
-
-### Nested UI instances
-
-- Do we need to somehow share context between the parent and child UI instances?
-- Does it make sense to push props into the nested UI store? For the current implementation
-  we're not getting the right props anyway: we're updating with the props of the target
-  node instead of the UI render function.
+With the current design, UI instances can push trees to many targets. But this means that
+UI instances don't have a meaningful "mount" and "unmount" state transitions.

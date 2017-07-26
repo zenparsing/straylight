@@ -1,3 +1,5 @@
+import Observable from 'zen-observable';
+import { PushStream } from './PushStream.js';
 import * as symbols from './symbols.js';
 
 function patchNode(target, element) {
@@ -27,7 +29,7 @@ function patchNode(target, element) {
   }
 
   patchAttributes(target, element);
-  if (!element.props.contentManager) {
+  if (element.props.updateChildren !== false) {
     patchChildren(target, element.children);
   }
   return target;
@@ -65,21 +67,34 @@ function patchAttributes(target, element) {
   }
 }
 
-function lifecycle(event, node, props = null) {
-  switch (event) {
-    case 'created':
-      if (props.contentManager) {
-        let manager = node[symbols.contentManager] = new props.contentManager();
-        manager.mount(new DOMTarget(node));
+function lifecycleHooks(node, props) {
+  return {
+    created() {
+      let { contentManager } = props;
+      if (contentManager) {
+        let target = new DOMTarget(node);
+        let states = new PushStream();
+        let trees = contentManager[symbols.mapStateToContent](states.observable);
+
+        states.push(props.contentManagerState);
+        target.mount(trees);
+        node[symbols.nodeData] = { states, target };
       }
-      break;
-    case 'updated':
-      // Not currently used
-      break;
-    case 'removed':
-      node[symbols.contentManager].unmount();
-      break;
-  }
+    },
+    updated() {
+      let data = node[symbols.nodeData];
+      if (data) {
+        data.states.push(props.contentManagerState);
+      }
+    },
+    removed() {
+      let data = node[symbols.nodeData];
+      if (data) {
+        data.target.unmount();
+        node[symbols.nodeData] = null;
+      }
+    },
+  };
 }
 
 function patchChildren(target, children) {
@@ -107,14 +122,19 @@ function patchChildren(target, children) {
     if (patched !== sibling) {
       target.insertBefore(patched, sibling);
     }
-    lifecycle(patched === matched ? 'updated' : 'created', patched, child.props);
+    let hooks = lifecycleHooks(patched, child.props);
+    if (patched === matched) {
+      hooks.updated();
+    } else {
+      hooks.created();
+    }
     size += 1;
   });
   // Remove remaining children in the target node
   while (target.childNodes.length > size) {
     let node = target.lastChild;
     target.removeChild(node);
-    lifecycle('removed', node);
+    lifecycleHooks(node).removed();
   }
 }
 
@@ -131,6 +151,7 @@ function propToAttributeName(name) {
     case 'key':
     case 'children':
     case 'contentManager':
+    case 'contentManagerState':
       return null;
   }
   return name;
@@ -155,16 +176,26 @@ export class DOMTarget {
     if (typeof node === 'string') {
       node = window.document.querySelector(node);
     }
+    if (!node) {
+      throw new TypeError(`${node} is not a DOM element`);
+    }
     this._node = node;
+    this._subscription = null;
   }
 
-  get node() {
-    return this._node;
+  mount(updates) {
+    if (this._subscription) {
+      throw new Error('Target already mounted');
+    }
+    this._subscription = Observable.from(updates).subscribe(tree => {
+      let children = tree.tag === '#document-fragment' ? tree.children : [tree];
+      patchChildren(this._node, children);
+    });
   }
 
-  patch(tree) {
-    let children = tree.tag === '#document-fragment' ? tree.children : [tree];
-    patchChildren(this._node, children);
+  unmount() {
+    this._subscription.unsubscribe();
+    this._subscription = null;
   }
 
 }

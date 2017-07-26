@@ -13,11 +13,11 @@
         ${planets.map(name => Shag.html`
           <li key=${name} onclick=${ () => console.log(name) }>
             Hello <span style='color:blue'>${ name }</span>
-            (<span contentManager=${class extends Shag.UI {
-              render() {
-                return name;
-              }
-            }} />)
+            (<span contentManager=${
+                class extends Shag.UI {
+                  render() { return name }
+                }
+              } />)
           </li>
         `)}
       </ul>
@@ -34,14 +34,14 @@
   class NestedStore extends Shag.UI {
     constructor() {
       super();
-      this.store.update({ planets: ['Foo', 'Bar'] });
+      this.updateState({ planets: ['Foo', 'Bar'] });
       this.events.subscribe(event => {
         switch (event.type) {
           case 'add-planet':
-            this.store.update(data => ({ planets: [...data.planets, 'Bong'] }));
+            this.updateState(data => ({ planets: [...data.planets, 'Bong'] }));
             break;
           case 'sort':
-            this.store.update(data => ({ planets: data.planets.sort() }));
+            this.updateState(data => ({ planets: data.planets.sort() }));
             break;
         }
       });
@@ -69,7 +69,7 @@
 
     onMount() {
       this._interval = setInterval(() => {
-        this.store.update({ time: new Date() });
+        this.updateState({ time: new Date() });
       }, 1000);
     }
 
@@ -92,14 +92,14 @@
   class App extends Shag.UI {
     constructor() {
       super();
-      this.store.update({ counter: 1 });
+      this.updateState({ counter: 1 });
       this.events.subscribe(event => {
         switch (event.type) {
           case 'refresh':
-            this.store.update({ counter: 1 });
+            this.updateState({ counter: 1 });
             break;
           case 'increment':
-            this.store.update(data => ({ counter: data.counter + 1 }));
+            this.updateState(data => ({ counter: data.counter + 1 }));
             break;
         }
       });
@@ -125,9 +125,9 @@
     }
   }
 
-  new App().mount('#mount');
+  new Shag.DOMTarget('#mount').mount(new App());
 
-  console.log(Shag.StringTarget.renderToString(new App()));
+  //console.log(Shag.StringTarget.renderToString(App));
 
   </script>
 </body>

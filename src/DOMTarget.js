@@ -29,7 +29,7 @@ function patchNode(target, element) {
   }
 
   patchAttributes(target, element);
-  if (element.props.updateChildren !== false) {
+  if (!element.props.contentManager) {
     patchChildren(target, element.children);
   }
   return target;

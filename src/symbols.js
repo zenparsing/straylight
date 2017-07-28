@@ -6,4 +6,4 @@ export const observable = observableSymbol;
 export const elementKey = sym('elementKey');
 export const renderElement = sym('renderElement');
 export const mapStateToContent = sym('mapStateToContent');
-export const nodeData = sym('nodeData');
+export const domNodeData = sym('domNodeData');

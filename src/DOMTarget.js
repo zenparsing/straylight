@@ -78,20 +78,20 @@ function lifecycleHooks(node, props) {
 
         states.push(props.contentManagerState);
         target.mount(trees);
-        node[symbols.nodeData] = { states, target };
+        node[symbols.domNodeData] = { states, target };
       }
     },
     updated() {
-      let data = node[symbols.nodeData];
+      let data = node[symbols.domNodeData];
       if (data) {
         data.states.push(props.contentManagerState);
       }
     },
     removed() {
-      let data = node[symbols.nodeData];
+      let data = node[symbols.domNodeData];
       if (data) {
         data.target.unmount();
-        node[symbols.nodeData] = null;
+        node[symbols.domNodeData] = null;
       }
     },
   };

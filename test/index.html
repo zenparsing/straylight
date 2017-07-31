@@ -60,11 +60,45 @@
     }
   }
 
+  class PhoneForm extends Shag.UI {
+    constructor() {
+      super();
+      this.updateState({ invalid: false });
+      this.events.subscribe(event => {
+        switch (event.type) {
+          case 'value-updated':
+            this.updateState({ invalid: /[^\d-]/.test(event.detail) });
+            break;
+        }
+      });
+    }
+
+    render({ invalid }, context) {
+      return Shag.html`
+        <form class='phone-form'>
+          <span style=${invalid ? 'color:red' : ''}>Phone:</span>
+          <input
+            type='text'
+            placeholder='xxx-xxx-xxxx'
+            oninput=${e => context.dispatchEvent('value-updated', e.target.value)}
+          />
+        </form>
+      `;
+    }
+
+    static get targetElement() {
+      return 'div';
+    }
+  }
+
   class Clock extends Shag.UI {
     constructor() {
       super();
       this._interval = null;
-      this.updateState({ time: new Date() });
+      this.updateState({
+        time: new Date(),
+        formatTime: time => time.toLocaleTimeString(),
+      });
     }
 
     onMount() {
@@ -77,11 +111,17 @@
       clearInterval(this._interval);
     }
 
-    render({ time }) {
+    render({ time, formatTime }) {
       return Shag.html`
         <p>Hello, world!</p>
-        <p>${time.toLocaleTimeString()}.</p>
+        <p>${formatTime ? formatTime(time) : time.toLocaleTimeString()}</p>
       `;
+    }
+
+    static mapPropsToState(props) {
+      return {
+        formatTime: props.formatTime,
+      };
     }
 
     static get targetElement() {
@@ -119,7 +159,8 @@
           </div>
         </div>
         <${NestedStore} />
-        <${Clock} />
+        <${Clock} formatTime=${t => t.toISOString()} />
+        <${PhoneForm} />
         <button onclick=${() => context.dispatchEvent('refresh')}>Refresh</button>
       `;
     }

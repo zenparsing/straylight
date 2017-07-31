@@ -23,9 +23,6 @@ function patchNode(target, element) {
 
   if (!sameTagName(target, element)) {
     target = target.ownerDocument.createElement(element.tag);
-    if (element.props.key) {
-      target[symbols.elementKey] = element.props.key;
-    }
   }
 
   patchAttributes(target, element);
@@ -75,7 +72,6 @@ function lifecycleHooks(node, props) {
         let target = new DOMTarget(node);
         let states = new PushStream();
         let trees = contentManager[symbols.mapStateToContent](states.observable);
-
         states.push(props.contentManagerState);
         target.mount(trees);
         node[symbols.domNodeData] = { states, target };
@@ -149,6 +145,7 @@ function sameTagName(node, element) {
 function propToAttributeName(name) {
   switch (name) {
     case 'key':
+      return 'data-key';
     case 'children':
     case 'contentManager':
     case 'contentManagerState':
@@ -165,7 +162,7 @@ function shouldPatch(node, element) {
     return node.id === element.props.id;
   }
   if (element.props.key) {
-    return node[symbols.elementKey] === element.props.key;
+    return node.getAttribute('data-key') === element.props.key;
   }
   return true;
 }

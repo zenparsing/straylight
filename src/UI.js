@@ -74,17 +74,21 @@ export class UI {
     throw new Error('Missing targetElement for UI class');
   }
 
+  static mapPropsToState() {
+    return null;
+  }
+
   static [symbols.mapStateToContent](states) {
     let ui = new this();
     states.subscribe(state => ui.updateState(state));
     return ui;
   }
 
-  static [symbols.renderElement](props) {
+  static [symbols.renderElement](props, context) {
     return new Element(this.targetElement, {
       key: props.key,
       contentManager: this,
-      contentManagerState: props,
+      contentManagerState: this.mapPropsToState(props, context),
     });
   }
 

@@ -16,8 +16,10 @@ export class Store {
     if (typeof data === 'function') {
       data = data(this._data);
     }
-    Object.assign(this._data, data);
-    this._stream.push(this._data);
+    if (data !== null && data !== undefined) {
+      Object.assign(this._data, data);
+      this._stream.push(this._data);
+    }
   }
 
   subscribe(...args) {

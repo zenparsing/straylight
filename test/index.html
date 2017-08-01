@@ -54,10 +54,6 @@
         <button onclick=${() => context.dispatchEvent('sort')}>Sort</button>
       `;
     }
-
-    static get targetElement() {
-      return 'div';
-    }
   }
 
   class PhoneForm extends Shag.UI {
@@ -85,20 +81,13 @@
         </form>
       `;
     }
-
-    static get targetElement() {
-      return 'div';
-    }
   }
 
   class Clock extends Shag.UI {
     constructor() {
       super();
       this._interval = null;
-      this.updateState({
-        time: new Date(),
-        formatTime: time => time.toLocaleTimeString(),
-      });
+      this.updateState({ time: new Date(), formatTime: null });
     }
 
     onMount() {
@@ -113,19 +102,13 @@
 
     render({ time, formatTime }) {
       return Shag.html`
-        <p>Hello, world!</p>
-        <p>${formatTime ? formatTime(time) : time.toLocaleTimeString()}</p>
+        <!--<p>Hello, world!</p>-->
+        <span>${formatTime ? formatTime(time) : time.toLocaleTimeString()}</span>
       `;
     }
 
-    static mapPropsToState(props) {
-      return {
-        formatTime: props.formatTime,
-      };
-    }
-
-    static get targetElement() {
-      return 'span';
+    static mapPropsToState({ formatTime }) {
+      return { formatTime };
     }
   }
 
@@ -159,7 +142,9 @@
           </div>
         </div>
         <${NestedStore} />
-        <${Clock} formatTime=${t => t.toISOString()} />
+        <div>
+          || <${Clock} formatTime=${t => t.toISOString()} /> ||
+        </div>
         <${PhoneForm} />
         <button onclick=${() => context.dispatchEvent('refresh')}>Refresh</button>
       `;

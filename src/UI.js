@@ -70,10 +70,6 @@ export class UI {
     });
   }
 
-  static get targetElement() {
-    throw new Error('Missing targetElement for UI class');
-  }
-
   static mapPropsToState() {
     return null;
   }
@@ -85,7 +81,7 @@ export class UI {
   }
 
   static [symbols.renderElement](props, context) {
-    return new Element(this.targetElement, {
+    return new Element('ui-container', {
       key: props.key,
       contentManager: this,
       contentManagerState: this.mapPropsToState(props, context),

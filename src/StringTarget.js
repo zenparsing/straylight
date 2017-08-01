@@ -71,10 +71,11 @@ function renderContentManager(manager, state) {
   let states = new PushStream();
   let trees = manager[symbols.mapStateToContent](states.observable);
   if (state) {
-    states.push(state);
+    states.next(state);
   }
   target.mount(trees);
   target.unmount();
+  states.complete();
   return target.htmlString;
 }
 

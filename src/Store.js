@@ -18,7 +18,7 @@ export class Store {
     }
     if (data !== null && data !== undefined) {
       Object.assign(this._data, data);
-      this._stream.push(this._data);
+      this._stream.next(this._data);
     }
   }
 

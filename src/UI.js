@@ -24,7 +24,7 @@ export class UI {
     this._store = new Store();
 
     let updateStream = new PushStream();
-    this._store.subscribe(() => updateStream.push(this._renderTree()));
+    this._store.subscribe(() => updateStream.next(this._renderTree()));
     this._updates = new Observable(sink => {
       sink.next(this._renderTree());
       return updateStream.observable.subscribe(sink);
@@ -47,7 +47,7 @@ export class UI {
     if (typeof event === 'string') {
       event = { type: event, detail };
     }
-    this._events.push(event);
+    this._events.next(event);
   }
 
   getState(fn) {

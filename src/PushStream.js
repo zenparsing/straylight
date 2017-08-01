@@ -21,13 +21,19 @@ export class PushStream {
     return this._observable;
   }
 
-  push(x) {
+  next(x) {
     forEachObserver(this._observers, observer => {
       try { observer.next(x); } catch (e) { this._onError(e); }
     });
   }
 
-  end() {
+  error(e) {
+    forEachObserver(this._observers, observer => {
+      try { observer.error(e); } catch (e) { this._onError(e); }
+    });
+  }
+
+  complete() {
     forEachObserver(this._observers, observer => {
       try { observer.complete(); } catch (e) { this._onError(e); }
     });

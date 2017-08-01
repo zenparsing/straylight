@@ -72,7 +72,7 @@ function lifecycleHooks(node, props) {
         let target = new DOMTarget(node);
         let states = new PushStream();
         let trees = contentManager[symbols.mapStateToContent](states.observable);
-        states.push(props.contentManagerState);
+        states.next(props.contentManagerState);
         target.mount(trees);
         node[symbols.domNodeData] = { states, target };
       }
@@ -80,13 +80,14 @@ function lifecycleHooks(node, props) {
     updated() {
       let data = node[symbols.domNodeData];
       if (data) {
-        data.states.push(props.contentManagerState);
+        data.states.next(props.contentManagerState);
       }
     },
     removed() {
       let data = node[symbols.domNodeData];
       if (data) {
         data.target.unmount();
+        data.states.complete();
         node[symbols.domNodeData] = null;
       }
     },

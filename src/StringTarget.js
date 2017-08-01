@@ -31,6 +31,7 @@ function toAttributes(props) {
 function propToAttributeName(name) {
   switch (name) {
     case 'key':
+      return 'data-key';
     case 'children':
     case 'contentManager':
     case 'contentManagerState':
@@ -46,9 +47,11 @@ function stringify(element) {
 
   let { tag, props, children } = element;
 
-  let html = props.contentManager ?
-    renderContentManager(props.contentManager, props.contentManagerState) :
-    children.map(stringify).join('');
+  if (props.contentManager) {
+    return renderContentManager(props.contentManager, props.contentManagerState);
+  }
+
+  let html = children.map(stringify).join('');
 
   if (tag !== '#document-fragment') {
     let attributes = toAttributes(props);

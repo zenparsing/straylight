@@ -183,7 +183,7 @@ export class DOMTarget {
 
   mount(updates) {
     if (this._subscription) {
-      throw new Error('Target already mounted');
+      throw new Error('Target is already mounted');
     }
     this._subscription = Observable.from(updates).subscribe(tree => {
       let children = tree.tag === '#document-fragment' ? tree.children : [tree];

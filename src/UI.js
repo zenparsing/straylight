@@ -7,11 +7,7 @@ import * as symbols from './symbols.js';
 class UIContext {
 
   constructor(ui) {
-    this._ui = ui;
-  }
-
-  dispatchEvent(event, detail = null) {
-    return this._ui.dispatchEvent(event, detail);
+    this.dispatch = (event, detail = null) => ui.dispatchEvent(event, detail);
   }
 
 }

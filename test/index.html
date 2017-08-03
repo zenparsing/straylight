@@ -47,11 +47,11 @@
       });
     }
 
-    render(props, context) {
+    render(props, { dispatch }) {
       return Shag.html`
         <${PlanetList} planets=${props.planets} />
-        <button onclick=${() => context.dispatchEvent('add-planet')}>Add</button>
-        <button onclick=${() => context.dispatchEvent('sort')}>Sort</button>
+        <button onclick=${() => dispatch('add-planet')}>Add</button>
+        <button onclick=${() => dispatch('sort')}>Sort</button>
       `;
     }
   }
@@ -69,14 +69,14 @@
       });
     }
 
-    render({ invalid }, context) {
+    render({ invalid }, { dispatch }) {
       return Shag.html`
         <form class='phone-form'>
           <span style=${invalid ? 'color:red' : ''}>Phone:</span>
           <input
             type='text'
             placeholder='xxx-xxx-xxxx'
-            oninput=${e => context.dispatchEvent('value-updated', e.target.value)}
+            oninput=${e => dispatch('value-updated', e.target.value)}
           />
         </form>
       `;
@@ -118,7 +118,7 @@
       this.updateState({ counter: 1 });
       this.events.subscribe(event => {
         switch (event.type) {
-          case 'refresh':
+          case 'reset':
             this.updateState({ counter: 1 });
             break;
           case 'increment':
@@ -128,7 +128,7 @@
       });
     }
 
-    render(props, context) {
+    render(props, { dispatch }) {
       return Shag.html`
         <div>
           <${PlanetList} key='heyhey' planets=${['Earth', 'Mars', 'Saturn']} />
@@ -138,7 +138,7 @@
           <div>${Date.now()}</div>
           <div>
             ${props.counter}
-            <button onclick=${() => context.dispatchEvent('increment')}>Inc</button>
+            <button onclick=${() => dispatch('increment')}>Inc</button>
           </div>
         </div>
         <${NestedStore} />
@@ -146,7 +146,7 @@
           || <${Clock} formatTime=${t => t.toISOString()} /> ||
         </div>
         <${PhoneForm} />
-        <button onclick=${() => context.dispatchEvent('refresh')}>Refresh</button>
+        <button onclick=${() => dispatch('reset')}>Reset</button>
       `;
     }
   }

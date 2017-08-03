@@ -2,8 +2,8 @@ import htmltag from 'htmltag';
 import { Element } from './Element.js';
 
 export { Element };
-export { StringTarget } from './StringTarget.js';
-export { DOMTarget } from './DOMTarget.js';
+export { renderToDOM } from './render-dom.js';
+export { renderToString } from './render-string.js';
 export { UI } from './UI.js';
 
 export function createElement(tag, props, children) {

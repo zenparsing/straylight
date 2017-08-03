@@ -5,11 +5,9 @@ import { Store } from './Store.js';
 import * as symbols from './symbols.js';
 
 class UIContext {
-
   constructor(ui) {
     this.dispatch = (event, detail = null) => ui.dispatchEvent(event, detail);
   }
-
 }
 
 export class UI {

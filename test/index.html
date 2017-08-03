@@ -151,9 +151,9 @@
     }
   }
 
-  new Shag.DOMTarget('#mount').mount(new App());
-
-  console.log(Shag.StringTarget.renderToString(App));
+  let app = new App();
+  Shag.renderToDOM('#mount', app);
+  Shag.renderToString(app).then(console.log);
 
   </script>
 </body>

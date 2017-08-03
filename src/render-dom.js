@@ -2,6 +2,18 @@ import Observable from 'zen-observable';
 import { PushStream } from './PushStream.js';
 import * as symbols from './symbols.js';
 
+export function renderToDOM(node, trees) {
+  if (typeof node === 'string') {
+    node = window.document.querySelector(node);
+  }
+  if (!node) {
+    throw new TypeError(`${node} is not a DOM element`);
+  }
+  return Observable.from(trees).subscribe(tree => {
+    patchChildren(node, tree.tag === '#document-fragment' ? tree.children : [tree]);
+  });
+}
+
 function patchNode(target, element) {
   if (typeof element.tag !== 'string') {
     throw new Error(`Invalid element tag ${element.tag}`);
@@ -69,12 +81,11 @@ function lifecycleHooks(node, props) {
     created() {
       let { contentManager } = props;
       if (contentManager) {
-        let target = new DOMTarget(node);
         let states = new PushStream();
         let trees = contentManager[symbols.mapStateToContent](states.observable);
         states.next(props.contentManagerState);
-        target.mount(trees);
-        node[symbols.domNodeData] = { states, target };
+        let updates = renderToDOM(node, trees);
+        node[symbols.domNodeData] = { states, updates };
       }
     },
     updated() {
@@ -86,7 +97,7 @@ function lifecycleHooks(node, props) {
     removed() {
       let data = node[symbols.domNodeData];
       if (data) {
-        data.target.unmount();
+        data.updates.unsubscribe();
         data.states.complete();
         node[symbols.domNodeData] = null;
       }
@@ -166,34 +177,4 @@ function shouldPatch(node, element) {
     return node.getAttribute('data-key') === element.props.key;
   }
   return true;
-}
-
-export class DOMTarget {
-
-  constructor(node) {
-    if (typeof node === 'string') {
-      node = window.document.querySelector(node);
-    }
-    if (!node) {
-      throw new TypeError(`${node} is not a DOM element`);
-    }
-    this._node = node;
-    this._subscription = null;
-  }
-
-  mount(updates) {
-    if (this._subscription) {
-      throw new Error('Target is already mounted');
-    }
-    this._subscription = Observable.from(updates).subscribe(tree => {
-      let children = tree.tag === '#document-fragment' ? tree.children : [tree];
-      patchChildren(this._node, children);
-    });
-  }
-
-  unmount() {
-    this._subscription.unsubscribe();
-    this._subscription = null;
-  }
-
 }

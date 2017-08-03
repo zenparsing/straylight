@@ -16,8 +16,28 @@ export class Store {
     if (typeof data === 'function') {
       data = data(this._data);
     }
-    if (data !== null && data !== undefined && data !== this._data) {
-      Object.keys(data).forEach(key => this._data[key] = data[key]);
+
+    if (data === null || data === undefined || data === this._data) {
+      return;
+    }
+
+    let updated = false;
+
+    Object.keys(data).forEach(key => {
+      let prev = this._data[key];
+      let next = data[key];
+
+      if (prev !== next) {
+        // Non-identical values trigger updates
+        updated = true;
+        this._data[key] = next;
+      } else if (prev && typeof prev === 'object') {
+        // Assume that identitical objects have been mutated
+        updated = true;
+      }
+    });
+
+    if (updated) {
       this._stream.next(this._data);
     }
   }

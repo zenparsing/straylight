@@ -6,8 +6,7 @@ module.exports = {
   },
 
   "globals": {
-    "window": true,
-    "console": true
+    "window": true
   },
 
   "rules": {

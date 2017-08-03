@@ -6,10 +6,13 @@ function forEachObserver(observers, fn) {
   list.forEach(fn);
 }
 
+function reportError(err) {
+  Promise.reject(err);
+}
+
 export class PushStream {
 
-  constructor(onError = (e => console.error(e))) {
-    this._onError = onError;
+  constructor() {
     this._observers = new Set();
     this._observable = new Observable(observer => {
       this._observers.add(observer);
@@ -23,19 +26,19 @@ export class PushStream {
 
   next(x) {
     forEachObserver(this._observers, observer => {
-      try { observer.next(x); } catch (e) { this._onError(e); }
+      try { observer.next(x); } catch (e) { reportError(e); }
     });
   }
 
   error(e) {
     forEachObserver(this._observers, observer => {
-      try { observer.error(e); } catch (e) { this._onError(e); }
+      try { observer.error(e); } catch (e) { reportError(e); }
     });
   }
 
   complete() {
     forEachObserver(this._observers, observer => {
-      try { observer.complete(); } catch (e) { this._onError(e); }
+      try { observer.complete(); } catch (e) { reportError(e); }
     });
   }
 

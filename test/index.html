@@ -90,13 +90,13 @@
       this.updateState({ time: new Date(), formatTime: null });
     }
 
-    onMount() {
+    start() {
       this._interval = setInterval(() => {
         this.updateState({ time: new Date() });
       }, 1000);
     }
 
-    onUnmount() {
+    pause() {
       clearInterval(this._interval);
     }
 

@@ -16,13 +16,7 @@ export class UI {
     this._events = new PushStream();
     this._context = new UIContext(this);
     this._store = new Store();
-
-    let updateStream = new PushStream();
-    this._store.subscribe(() => updateStream.next(this._renderTree()));
-    this._updates = new Observable(sink => {
-      sink.next(this._renderTree());
-      return updateStream.observable.subscribe(sink);
-    });
+    this._updates = this._createUpdateObservable();
   }
 
   get events() {
@@ -56,11 +50,37 @@ export class UI {
     throw new Error('Missing render method for UI class');
   }
 
+  start() {
+    return;
+  }
+
+  pause() {
+    return;
+  }
+
   _renderTree() {
     return this._store.read(data => {
       return Element
         .from(this.render(data, this._context))
         .evaluate(this._context);
+    });
+  }
+
+  _createUpdateObservable() {
+    let updateStream = new PushStream();
+    this._store.subscribe(() => updateStream.next(this._renderTree()));
+    return new Observable(sink => {
+      if (!updateStream.observed) {
+        this.start();
+      }
+      sink.next(this._renderTree());
+      let subscription = updateStream.observable.subscribe(sink);
+      return () => {
+        subscription.unsubscribe();
+        if (!updateStream.observed) {
+          this.pause();
+        }
+      };
     });
   }
 

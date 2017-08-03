@@ -24,6 +24,10 @@ export class PushStream {
     return this._observable;
   }
 
+  get observed() {
+    return this._observers.size > 0;
+  }
+
   next(x) {
     forEachObserver(this._observers, observer => {
       try { observer.next(x); } catch (e) { reportError(e); }

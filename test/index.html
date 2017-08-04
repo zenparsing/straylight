@@ -65,6 +65,13 @@
           case 'value-updated':
             this.updateState({ invalid: /[^\d-]/.test(event.detail) });
             break;
+          case 'input-blur': {
+            let value = event.detail;
+            this.updateState({
+              invalid: /[^\d-]/.test(value) || value.replace(/[^\d]/g, '').length < 7,
+            });
+            break;
+          }
         }
       });
     }
@@ -77,6 +84,7 @@
             type='text'
             placeholder='xxx-xxx-xxxx'
             oninput=${e => dispatch('value-updated', e.target.value)}
+            onblur=${e => dispatch('input-blur', e.target.value)}
           />
         </form>
       `;

@@ -9,7 +9,7 @@ export function renderToString(trees) {
       start(s) { this._subscription = s; },
       next(tree) {
         this._subscription.unsubscribe();
-        resolve(stringify(tree));
+        resolve(stringify(tree.render()));
       },
       error(e) { reject(e); },
       complete() { resolve(''); },

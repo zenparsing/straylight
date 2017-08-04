@@ -10,11 +10,18 @@ class UIContext {
   }
 }
 
+class UIRenderer {
+  constructor(ui) {
+    this.render = () => ui._renderTree();
+  }
+}
+
 export class UI {
 
   constructor() {
     this._events = new PushStream();
     this._context = new UIContext(this);
+    this._renderer = new UIRenderer(this);
     this._store = new Store();
     this._updates = this._createUpdateObservable();
   }
@@ -68,15 +75,18 @@ export class UI {
 
   _createUpdateObservable() {
     let updateStream = new PushStream();
-    this._store.subscribe(() => updateStream.next(this._renderTree()));
+    this._store.subscribe(() => updateStream.next(this._renderer));
     return new Observable(sink => {
+      // Transitioning from not-observed => observed
       if (!updateStream.observed) {
         this.start();
       }
-      sink.next(this._renderTree());
+      // Send current renderer
+      sink.next(this._renderer);
       let subscription = updateStream.observable.subscribe(sink);
       return () => {
         subscription.unsubscribe();
+        // Transitioning from observed => not-observed
         if (!updateStream.observed) {
           this.pause();
         }

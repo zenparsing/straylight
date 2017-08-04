@@ -6,11 +6,26 @@ export function renderToDOM(node, trees) {
   if (typeof node === 'string') {
     node = window.document.querySelector(node);
   }
+
   if (!node) {
     throw new TypeError(`${node} is not a DOM element`);
   }
-  return Observable.from(trees).subscribe(tree => {
+
+  let current = null;
+  let scheduled = false;
+
+  function onFrame() {
+    scheduled = false;
+    let tree = current.render();
     patchChildren(node, tree.tag === '#document-fragment' ? tree.children : [tree]);
+  }
+
+  return Observable.from(trees).subscribe(value => {
+    current = value;
+    if (!scheduled) {
+      scheduled = true;
+      window.requestAnimationFrame(onFrame);
+    }
   });
 }
 

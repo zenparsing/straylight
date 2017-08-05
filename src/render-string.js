@@ -2,14 +2,14 @@ import Observable from 'zen-observable';
 import { PushStream } from './PushStream.js';
 import * as symbols from './symbols.js';
 
-export function renderToString(trees) {
+export function renderToString(updates) {
   return new Promise((resolve, reject) => {
-    Observable.from(trees).subscribe({
+    Observable.from(updates).subscribe({
       _subscription: null,
       start(s) { this._subscription = s; },
-      next(tree) {
+      next(update) {
         this._subscription.unsubscribe();
-        resolve(stringify(tree.render()));
+        resolve(stringify(update.tree));
       },
       error(e) { reject(e); },
       complete() { resolve(''); },
@@ -89,9 +89,9 @@ function stringify(element) {
 
 function renderContentManager(manager, state) {
   let states = new PushStream();
-  let trees = manager[symbols.mapStateToContent](states.observable);
+  let updates = manager[symbols.mapStateToContent](states.observable);
   if (state) {
     states.next(state);
   }
-  return renderToString(trees);
+  return renderToString(updates);
 }

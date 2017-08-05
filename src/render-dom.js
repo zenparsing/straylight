@@ -2,7 +2,7 @@ import Observable from 'zen-observable';
 import { PushStream } from './PushStream.js';
 import * as symbols from './symbols.js';
 
-export function renderToDOM(node, trees) {
+export function renderToDOM(node, updates) {
   if (typeof node === 'string') {
     node = window.document.querySelector(node);
   }
@@ -16,11 +16,11 @@ export function renderToDOM(node, trees) {
 
   function onFrame() {
     scheduled = false;
-    let tree = current.render();
+    let { tree } = current;
     patchChildren(node, tree.tag === '#document-fragment' ? tree.children : [tree]);
   }
 
-  return Observable.from(trees).subscribe(value => {
+  return Observable.from(updates).subscribe(value => {
     current = value;
     if (!scheduled) {
       scheduled = true;
@@ -97,10 +97,10 @@ function lifecycleHooks(node, props) {
       let { contentManager } = props;
       if (contentManager) {
         let states = new PushStream();
-        let trees = contentManager[symbols.mapStateToContent](states.observable);
+        let updates = contentManager[symbols.mapStateToContent](states.observable);
         states.next(props.contentManagerState);
-        let updates = renderToDOM(node, trees);
-        node[symbols.domNodeData] = { states, updates };
+        let subscription = renderToDOM(node, updates);
+        node[symbols.domNodeData] = { states, subscription };
       }
     },
     updated() {
@@ -112,7 +112,7 @@ function lifecycleHooks(node, props) {
     removed() {
       let data = node[symbols.domNodeData];
       if (data) {
-        data.updates.unsubscribe();
+        data.subscription.unsubscribe();
         data.states.complete();
         node[symbols.domNodeData] = null;
       }

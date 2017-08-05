@@ -16,7 +16,7 @@ export function renderToDOM(node, updates) {
 
   function onFrame() {
     scheduled = false;
-    let { tree } = current;
+    let tree = current.render();
     patchChildren(node, tree.tag === '#document-fragment' ? tree.children : [tree]);
   }
 

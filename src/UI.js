@@ -16,7 +16,7 @@ class UIUpdate {
     this._tree = null;
   }
 
-  get tree() {
+  render() {
     return this._tree || this._ui._renderTree();
   }
 }

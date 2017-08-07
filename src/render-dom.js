@@ -1,5 +1,6 @@
 import Observable from 'zen-observable';
 import { PushStream } from './PushStream.js';
+import { Element } from './Element.js';
 import * as symbols from './symbols.js';
 
 export function renderToDOM(node, updates) {
@@ -16,7 +17,7 @@ export function renderToDOM(node, updates) {
 
   function onFrame() {
     scheduled = false;
-    let tree = current.render();
+    let tree = Element.from(current);
     patchChildren(node, tree.tag === '#document-fragment' ? tree.children : [tree]);
   }
 

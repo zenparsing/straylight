@@ -1,5 +1,6 @@
 import Observable from 'zen-observable';
 import { PushStream } from './PushStream.js';
+import { Element } from './Element.js';
 import * as symbols from './symbols.js';
 
 export function renderToString(updates) {
@@ -9,7 +10,7 @@ export function renderToString(updates) {
       start(s) { this._subscription = s; },
       next(update) {
         this._subscription.unsubscribe();
-        resolve(stringify(update.render()));
+        resolve(stringify(Element.from(update)));
       },
       error(e) { reject(e); },
       complete() { resolve(''); },

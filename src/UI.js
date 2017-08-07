@@ -13,11 +13,11 @@ class UIContext {
 class UIUpdate {
   constructor(ui) {
     this._ui = ui;
-    this._tree = null;
+    this._element = null;
   }
 
-  render() {
-    return this._tree || this._ui._renderTree();
+  [symbols.element]() {
+    return this._element || (this._element = Element.from(this._ui));
   }
 }
 
@@ -25,8 +25,8 @@ export class UI {
 
   constructor() {
     this._events = new PushStream();
-    this._context = new UIContext(this);
     this._store = new Store();
+    this._context = new UIContext(this);
     this._updates = this._createUpdateObservable();
   }
 
@@ -69,14 +69,6 @@ export class UI {
     return;
   }
 
-  _renderTree() {
-    return this._store.read(data => {
-      return Element
-        .from(this.render(data, this._context))
-        .evaluate(this._context);
-    });
-  }
-
   _createUpdateObservable() {
     let updateStream = new PushStream();
     this._store.subscribe(() => updateStream.next(new UIUpdate(this)));
@@ -98,6 +90,12 @@ export class UI {
     });
   }
 
+  [symbols.element]() {
+    return this._store.read(data =>
+      Element.evaluate(this.render(data, this._context), this._context)
+    );
+  }
+
   static mapPropsToState() {
     return null;
   }
@@ -108,7 +106,7 @@ export class UI {
     return ui;
   }
 
-  static [symbols.renderElement](props, context) {
+  static [symbols.render](props, context) {
     return new Element('ui-container', {
       key: props.key,
       contentManager: this,

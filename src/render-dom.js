@@ -53,19 +53,21 @@ function patchNode(target, element) {
     target = target.ownerDocument.createElement(element.tag);
   }
 
-  patchAttributes(target, element);
+  patchAttributes(target, element.props);
+
   if (!element.props.contentManager) {
     patchChildren(target, element.children);
   }
+
   return target;
 }
 
-function patchAttributes(target, element) {
-  let attributes = propsToAttributes(element.props);
+function patchAttributes(target, props) {
+  let attributes = propsToAttributes(props);
 
   // Set attributes defined by the element
   attributes.forEach((value, name) => {
-    if (shouldAssign(target, name)) {
+    if (isEventHandler(name)) {
       target.setAttribute(name, '');
       target[name] = value;
     } else {
@@ -78,10 +80,23 @@ function patchAttributes(target, element) {
     let { name } = target.attributes[i];
     if (!attributes.has(name)) {
       target.removeAttribute(name);
-      if (shouldAssign(target, name)) {
+      if (isEventHandler(name)) {
         target[name] = undefined;
       }
     }
+  }
+
+  // Apply special-case attribute handling
+  switch (target.nodeName) {
+    case 'INPUT':
+      assignProps(target, props, ['value', 'checked', 'disabled']);
+      break;
+    case 'TEXTAREA':
+      assignProps(target, props, ['value']);
+      break;
+    case 'OPTION':
+      assignProps(target, props, ['selected']);
+      break;
   }
 }
 
@@ -189,7 +204,15 @@ function propsToAttributes(props) {
   return map;
 }
 
-function shouldAssign(target, name) {
+function assignProps(target, props, names) {
+  names.forEach(name => {
+    if (props[name] !== undefined && props[name] !== target[name]) {
+      target[name] = props[name];
+    }
+  });
+}
+
+function isEventHandler(name) {
   return name !== 'on' && name.startsWith('on');
 }
 

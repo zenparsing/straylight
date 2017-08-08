@@ -34,23 +34,37 @@ function esc(s) {
 
 function toAttributes(props) {
   let attr = {};
-  Object.keys(props).forEach(key => {
-    let name = key;
-    switch (key) {
-      case 'key':
-        name = 'ui-key';
-        break;
+  Object.keys(props).forEach(name => {
+    let value = props[name];
+
+    if (
+      value === null ||
+      value === undefined ||
+      value === false ||
+      typeof value === 'function'
+    ) {
+      return;
+    }
+
+    switch (name) {
       case 'children':
       case 'contentManager':
       case 'contentManagerState':
       case 'onTargetCreated':
-        name = '';
-        break;
+        return;
     }
-    let value = props[key];
-    if (name && typeof value !== 'function') {
-      attr[name] = value === true ? key : value;
+
+    if (name === 'key') {
+      name = 'ui-key';
+    } else {
+      name = name.toLowerCase();
     }
+
+    if (value === true) {
+      value = name;
+    }
+
+    attr[name] = value;
   });
   return attr;
 }

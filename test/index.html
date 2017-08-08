@@ -63,7 +63,9 @@
       this.events.subscribe(event => {
         switch (event.type) {
           case 'value-updated':
-            this.updateState({ invalid: /[^\d-]/.test(event.detail) });
+            this.updateState({
+              invalid: /[^\d-]/.test(event.detail),
+            });
             break;
           case 'input-blur': {
             let value = event.detail;
@@ -83,9 +85,10 @@
           <input
             type='text'
             placeholder='xxx-xxx-xxxx'
-            oninput=${e => dispatch('value-updated', e.target.value)}
-            onblur=${e => dispatch('input-blur', e.target.value)}
+            onInput=${e => dispatch('value-updated', e.target.value)}
+            onBlur=${e => dispatch('input-blur', e.target.value)}
           />
+          <button disabled=${invalid}>Save</button>
         </form>
       `;
     }

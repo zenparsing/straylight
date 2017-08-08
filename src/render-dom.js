@@ -61,68 +61,65 @@ function patchNode(target, element) {
 }
 
 function patchAttributes(target, element) {
-  let names = new Set();
+  let attributes = propsToAttributes(element.props);
+
   // Set attributes defined by the element
-  Object.keys(element.props).forEach(key => {
-    let name = propToAttributeName(key);
-    let value = element.props[key];
-    if (!name || value === null || value === undefined) {
-      return;
-    }
-    let assignProp = shouldAssignProperty(target, name, value);
-    let attrValue = assignProp ? '' : value;
-    if (target.getAttribute(name) !== attrValue) {
-      target.setAttribute(name, attrValue);
-    }
-    if (assignProp) {
+  attributes.forEach((value, name) => {
+    if (shouldAssign(target, name)) {
+      target.setAttribute(name, '');
       target[name] = value;
+    } else {
+      target.setAttribute(name, value);
     }
-    names.add(name);
   });
+
   // Remove attributes not defined by the element
-  let { attributes } = target;
-  for (let i = attributes.length - 1; i >= 0; --i) {
-    let { name } = attributes[i];
-    if (!names.has(name)) {
+  for (let i = target.attributes.length - 1; i >= 0; --i) {
+    let { name } = target.attributes[i];
+    if (!attributes.has(name)) {
       target.removeAttribute(name);
-      if (shouldAssignProperty(target, name)) {
+      if (shouldAssign(target, name)) {
         target[name] = undefined;
       }
     }
   }
 }
 
-function lifecycleHooks(node, props) {
-  return {
-    created() {
-      let { contentManager, onTargetCreated } = props;
-      if (contentManager) {
-        let states = new PushStream();
-        let updates = contentManager[symbols.mapStateToContent](states.observable);
-        states.next(props.contentManagerState);
-        let subscription = renderToDOM(node, updates);
-        node[symbols.domNodeData] = { states, subscription };
-      }
-      if (onTargetCreated) {
-        onTargetCreated(node);
-      }
-    },
-    updated() {
-      let data = node[symbols.domNodeData];
-      if (data) {
-        data.states.next(props.contentManagerState);
-      }
-    },
-    removed() {
-      let data = node[symbols.domNodeData];
-      if (data) {
-        data.subscription.unsubscribe();
-        data.states.complete();
-        node[symbols.domNodeData] = null;
-      }
-    },
-  };
-}
+const Lifecycle = {
+
+  created(node, props) {
+    let { contentManager, onTargetCreated } = props;
+
+    if (contentManager) {
+      let states = new PushStream();
+      let updates = contentManager[symbols.mapStateToContent](states.observable);
+      states.next(props.contentManagerState);
+      let subscription = renderToDOM(node, updates);
+      node[symbols.domNodeData] = { states, subscription };
+    }
+
+    if (onTargetCreated) {
+      onTargetCreated({ target: node });
+    }
+  },
+
+  updated(node, props) {
+    let data = node[symbols.domNodeData];
+    if (data) {
+      data.states.next(props.contentManagerState);
+    }
+  },
+
+  removed(node) {
+    let data = node[symbols.domNodeData];
+    if (data) {
+      data.subscription.unsubscribe();
+      data.states.complete();
+      node[symbols.domNodeData] = null;
+    }
+  },
+
+};
 
 function patchChildren(target, children) {
   let noMatch = { ownerDocument: target.ownerDocument };
@@ -150,11 +147,10 @@ function patchChildren(target, children) {
       target.insertBefore(patched, sibling);
     }
     // Call lifecycle hooks for the DOM node
-    let hooks = lifecycleHooks(patched, child.props);
     if (patched === matched) {
-      hooks.updated();
+      Lifecycle.updated(patched, child.props);
     } else {
-      hooks.created();
+      Lifecycle.created(patched, child.props);
     }
     size += 1;
   });
@@ -162,29 +158,43 @@ function patchChildren(target, children) {
   while (target.childNodes.length > size) {
     let node = target.lastChild;
     target.removeChild(node);
-    lifecycleHooks(node).removed();
+    Lifecycle.removed(node);
   }
 }
 
-function shouldAssignProperty(node, name, value) {
-  return typeof value === 'function';
+function propsToAttributes(props) {
+  let map = new Map();
+  Object.keys(props).forEach(name => {
+    let value = props[name];
+    switch (name) {
+      case 'key':
+        name = 'ui-key';
+        break;
+      case 'children':
+      case 'contentManager':
+      case 'contentManagerState':
+      case 'onTargetCreated':
+        value = null;
+        break;
+    }
+    if (value === null || value === undefined || value === false) {
+      return;
+    }
+    name = name.toLowerCase();
+    if (value === true) {
+      value = name;
+    }
+    map.set(name, value);
+  });
+  return map;
+}
+
+function shouldAssign(target, name) {
+  return name !== 'on' && name.startsWith('on');
 }
 
 function sameTagName(node, element) {
   return String(element.tag).toLowerCase() === String(node.nodeName).toLowerCase();
-}
-
-function propToAttributeName(name) {
-  switch (name) {
-    case 'key':
-      return 'ui-key';
-    case 'children':
-    case 'contentManager':
-    case 'contentManagerState':
-    case 'onTargetCreated':
-      return null;
-  }
-  return name;
 }
 
 function shouldPatch(node, element) {

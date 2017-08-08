@@ -19,6 +19,6 @@
   },
   "scripts": {
     "test": "eslint src/*.js",
-    "pack": "esdown - src/index.js dist/shag.js -b -g Shag"
+    "pack": "eslint src/*.js && esdown - src/index.js dist/shag.js -b -g Shag"
   }
 }

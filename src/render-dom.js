@@ -146,6 +146,7 @@ function patchChildren(target, children) {
     if (patched !== sibling) {
       target.insertBefore(patched, sibling);
     }
+    // Call lifecycle hooks for the DOM node
     let hooks = lifecycleHooks(patched, child.props);
     if (patched === matched) {
       hooks.updated();

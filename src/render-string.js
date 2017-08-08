@@ -35,25 +35,23 @@ function esc(s) {
 function toAttributes(props) {
   let attr = {};
   Object.keys(props).forEach(key => {
-    let name = propToAttributeName(key);
+    let name = key;
+    switch (key) {
+      case 'key':
+        name = 'data-key';
+        break;
+      case 'children':
+      case 'contentManager':
+      case 'contentManagerState':
+        name = '';
+        break;
+    }
     let value = props[key];
     if (name && typeof value !== 'function') {
       attr[name] = value === true ? key : value;
     }
   });
   return attr;
-}
-
-function propToAttributeName(name) {
-  switch (name) {
-    case 'key':
-      return 'data-key';
-    case 'children':
-    case 'contentManager':
-    case 'contentManagerState':
-      return null;
-  }
-  return name;
 }
 
 function tryAsync(fn) {

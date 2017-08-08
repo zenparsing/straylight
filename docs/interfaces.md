@@ -38,6 +38,7 @@ type ElementSource =
   Array |
   string |
   number |
+  boolean |
   null |
   undefined;
 

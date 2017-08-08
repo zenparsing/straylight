@@ -62,8 +62,12 @@ export class Element {
   static from(source) {
     if (source === null || source === undefined) {
       return new Element('#text', { text: '' });
-    } else if (typeof source === 'string' || typeof source === 'number') {
-      return new Element('#text', { text: source });
+    } else if (
+      typeof source === 'string' ||
+      typeof source === 'number' ||
+      typeof source === 'boolean'
+    ) {
+      return new Element('#text', { text: String(source) });
     } else if (Array.isArray(source)) {
       return new Element('#document-fragment', {}, source);
     } else if (source[symbols.element]) {

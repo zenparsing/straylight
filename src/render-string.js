@@ -38,11 +38,12 @@ function toAttributes(props) {
     let name = key;
     switch (key) {
       case 'key':
-        name = 'data-key';
+        name = 'ui-key';
         break;
       case 'children':
       case 'contentManager':
       case 'contentManagerState':
+      case 'onTargetCreated':
         name = '';
         break;
     }

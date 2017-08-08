@@ -26,7 +26,7 @@
 
   function Message(props) {
     return Shag.html`
-      <p>Here is a message:</p>
+      <p onTargetCreated=${e => console.log('created', e)}>Here is a message:</p>
       <p>${props.children}</p>
     `;
   }

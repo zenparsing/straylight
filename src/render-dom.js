@@ -95,13 +95,16 @@ function patchAttributes(target, element) {
 function lifecycleHooks(node, props) {
   return {
     created() {
-      let { contentManager } = props;
+      let { contentManager, onTargetCreated } = props;
       if (contentManager) {
         let states = new PushStream();
         let updates = contentManager[symbols.mapStateToContent](states.observable);
         states.next(props.contentManagerState);
         let subscription = renderToDOM(node, updates);
         node[symbols.domNodeData] = { states, subscription };
+      }
+      if (onTargetCreated) {
+        onTargetCreated(node);
       }
     },
     updated() {
@@ -174,10 +177,11 @@ function sameTagName(node, element) {
 function propToAttributeName(name) {
   switch (name) {
     case 'key':
-      return 'data-key';
+      return 'ui-key';
     case 'children':
     case 'contentManager':
     case 'contentManagerState':
+    case 'onTargetCreated':
       return null;
   }
   return name;
@@ -191,7 +195,7 @@ function shouldPatch(node, element) {
     return node.id === element.props.id;
   }
   if (element.props.key) {
-    return node.getAttribute('data-key') === element.props.key;
+    return node.getAttribute('ui-key') === element.props.key;
   }
   return true;
 }

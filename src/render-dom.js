@@ -85,19 +85,6 @@ function patchAttributes(target, props) {
       }
     }
   }
-
-  // Apply special-case attribute handling
-  switch (target.nodeName) {
-    case 'INPUT':
-      assignProps(target, props, ['value', 'checked', 'disabled']);
-      break;
-    case 'TEXTAREA':
-      assignProps(target, props, ['value']);
-      break;
-    case 'OPTION':
-      assignProps(target, props, ['selected']);
-      break;
-  }
 }
 
 const Lifecycle = {
@@ -202,14 +189,6 @@ function propsToAttributes(props) {
     map.set(name, value);
   });
   return map;
-}
-
-function assignProps(target, props, names) {
-  names.forEach(name => {
-    if (props[name] !== undefined && props[name] !== target[name]) {
-      target[name] = props[name];
-    }
-  });
 }
 
 function isEventHandler(name) {

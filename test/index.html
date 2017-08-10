@@ -12,12 +12,13 @@
       <ul class='planet-list'>
         ${planets.map(name => Shag.html`
           <li key=${name} onclick=${ () => console.log(name) }>
-            Hello <span style='color:blue'>${ name }</span>
+            Hello <span style=${Shag.css`color: ${'blue'}`}>${ name }</span>
             (<span contentManager=${
                 class extends Shag.UI {
                   render() { return name }
                 }
-              } />)
+              }
+              />)
           </li>
         `)}
       </ul>
@@ -59,6 +60,7 @@
   class PhoneForm extends Shag.UI {
     constructor() {
       super();
+      this.checkbox = null;
       this.updateState({ invalid: false });
       this.events.subscribe(event => {
         switch (event.type) {
@@ -79,6 +81,9 @@
     }
 
     render({ invalid }, { dispatch }) {
+      if (this.checkbox) {
+        this.checkbox.checked = invalid;
+      }
       return Shag.html`
         <form class='phone-form'>
           <span style=${invalid ? 'color:red' : ''}>Phone:</span>
@@ -87,8 +92,13 @@
             placeholder='xxx-xxx-xxxx'
             onInput=${e => dispatch('value-updated', e.target.value)}
             onBlur=${e => dispatch('input-blur', e.target.value)}
-          />
-          <input type='checkbox' checked=${invalid} onTargetUpdated=${e => e.target.checked = invalid} />
+            />
+          <input
+            type='checkbox'
+            checked=${invalid}
+            onTargetCreated=${e => this.checkbox = e.target}
+            onClick=${() => false}
+            />
           <button disabled=${invalid}>Save</button>
         </form>
       `;

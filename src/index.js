@@ -3,6 +3,7 @@ import { Element } from './Element.js';
 
 export { Element };
 export { UI } from './UI.js';
+export { css } from './css.js';
 
 export { renderToDOM } from './render-dom.js';
 export { renderToString } from './render-string.js';

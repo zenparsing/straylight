@@ -100,6 +100,7 @@ const Lifecycle = {
       node[symbols.domNodeData] = { states, subscription };
     }
 
+    // [Experimental]
     if (onTargetCreated) {
       onTargetCreated({ target: node });
     }

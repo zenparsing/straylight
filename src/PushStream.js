@@ -24,6 +24,7 @@ export class PushStream {
     return this._observable;
   }
 
+  // [Experimental]
   get observed() {
     return this._observers.size > 0;
   }

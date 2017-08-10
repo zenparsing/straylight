@@ -88,7 +88,7 @@
             onInput=${e => dispatch('value-updated', e.target.value)}
             onBlur=${e => dispatch('input-blur', e.target.value)}
           />
-          <input type='checkbox' onTargetUpdated=${e => e.target.checked = invalid} />
+          <input type='checkbox' checked=${invalid} onTargetUpdated=${e => e.target.checked = invalid} />
           <button disabled=${invalid}>Save</button>
         </form>
       `;

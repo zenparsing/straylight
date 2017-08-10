@@ -35,14 +35,14 @@
   class NestedStore extends Shag.UI {
     constructor() {
       super();
-      this.updateState({ planets: ['Foo', 'Bar'] });
+      this.setState({ planets: ['Foo', 'Bar'] });
       this.events.subscribe(event => {
         switch (event.type) {
           case 'add-planet':
-            this.updateState(data => ({ planets: [...data.planets, 'Bong'] }));
+            this.setState(data => ({ planets: [...data.planets, 'Bong'] }));
             break;
           case 'sort':
-            this.updateState(data => ({ planets: data.planets.sort() }));
+            this.setState(data => ({ planets: data.planets.sort() }));
             break;
         }
       });
@@ -61,17 +61,17 @@
     constructor() {
       super();
       this.checkbox = null;
-      this.updateState({ invalid: false });
+      this.setState({ invalid: false });
       this.events.subscribe(event => {
         switch (event.type) {
           case 'value-updated':
-            this.updateState({
+            this.setState({
               invalid: /[^\d-]/.test(event.detail),
             });
             break;
           case 'input-blur': {
             let value = event.detail;
-            this.updateState({
+            this.setState({
               invalid: /[^\d-]/.test(value) || value.replace(/[^\d]/g, '').length < 7,
             });
             break;
@@ -109,12 +109,12 @@
     constructor() {
       super();
       this._interval = null;
-      this.updateState({ time: new Date(), formatTime: null });
+      this.setState({ time: new Date(), formatTime: null });
     }
 
     start() {
       this._interval = setInterval(() => {
-        this.updateState({ time: new Date() });
+        this.setState({ time: new Date() });
       }, 1000);
     }
 
@@ -137,14 +137,14 @@
   class App extends Shag.UI {
     constructor() {
       super();
-      this.updateState({ counter: 1 });
+      this.setState({ counter: 1 });
       this.events.subscribe(event => {
         switch (event.type) {
           case 'reset':
-            this.updateState({ counter: 1 });
+            this.setState({ counter: 1 });
             break;
           case 'increment':
-            this.updateState(data => ({ counter: data.counter + 1 }));
+            this.setState(data => ({ counter: data.counter + 1 }));
             break;
         }
       });

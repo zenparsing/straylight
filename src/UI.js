@@ -53,7 +53,7 @@ export class UI {
     return this.store.read(fn);
   }
 
-  updateState(data) {
+  setState(data) {
     this.store.update(data);
   }
 
@@ -104,7 +104,7 @@ export class UI {
 
   static [symbols.mapStateToContent](states) {
     let ui = new this();
-    states.subscribe(state => ui.updateState(state));
+    states.subscribe(state => ui.setState(state));
     return ui;
   }
 

@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+<!-- Adapted from the MarkoJS website -->
+<head>
+  <script src='../dist/shag.js'></script>
+  <style>
+
+  .animated-sin-wave {
+    position: relative;
+    height: 150px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .animated-sin-wave > .bar {
+    position: absolute;
+    height: 100%;
+    border-radius: 50%;
+    max-width:10px;
+  }
+
+  </style>
+</head>
+<body>
+  <div id='mount'></div>
+  <script>
+
+  class SineWave extends Shag.UI {
+    constructor() {
+      super();
+      this.setState({
+        bars: 90,
+        barWidth: 100 / 90,
+        count: 0,
+        running: false,
+      });
+    }
+
+    start() {
+      this.setState({ running: true });
+    }
+
+    pause() {
+      this.setState({ running: false });
+    }
+
+    toggle() {
+      if (this.getState().running) {
+        this.pause();
+      } else {
+        this.start();
+      }
+    }
+
+    render({ bars, barWidth, count, running }) {
+      if (running) {
+        window.requestAnimationFrame(() => this.setState({ count: count + 1 }));
+      }
+
+      return Shag.html`
+        <div class='animated-sin-wave' onClick=${() => this.toggle()}>
+          ${
+            Array(bars).fill(0).map((x, i) => {
+              let translateY = Math.sin(count / 10 + i / 5) * 100 * .5;
+              let hue = (360 / bars * i - count) % 360;
+              let color = `hsl(${hue},95%,55%)`;
+              let rotation = (count + i) % 360;
+              let barX = barWidth * i;
+
+              let style = `
+                width: ${barWidth}%;
+                left: ${barX}%;
+                transform: scale(0.8,.5) translateY(${translateY}%) rotate(${rotation}deg);
+                background: ${color};
+              `;
+
+              return Shag.html`
+                <div class='bar' style=${style} />`;
+            })
+          }
+        </div>
+      `;
+    }
+  }
+
+  Shag.renderToDOM('#mount', new SineWave());
+
+  </script>
+</body>
+</html>

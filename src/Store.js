@@ -5,7 +5,7 @@ export class Store {
 
   constructor(data) {
     this._stream = new PushStream();
-    this._data = { ...data };
+    this._data = Object.assign({}, data);
   }
 
   read(fn) {

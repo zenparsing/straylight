@@ -4,7 +4,7 @@ export class Element {
 
   constructor(tag, props = {}, children = []) {
     // Copy props
-    props = { ...props };
+    props = Object.assign({}, props);
 
     // Enforce props.children === children
     if (children.length === 0 && Array.isArray(props.children)) {

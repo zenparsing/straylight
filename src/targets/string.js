@@ -1,7 +1,7 @@
 import Observable from 'zen-observable';
-import { PushStream } from './PushStream.js';
-import { Element } from './Element.js';
-import * as symbols from './symbols.js';
+import { PushStream } from '../PushStream.js';
+import { Element } from '../Element.js';
+import * as symbols from '../symbols.js';
 
 export function renderToString(updates) {
   return new Promise((resolve, reject) => {

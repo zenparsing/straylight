@@ -12,7 +12,7 @@
       <ul class='planet-list'>
         ${planets.map(name => Shag.html`
           <li key=${name} onclick=${ () => console.log(name) }>
-            Hello <span style=${Shag.css`color: ${'blue'}`}>${ name }</span>
+            Hello <span style='color:blue'>${ name }</span>
             (<span contentManager=${
                 class extends Shag.UI {
                   render() { return name }

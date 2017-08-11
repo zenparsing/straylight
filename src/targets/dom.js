@@ -40,7 +40,7 @@ function patchNode(target, element) {
   }
 
   if (element.tag === '#text') {
-    if (sameTagName(target, element)) {
+    if (target.nodeName === '#text') {
       if (target.nodeValue !== element.props.text) {
         target.nodeValue = element.props.text;
       }
@@ -49,7 +49,7 @@ function patchNode(target, element) {
     return target.ownerDocument.createTextNode(element.props.text);
   }
 
-  if (!sameTagName(target, element)) {
+  if (!compatible(target, element)) {
     target = target.ownerDocument.createElement(element.tag);
   }
 
@@ -196,12 +196,19 @@ function isEventHandler(name) {
   return name !== 'on' && name.startsWith('on');
 }
 
-function sameTagName(node, element) {
-  return String(element.tag).toLowerCase() === String(node.nodeName).toLowerCase();
+function compatible(node, element) {
+  let { tag } = element;
+  let { nodeName } = node;
+  return (
+    typeof tag === 'string' &&
+    typeof nodeName === 'string' &&
+    tag.toLowerCase() === nodeName.toLowerCase() &&
+    (nodeName !== 'INPUT' || element.props.type === node.type)
+  );
 }
 
 function shouldPatch(node, element) {
-  if (!sameTagName(node, element)) {
+  if (!compatible(node, element)) {
     return false;
   }
   if (element.props.id) {

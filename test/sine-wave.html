@@ -70,12 +70,13 @@
               let style = `
                 width: ${barWidth}%;
                 left: ${barX}%;
-                transform: scale(0.8,.5) translateY(${translateY}%) rotate(${rotation}deg);
+                transform: scale(0.5,.5) translateY(${translateY}%) rotate(${rotation}deg);
                 background: ${color};
               `;
 
               return Shag.html`
-                <div class='bar' style=${style} />`;
+                <div class='bar' style=${style} />
+              `;
             })
           }
         </div>

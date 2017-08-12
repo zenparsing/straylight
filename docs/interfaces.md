@@ -55,7 +55,38 @@ interface ElementConstructor {
 ```ts
 
 interface ContentManager {
-  [symbols.mapStateToContent](states: Observable<any>): Observable<ElementSource>;
+  [symbols.mapStateToContent](states: Observable<any>): ObservableLike<ElementSource>;
+}
+
+```
+
+### User Interfaces
+
+```ts
+
+interface UIContext {
+  dispatch(event: object): void;
+  dispatch(eventName: string, detail?: any): void;
+}
+
+interface UI extends ElementLike, ObservableLike<ElementSource> {
+  events: Observable<any>;
+  dispatchEvent(event: object): void;
+  dispatchEvent(eventName: string, detail?: any): void;
+
+  getState(fn?: object => any): object;
+  setState(data: object): void;
+  setState(fn: object => object): void;
+
+  start(): void;
+  pause(): void;
+
+  render(props: object, context: UIContext): ElementSource;
+}
+
+interface UIConstructor extends Renderable, ContentManager {
+  new(): UI;
+  mapPropsToState(props: object, context: UIContext): any;
 }
 
 ```

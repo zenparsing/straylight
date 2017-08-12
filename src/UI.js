@@ -38,10 +38,6 @@ export class UI {
     return this._updates;
   }
 
-  get store() {
-    return this._store;
-  }
-
   dispatchEvent(event, detail = null) {
     if (typeof event === 'string') {
       event = { type: event, detail };
@@ -50,11 +46,11 @@ export class UI {
   }
 
   getState(fn) {
-    return this.store.read(fn);
+    return this._store.read(fn);
   }
 
   setState(data) {
-    this.store.update(data);
+    this._store.update(data);
   }
 
   render() {

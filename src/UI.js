@@ -6,7 +6,7 @@ import * as symbols from './symbols.js';
 
 class UIContext {
   constructor(ui) {
-    this.dispatch = (event, detail = null) => ui.dispatchEvent(event, detail);
+    this.dispatch = (event, detail = null) => ui.dispatch(event, detail);
   }
 }
 
@@ -38,7 +38,7 @@ export class UI {
     return this._updates;
   }
 
-  dispatchEvent(event, detail = null) {
+  dispatch(event, detail = null) {
     if (typeof event === 'string') {
       event = { type: event, detail };
     }

@@ -97,7 +97,7 @@ const Lifecycle = {
       let updates = contentManager[symbols.mapStateToContent](states.observable);
       states.next(props.contentManagerState);
       let subscription = renderToDOM(node, updates);
-      node[symbols.domNodeData] = { states, subscription };
+      node[symbols.nodeData] = { states, subscription };
     }
 
     // [Experimental]
@@ -107,18 +107,18 @@ const Lifecycle = {
   },
 
   updated(node, props) {
-    let data = node[symbols.domNodeData];
+    let data = node[symbols.nodeData];
     if (data) {
       data.states.next(props.contentManagerState);
     }
   },
 
   removed(node) {
-    let data = node[symbols.domNodeData];
+    let data = node[symbols.nodeData];
     if (data) {
       data.subscription.unsubscribe();
       data.states.complete();
-      node[symbols.domNodeData] = null;
+      node[symbols.nodeData] = null;
     }
   },
 

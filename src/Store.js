@@ -1,4 +1,4 @@
-import { PushStream } from './PushStream.js';
+import PushStream from 'zen-push';
 import * as symbols from './symbols.js';
 
 export class Store {

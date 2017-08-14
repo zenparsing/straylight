@@ -1,5 +1,5 @@
 import Observable from 'zen-observable';
-import { PushStream } from '../PushStream.js';
+import PushStream from 'zen-push';
 import { Element } from '../Element.js';
 import * as symbols from '../symbols.js';
 

@@ -11,7 +11,8 @@
   "dependencies": {
     "htmltag": "^0.1.6",
     "symbol-observable": "^1.0.4",
-    "zen-observable": "^0.5.2"
+    "zen-observable": "^0.5.2",
+    "zen-push": "^0.1.0"
   },
   "devDependencies": {
     "esdown": "^1.2.2",

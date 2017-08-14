@@ -1,6 +1,6 @@
 import Observable from 'zen-observable';
+import PushStream from 'zen-push';
 import { Element } from './Element.js';
-import { PushStream } from './PushStream.js';
 import { Store } from './Store.js';
 import * as symbols from './symbols.js';
 

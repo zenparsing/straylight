@@ -2,19 +2,18 @@ import * as symbols from './symbols.js';
 
 export class Element {
 
-  constructor(tag, props = {}, children = []) {
-    // Copy props
-    props = Object.assign({}, props);
-
-    // Enforce props.children === children
-    if (children.length === 0 && Array.isArray(props.children)) {
+  constructor(tag, props = null, children = null) {
+    // Pull children from props
+    if (props && (!children || children.length === 0) && Array.isArray(props.children)) {
       children = props.children;
-    } else {
-      props.children = children;
     }
 
     // Convert children to elements
-    children = children.map(Element.from);
+    children = children ? children.map(Element.from) : [];
+
+    // Copy props
+    props = Object.assign({}, props);
+    props.children = children;
 
     this.tag = tag;
     this.props = props;

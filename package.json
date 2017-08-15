@@ -12,14 +12,14 @@
     "htmltag": "^0.1.6",
     "symbol-observable": "^1.0.4",
     "zen-observable": "^0.5.2",
-    "zen-push": "^0.1.1"
+    "zen-push": "^0.1.2"
   },
   "devDependencies": {
     "esdown": "^1.2.2",
     "eslint": "^4.2.0"
   },
   "scripts": {
-    "test": "eslint src/*.js",
-    "pack": "eslint src/*.js && esdown - src/index.js dist/shag.js -b -g Shag"
+    "test": "eslint src/*.js && esdown test/index.js",
+    "pack": "esdown - src/index.js dist/shag.js -b -g Shag"
   }
 }

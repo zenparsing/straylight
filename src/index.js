@@ -1,6 +1,8 @@
 import htmltag from 'htmltag';
 import { Element } from './Element.js';
+import * as symbols from './symbols.js';
 
+export { symbols };
 export { Element };
 export { UI } from './UI.js';
 

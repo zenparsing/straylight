@@ -5,6 +5,10 @@ import * as symbols from '../symbols.js';
 
 export function renderToString(updates) {
   return new Promise((resolve, reject) => {
+    if (typeof updates[symbols.element] === 'function') {
+      updates = Observable.of(updates);
+    }
+
     Observable.from(updates).subscribe({
       _subscription: null,
       start(s) { this._subscription = s; },

@@ -64,26 +64,22 @@ interface ContentManager {
 
 ```ts
 
-interface UIContext {
-  dispatch(event: object): void;
-  dispatch(eventName: string, detail?: any): void;
-}
-
 interface UIConstructor extends Renderable, ContentManager {
   new(): UI;
-  mapPropsToState(props: object, context: UIContext): any;
+  mapPropsToState(props: object, context: object): any;
 }
 
-interface UI extends ElementLike, ObservableLike<ElementSource> {
+interface UI extends ObservableLike<ElementSource> {
   events: Observable<any>;
-  dispatch(event: object): void;
-  dispatch(eventName: string, detail?: any): void;
+  getContext(): object;
+  setContext(context): void;
   getState(fn?: object => any): object;
   setState(data: object): void;
   setState(fn: object => object): void;
   start(): void;
   pause(): void;
-  render(props: object, context: UIContext): ElementSource;
+  render(props: object, context: object): ElementSource;
+  renderElement(): Element;
 }
 
 ```

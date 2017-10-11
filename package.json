@@ -1,13 +1,13 @@
 {
-  "name": "shag",
+  "name": "straylight",
   "version": "0.1.0",
   "description": "HTML templating and update engine",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/zenparsing/shag.git"
+    "url": "https://github.com/zenparsing/straylight.git"
   },
-  "homepage": "https://github.com/zenparsing/shag",
+  "homepage": "https://github.com/zenparsing/straylight",
   "dependencies": {
     "htmltag": "^0.1.6",
     "symbol-observable": "^1.0.4",
@@ -20,6 +20,6 @@
   },
   "scripts": {
     "test": "eslint src/*.js test/*.js && esdown test/index.js",
-    "pack": "esdown - src/index.js dist/shag.js -b -g Shag"
+    "pack": "esdown - src/index.js dist/straylight.js -b -g Straylight"
   }
 }

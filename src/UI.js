@@ -4,12 +4,6 @@ import { Element } from './Element.js';
 import { Store } from './Store.js';
 import * as symbols from './symbols.js';
 
-class UIContext {
-  constructor(ui) {
-    this.dispatch = (event, detail = null) => ui.dispatch(event, detail);
-  }
-}
-
 class UIUpdate {
   constructor(ui) {
     this._ui = ui;
@@ -17,32 +11,24 @@ class UIUpdate {
   }
 
   [symbols.element]() {
-    return this._element || (this._element = Element.from(this._ui));
+    if (!this._element) {
+      this._element = this._ui.renderElement();
+      this._ui = null;
+    }
+    return this._element;
   }
 }
 
 export class UI {
 
   constructor() {
-    this._events = new PushStream();
     this._store = new Store();
-    this._context = new UIContext(this);
+    this._context = null;
     this._updates = this._createUpdateObservable();
-  }
-
-  get events() {
-    return this._events.observable;
   }
 
   [symbols.observable]() {
     return this._updates;
-  }
-
-  dispatch(event, detail = null) {
-    if (typeof event === 'string') {
-      event = { type: event, detail };
-    }
-    this._events.next(event);
   }
 
   getState(fn) {
@@ -51,6 +37,17 @@ export class UI {
 
   setState(data) {
     this._store.update(data);
+  }
+
+  getContext() {
+    return this._store.read(data => {
+      let proto = data.parentContext || null;
+      return Object.assign(Object.create(proto), this._context);
+    });
+  }
+
+  setContext(data) {
+    this._context = data;
   }
 
   render() {
@@ -88,14 +85,15 @@ export class UI {
     });
   }
 
-  [symbols.element]() {
-    return this._store.read(data =>
-      Element.evaluate(this.render(data, this._context), this._context)
-    );
+  renderElement() {
+    return this._store.read(data => {
+      let context = this.getContext();
+      return Element.evaluate(this.render(data, context), context);
+    });
   }
 
-  static mapPropsToState() {
-    return null;
+  static mapPropsToState(props, context) {
+    return Object.assign({ parentContext: context }, props);
   }
 
   static [symbols.mapStateToContent](states) {

@@ -3,6 +3,8 @@ import PushStream from 'zen-push';
 import { Element } from '../Element.js';
 import * as symbols from '../symbols.js';
 
+let inAnimationFrame = false;
+
 export function renderToDOM(node, updates) {
   if (typeof node === 'string') {
     node = window.document.querySelector(node);
@@ -12,11 +14,24 @@ export function renderToDOM(node, updates) {
     throw new TypeError(`${node} is not a DOM element`);
   }
 
+  if (typeof updates[symbols.element] === 'function') {
+    updates = Observable.of(updates);
+  }
+
   let current = null;
   let scheduled = false;
 
   function onFrame() {
-    scheduled = false;
+    try {
+      scheduled = false;
+      inAnimationFrame = true;
+      patch();
+    } finally {
+      inAnimationFrame = false;
+    }
+  }
+
+  function patch() {
     let tree = Element.from(current);
     patchChildren(node, tree.tag === '#document-fragment' ? tree.children : [tree]);
   }
@@ -24,8 +39,11 @@ export function renderToDOM(node, updates) {
   return Observable.from(updates).subscribe(value => {
     current = value;
     if (!scheduled) {
-      scheduled = true;
-      window.requestAnimationFrame(onFrame);
+      if (inAnimationFrame) {
+        patch();
+      } else {
+        window.requestAnimationFrame(onFrame);
+      }
     }
   });
 }

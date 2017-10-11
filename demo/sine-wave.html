@@ -2,7 +2,7 @@
 <html>
 <!-- Adapted from the MarkoJS website -->
 <head>
-  <script src='../dist/shag.js'></script>
+  <script src='../dist/straylight.js'></script>
   <style>
 
   .animated-sin-wave {
@@ -25,7 +25,7 @@
   <div id='mount'></div>
   <script>
 
-  class SineWave extends Shag.UI {
+  class SineWave extends Straylight.UI {
     constructor() {
       super();
       this.setState({
@@ -57,7 +57,7 @@
         window.requestAnimationFrame(() => this.setState({ count: count + 1 }));
       }
 
-      return Shag.html`
+      return Straylight.html`
         <div class='animated-sin-wave' onClick=${() => this.toggle()}>
           ${
             Array(bars).fill(0).map((x, i) => {
@@ -74,7 +74,7 @@
                 background: ${color};
               `;
 
-              return Shag.html`
+              return Straylight.html`
                 <div class='bar' style=${style} />
               `;
             })
@@ -84,7 +84,7 @@
     }
   }
 
-  Shag.renderToDOM('#mount', new SineWave());
+  Straylight.renderToDOM('#mount', new SineWave());
 
   </script>
 </body>

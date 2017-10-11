@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src='../dist/shag.js'></script>
+  <script src='../dist/straylight.js'></script>
 </head>
 <body>
   <div id='mount'></div>
   <script>
 
   function PlanetList({ planets }) {
-    return Shag.html`
+    return Straylight.html`
       <ul class='planet-list'>
-        ${planets.map(name => Shag.html`
+        ${planets.map(name => Straylight.html`
           <li key=${name} onclick=${ () => console.log(name) }>
             Hello <span style='color:blue'>${ name }</span>
             (<span contentManager=${
-                class extends Shag.UI {
+                class extends Straylight.UI {
                   render() { return name }
                 }
               }
@@ -26,13 +26,13 @@
   }
 
   function Message(props) {
-    return Shag.html`
+    return Straylight.html`
       <p onTargetCreated=${e => console.log('created', e)}>Here is a message:</p>
       <p>${props.children}</p>
     `;
   }
 
-  class NestedStore extends Shag.UI {
+  class NestedStore extends Straylight.UI {
     constructor() {
       super();
       this.setState({ planets: ['Foo', 'Bar'] });
@@ -49,7 +49,7 @@
     }
 
     render(props, { dispatch }) {
-      return Shag.html`
+      return Straylight.html`
         <${PlanetList} planets=${props.planets} />
         <button onclick=${() => dispatch('add-planet')}>Add</button>
         <button onclick=${() => dispatch('sort')}>Sort</button>
@@ -57,7 +57,7 @@
     }
   }
 
-  class PhoneForm extends Shag.UI {
+  class PhoneForm extends Straylight.UI {
     constructor() {
       super();
       this.checkbox = null;
@@ -84,7 +84,7 @@
       if (this.checkbox) {
         this.checkbox.checked = invalid;
       }
-      return Shag.html`
+      return Straylight.html`
         <form class='phone-form'>
           <span style=${invalid ? 'color:red' : ''}>Phone:</span>
           <input
@@ -105,7 +105,7 @@
     }
   }
 
-  class Clock extends Shag.UI {
+  class Clock extends Straylight.UI {
     constructor() {
       super();
       this._interval = null;
@@ -123,7 +123,7 @@
     }
 
     render({ time, formatTime }) {
-      return Shag.html`
+      return Straylight.html`
         <!--<p>Hello, world!</p>-->
         <span>${formatTime ? formatTime(time) : time.toLocaleTimeString()}</span>
       `;
@@ -134,7 +134,7 @@
     }
   }
 
-  class App extends Shag.UI {
+  class App extends Straylight.UI {
     constructor() {
       super();
       this.setState({ counter: 1 });
@@ -151,7 +151,7 @@
     }
 
     render(props, { dispatch }) {
-      return Shag.html`
+      return Straylight.html`
         <div>
           <${PlanetList} key='heyhey' planets=${['Earth', 'Mars', 'Saturn']} />
           <${Message}>
@@ -175,8 +175,8 @@
   }
 
   let app = new App();
-  Shag.renderToDOM('#mount', app);
-  Shag.renderToString(app).then(console.log);
+  Straylight.renderToDOM('#mount', app);
+  Straylight.renderToString(app).then(console.log);
 
   </script>
 </body>

@@ -14,7 +14,7 @@ export function renderToDOM(node, updates) {
     throw new TypeError(`${node} is not a DOM element`);
   }
 
-  if (typeof updates[symbols.element] === 'function') {
+  if (updates[symbols.element]) {
     updates = Observable.of(updates);
   }
 
@@ -115,7 +115,7 @@ const Lifecycle = {
       let updates = contentManager[symbols.mapStateToContent](states.observable);
       states.next(props.contentManagerState);
       let subscription = renderToDOM(node, updates);
-      node[symbols.nodeData] = { states, subscription };
+      node[symbols.nodeData] = { states, subscription, contentManager };
     }
 
     // [Experimental]
@@ -229,11 +229,18 @@ function shouldPatch(node, element) {
   if (!compatible(node, element)) {
     return false;
   }
-  if (element.props.id) {
-    return node.id === element.props.id;
+  let { props } = element;
+  if (props.contentManager) {
+    let data = node[symbols.nodeData];
+    if (!data || data.contentManager !== props.contentManager) {
+      return false;
+    }
   }
-  if (element.props.key) {
-    return node.getAttribute('ui-key') === element.props.key;
+  if (props.id) {
+    return node.id === props.id;
+  }
+  if (props.key) {
+    return node.getAttribute('ui-key') === props.key;
   }
   return true;
 }

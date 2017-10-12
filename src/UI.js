@@ -5,6 +5,7 @@ import { Store } from './Store.js';
 import * as symbols from './symbols.js';
 
 class UIUpdate {
+
   constructor(ui) {
     this._ui = ui;
     this._element = null;
@@ -17,6 +18,7 @@ class UIUpdate {
     }
     return this._element;
   }
+
 }
 
 export class UI {

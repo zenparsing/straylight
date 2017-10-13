@@ -6,11 +6,11 @@ import * as symbols from '../symbols.js';
 let inAnimationFrame = false;
 
 export function renderToDOM(node, updates) {
-  if (typeof node === 'string') {
-    node = window.document.querySelector(node);
+  if (typeof document === 'object' && typeof node === 'string') {
+    node = document.querySelector(node);
   }
 
-  if (!node) {
+  if (!node || !node.nodeName) {
     throw new TypeError(`${node} is not a DOM element`);
   }
 

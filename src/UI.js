@@ -56,34 +56,13 @@ export class UI {
     throw new Error('Missing render method for UI class');
   }
 
-  // [Experimental]
-  start() {
-    return;
-  }
-
-  // [Experimental]
-  pause() {
-    return;
-  }
-
   _createUpdateObservable() {
     let updateStream = new PushStream();
     this._store.subscribe(() => updateStream.next(new UIUpdate(this)));
     return new Observable(sink => {
-      // [Experimental] Transitioning from not-observed => observed
-      if (!updateStream.observed) {
-        this.start();
-      }
       // Send an update for the current state
       sink.next(new UIUpdate(this));
-      let subscription = updateStream.observable.subscribe(sink);
-      return () => {
-        subscription.unsubscribe();
-        // [Experimental] Transitioning from observed => not-observed
-        if (!updateStream.observed) {
-          this.pause();
-        }
-      };
+      return updateStream.observable.subscribe(sink);
     });
   }
 

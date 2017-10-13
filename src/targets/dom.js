@@ -123,39 +123,74 @@ function patchAttributes(target, props) {
   }
 }
 
+const NodeData = {
+
+  get(node) {
+    return node[symbols.nodeData] || {};
+  },
+
+  assign(node, data) {
+    let nodeData = node[symbols.nodeData];
+    if (!nodeData) {
+      node[symbols.nodeData] = data;
+    } else {
+      Object.assign(nodeData, data);
+    }
+  },
+
+  clear(node) {
+    node[symbols.nodeData] = null;
+  },
+
+};
+
 const Lifecycle = {
 
   created(node, props) {
-    let { contentManager, onTargetCreated } = props;
+    let { contentManager, onTargetCreated, onTargetUpdated, onTargetRemoved } = props;
 
     if (contentManager) {
       let states = new PushStream();
       let updates = contentManager[symbols.mapStateToContent](states.observable);
       states.next(props.contentManagerState);
       let subscription = renderToDOM(node, updates);
-      node[symbols.nodeData] = { states, subscription, contentManager };
+      NodeData.assign(node, { states, subscription, contentManager });
     }
 
-    // [Experimental]
+    if (onTargetUpdated || onTargetRemoved) {
+      NodeData.assign(node, { onTargetUpdated, onTargetRemoved });
+    }
+
     if (onTargetCreated) {
       schedule(() => onTargetCreated({ target: node }));
     }
   },
 
   updated(node, props) {
-    let data = node[symbols.nodeData];
-    if (data) {
-      data.states.next(props.contentManagerState);
+    let { states, onTargetUpdated } = NodeData.get(node);
+
+    if (states) {
+      states.next(props.contentManagerState);
+    }
+
+    if (onTargetUpdated) {
+      schedule(() => onTargetUpdated({ target: node }));
     }
   },
 
   removed(node) {
-    let data = node[symbols.nodeData];
-    if (data) {
-      data.subscription.unsubscribe();
-      data.states.complete();
-      node[symbols.nodeData] = null;
+    let { subscription, states, onTargetRemoved } = NodeData.get(node);
+
+    if (states) {
+      states.complete();
+      subscription.unsubscribe();
     }
+
+    if (onTargetRemoved) {
+      schedule(() => onTargetRemoved({ target: node }));
+    }
+
+    NodeData.clear(node);
   },
 
 };

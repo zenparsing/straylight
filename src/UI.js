@@ -13,7 +13,7 @@ class UIUpdate {
 
   [symbols.element]() {
     if (!this._element) {
-      this._element = this._ui.renderElement();
+      this._element = this._ui.renderState();
       this._ui = null;
     }
     return this._element;
@@ -87,7 +87,7 @@ export class UI {
     });
   }
 
-  renderElement() {
+  renderState() {
     return this._store.read(data => {
       let context = this.getContext();
       return Element.evaluate(this.render(data, context), context);

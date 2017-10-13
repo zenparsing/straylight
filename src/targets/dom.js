@@ -48,7 +48,19 @@ export function renderToDOM(node, updates) {
   });
 }
 
-function patchNode(target, element) {
+function getNamespace(element, context) {
+  if (element.props.xmlns) {
+    return element.props.xmlns;
+  }
+  switch (element.tag.toLowerCase()) {
+    case 'svg':
+      return 'http://www.w3.org/2000/svg';
+    default:
+      return context.namespaceURI || 'http://www.w3.org/1999/xhtml';
+  }
+}
+
+function patchNode(target, element, context) {
   if (typeof element.tag !== 'string') {
     throw new Error(`Invalid element tag ${element.tag}`);
   }
@@ -58,17 +70,18 @@ function patchNode(target, element) {
   }
 
   if (element.tag === '#text') {
-    if (target.nodeName === '#text') {
+    if (target && target.nodeName === '#text') {
       if (target.nodeValue !== element.props.text) {
         target.nodeValue = element.props.text;
       }
       return target;
     }
-    return target.ownerDocument.createTextNode(element.props.text);
+    return context.ownerDocument.createTextNode(element.props.text);
   }
 
-  if (!compatible(target, element)) {
-    target = target.ownerDocument.createElement(element.tag);
+  if (!target || !compatible(target, element)) {
+    let ns = getNamespace(element, context);
+    target = context.ownerDocument.createElementNS(ns, element.tag);
   }
 
   patchAttributes(target, element.props);
@@ -143,7 +156,6 @@ const Lifecycle = {
 };
 
 function patchChildren(target, children) {
-  let noMatch = { ownerDocument: target.ownerDocument };
   let size = 0;
   children.forEach(function patchChild(child) {
     // Recurse into fragments
@@ -152,7 +164,7 @@ function patchChildren(target, children) {
       return;
     }
     // Try to find a matching child in the target
-    let matched = noMatch;
+    let matched = null;
     for (let i = size; i < target.childNodes.length; ++i) {
       let node = target.childNodes[i];
       if (shouldPatch(node, child)) {
@@ -161,7 +173,7 @@ function patchChildren(target, children) {
       }
     }
     // Patch a DOM node
-    let patched = patchNode(matched, child);
+    let patched = patchNode(matched, child, target);
     // Insert into the tree if not already in the correct position
     let sibling = target.childNodes[size] || null;
     if (patched !== sibling) {

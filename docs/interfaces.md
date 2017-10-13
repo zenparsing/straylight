@@ -67,19 +67,22 @@ interface ContentManager {
 interface UIConstructor extends Renderable, ContentManager {
   new(): UI;
   mapPropsToState(props: object, context: object): any;
+  tagName: string;
 }
 
 interface UI extends ObservableLike<ElementSource> {
-  events: Observable<any>;
   getContext(): object;
   setContext(context): void;
+
   getState(fn?: object => any): object;
   setState(data: object): void;
   setState(fn: object => object): void;
+
   start(): void;
   pause(): void;
-  render(props: object, context: object): ElementSource;
-  renderElement(): Element;
+
+  render: RenderFunction;
+  renderState(): Element;
 }
 
 ```

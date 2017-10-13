@@ -98,6 +98,14 @@ export class UI {
     return Object.assign({ parentContext: context }, props);
   }
 
+  static get tagName() {
+    let name = this.name.toLowerCase();
+    if (!name || name === 'ui') {
+      name = 'x';
+    }
+    return `ui-${ name }`;
+  }
+
   static [symbols.mapStateToContent](states) {
     let ui = new this();
     states.subscribe(state => ui.setState(state));
@@ -105,7 +113,7 @@ export class UI {
   }
 
   static [symbols.render](props, context) {
-    return new Element('ui-container', {
+    return new Element(this.tagName, {
       key: props.key,
       contentManager: this,
       contentManagerState: this.mapPropsToState(props, context),

@@ -3,11 +3,33 @@ import PushStream from 'zen-push';
 import { Element } from '../Element.js';
 import * as symbols from '../symbols.js';
 
-let inAnimationFrame = false;
+const schedule = function makeScheduler() {
+  let scheduled = false;
+  let callbacks = [];
+
+  function run() {
+    try {
+      while (callbacks.length > 0) {
+        callbacks.shift()();
+      }
+      scheduled = false;
+    } catch (err) {
+      window.requestAnimationFrame(run);
+    }
+  }
+
+  return function schedule(fn) {
+    callbacks.push(fn);
+    if (!scheduled) {
+      scheduled = true;
+      window.requestAnimationFrame(run);
+    }
+  };
+}();
 
 export function renderToDOM(node, updates) {
-  if (typeof document === 'object' && typeof node === 'string') {
-    node = document.querySelector(node);
+  if (typeof node === 'string') {
+    node = window.document.querySelector(node);
   }
 
   if (!node || !node.nodeName) {
@@ -19,17 +41,6 @@ export function renderToDOM(node, updates) {
   }
 
   let current = null;
-  let scheduled = false;
-
-  function onFrame() {
-    try {
-      scheduled = false;
-      inAnimationFrame = true;
-      patch();
-    } finally {
-      inAnimationFrame = false;
-    }
-  }
 
   function patch() {
     let tree = Element.from(current);
@@ -38,13 +49,7 @@ export function renderToDOM(node, updates) {
 
   return Observable.from(updates).subscribe(value => {
     current = value;
-    if (!scheduled) {
-      if (inAnimationFrame) {
-        patch();
-      } else {
-        window.requestAnimationFrame(onFrame);
-      }
-    }
+    schedule(patch);
   });
 }
 
@@ -133,7 +138,7 @@ const Lifecycle = {
 
     // [Experimental]
     if (onTargetCreated) {
-      onTargetCreated({ target: node });
+      schedule(() => onTargetCreated({ target: node }));
     }
   },
 

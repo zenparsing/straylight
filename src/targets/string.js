@@ -31,6 +31,12 @@ const HTML_ESCAPES = {
   '`': '&#x60;',
 };
 
+const SELF_CLOSING = new RegExp('^(?:' + [
+  'area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command',
+  'embed', 'frame', 'hr', 'img', 'input', 'isindex', 'keygen',
+  'link', 'meta', 'param', 'source', 'track', 'wbr',
+].join('|') + ')$', 'i');
+
 function esc(s) {
   s = '' + (s || '');
   return /[&<>"'`]/.test(s) ? s.replace(/[&<>"'`]/g, m => HTML_ESCAPES[m]) : s;
@@ -98,7 +104,11 @@ function stringify(element) {
         if (pairs.length > 0) {
           open += ' ' + pairs.join(' ');
         }
-        html = `<${open}>${html}</${tag}>`;
+        if (!html && SELF_CLOSING.test(tag)) {
+          html = `<${open} />`;
+        } else {
+          html = `<${open}>${html}</${tag}>`;
+        }
       }
       return html;
     });

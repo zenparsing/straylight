@@ -78,11 +78,12 @@ export class UI {
   }
 
   static get tagName() {
-    let name = this.name.toLowerCase();
-    if (!name || name === 'ui') {
-      name = 'x';
+    let { name } = this;
+    if (!name) { // IE11
+      name = 'UI';
     }
-    return `ui-${ name }`;
+    name = name.toLowerCase();
+    return `ui-${ name === 'ui' ? 'x' : name }`;
   }
 
   static [symbols.mapStateToContent](states) {

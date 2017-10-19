@@ -15,6 +15,7 @@ const schedule = function makeScheduler() {
       scheduled = false;
     } catch (err) {
       window.requestAnimationFrame(run);
+      throw err;
     }
   }
 

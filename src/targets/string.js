@@ -83,6 +83,10 @@ function tryAsync(fn) {
   return new Promise(resolve => resolve(fn()));
 }
 
+function isRawTag(tag) {
+  return tag === 'script' || tag === 'style';
+}
+
 function stringify(element) {
   return tryAsync(() => {
     if (element.tag === '#text') {
@@ -95,8 +99,12 @@ function stringify(element) {
       return renderContentManager(props.contentManager, props.contentManagerState);
     }
 
-    return Promise.all(children.map(stringify)).then(subtrees => {
-      let html = subtrees.join('');
+    let subtrees = isRawTag(element.tag) ?
+      children.map(c => c.props.text || '') :
+      children.map(stringify);
+
+    return Promise.all(subtrees).then(list => {
+      let html = list.join('');
       if (tag !== '#document-fragment') {
         let attributes = toAttributes(props);
         let open = element.tag;

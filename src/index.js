@@ -10,7 +10,7 @@ export { renderToDOM } from './targets/dom.js';
 export { renderToString } from './targets/string.js';
 
 export function createElement(tag, props, children) {
-  if (tag[0] === '#') {
+  if (typeof tag === 'string' && tag[0] === '#') {
     throw new Error('Tag cannot begin with the character "#"');
   }
   return new Element(tag, props, children);

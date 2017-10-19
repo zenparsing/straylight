@@ -9,18 +9,18 @@
   },
   "homepage": "https://github.com/zenparsing/straylight",
   "dependencies": {
-    "htmltag": "^0.1.7",
+    "htmltag": "^0.1.12",
     "symbol-observable": "^1.0.4",
-    "zen-observable": "^0.5.2",
-    "zen-push": "^0.1.2"
+    "zen-observable": "^0.6.0",
+    "zen-push": "^0.1.3"
   },
   "devDependencies": {
-    "esdown": "^1.2.2",
+    "esdown": "^1.2.3",
     "eslint": "^4.2.0"
   },
   "scripts": {
     "test": "eslint src/**/*.js test/*.js && esdown test/index.js",
-    "pack": "esdown - src/index.js dist/straylight.js -b -g Straylight",
+    "pack": "esdown - src/index.js dist/straylight.js -b --deep -g Straylight",
     "prepublishOnly": "npm run pack"
   }
 }

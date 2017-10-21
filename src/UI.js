@@ -56,13 +56,30 @@ export class UI {
     throw new Error('Missing render method for UI class');
   }
 
+  start() {
+    return;
+  }
+
+  pause() {
+    return;
+  }
+
   _createUpdateObservable() {
     let updateStream = new PushStream();
     this._store.subscribe(() => updateStream.next(new UIUpdate(this)));
     return new Observable(sink => {
+      if (!updateStream.observed) {
+        this.start();
+      }
       // Send an update for the current state
       sink.next(new UIUpdate(this));
-      return updateStream.observable.subscribe(sink);
+      let subscription = updateStream.observable.subscribe(sink);
+      return () => {
+        subscription.unsubscribe();
+        if (!updateStream.observed) {
+          this.pause();
+        }
+      };
     });
   }
 
@@ -73,8 +90,8 @@ export class UI {
     });
   }
 
-  static mapPropsToState(props, context) {
-    return Object.assign({ parentContext: context }, props);
+  static mapPropsToState(props) {
+    return props;
   }
 
   static get tagName() {
@@ -82,8 +99,7 @@ export class UI {
     if (!name) { // IE11
       name = 'UI';
     }
-    name = name.toLowerCase();
-    return `ui-${ name === 'ui' ? 'x' : name }`;
+    return `ui-${ name === 'UI' ? 'x' : name.toLowerCase() }`;
   }
 
   static [symbols.mapStateToContent](states) {
@@ -96,7 +112,10 @@ export class UI {
     return new Element(this.tagName, {
       key: props.key,
       contentManager: this,
-      contentManagerState: this.mapPropsToState(props, context),
+      contentManagerState: Object.assign(
+        { parentContext: context },
+        this.mapPropsToState(props, context)
+      ),
     });
   }
 

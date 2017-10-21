@@ -58,12 +58,7 @@
       }
 
       return Straylight.html`
-        <div
-          class='animated-sin-wave'
-          onClick=${() => this.toggle()}
-          onTargetCreated=${() => this.start()}
-          onTargetRemoved=${() => this.stop()}
-          >
+        <div class='animated-sin-wave' onClick=${() => this.toggle()}>
           ${
             Array(bars).fill(0).map((x, i) => {
               let translateY = Math.sin(count / 10 + i / 5) * 100 * .5;

@@ -78,6 +78,9 @@ interface UI extends ObservableLike<ElementSource> {
   setState(data: object): void;
   setState(fn: object => object): void;
 
+  start(): void;
+  pause(): void;
+
   render: RenderFunction;
   renderState(): Element;
 }

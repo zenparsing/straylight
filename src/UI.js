@@ -26,7 +26,14 @@ export class UI {
   constructor() {
     this._store = new Store();
     this._context = null;
-    this._updates = this._createUpdateObservable();
+
+    let updateStream = new PushStream(this);
+    this._store.subscribe(() => updateStream.next(new UIUpdate(this)));
+    this._updates = new Observable(sink => {
+      let subscription = updateStream.observable.subscribe(sink);
+      sink.next(new UIUpdate(this));
+      return subscription;
+    });
   }
 
   [symbols.observable]() {
@@ -42,10 +49,10 @@ export class UI {
   }
 
   getContext() {
-    return this._store.read(data => {
-      let proto = data.parentContext || null;
-      return Object.assign(Object.create(proto), this._context);
-    });
+    return this._store.read(data => Object.assign(
+      Object.create(data.parentContext || null),
+      this._context)
+    );
   }
 
   setContext(data) {
@@ -62,25 +69,6 @@ export class UI {
 
   pause() {
     return;
-  }
-
-  _createUpdateObservable() {
-    let updateStream = new PushStream();
-    this._store.subscribe(() => updateStream.next(new UIUpdate(this)));
-    return new Observable(sink => {
-      if (!updateStream.observed) {
-        this.start();
-      }
-      // Send an update for the current state
-      sink.next(new UIUpdate(this));
-      let subscription = updateStream.observable.subscribe(sink);
-      return () => {
-        subscription.unsubscribe();
-        if (!updateStream.observed) {
-          this.pause();
-        }
-      };
-    });
   }
 
   renderState() {

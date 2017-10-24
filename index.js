@@ -1,1 +1,1 @@
-module.exports = require('./dist/straylight');
+module.exports = require('./dist');

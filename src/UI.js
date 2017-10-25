@@ -3,7 +3,14 @@ import { Element } from './Element.js';
 import { Store } from './Store.js';
 import * as symbols from './symbols.js';
 
+class UIStore extends Store {
+  constructor(ui) { super(); this._ui = ui; }
+  start() { this._ui.start(); }
+  pause() { this._ui.pause(); }
+}
+
 class UIUpdate {
+
   constructor(ui) {
     this._ui = ui;
     this._element = null;
@@ -16,13 +23,14 @@ class UIUpdate {
     }
     return this._element;
   }
+
 }
 
 export class UI {
 
   constructor() {
     this._context = null;
-    this._store = new Store(this);
+    this._store = new UIStore(this);
     this._updates = Observable.from(this._store).map(() => new UIUpdate(this));
   }
 

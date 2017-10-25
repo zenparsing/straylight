@@ -4,8 +4,8 @@ import * as symbols from './symbols.js';
 
 export class Store {
 
-  constructor(data, options) {
-    this._data = Object.assign({}, data);
+  constructor(options) {
+    this._data = Object.create(null);
     this._stream = new PushStream(options);
     this._updates = new Observable(sink => {
       sink.next(this._data);

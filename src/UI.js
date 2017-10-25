@@ -22,7 +22,7 @@ export class UI {
 
   constructor() {
     this._context = null;
-    this._store = new Store({}, this);
+    this._store = new Store(this);
     this._updates = Observable.from(this._store).map(() => new UIUpdate(this));
   }
 

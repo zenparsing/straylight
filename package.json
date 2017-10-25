@@ -1,6 +1,6 @@
 {
   "name": "straylight",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "HTML templating and update engine",
   "license": "MIT",
   "repository": {
@@ -15,11 +15,11 @@
     "zen-push": "^0.1.4"
   },
   "devDependencies": {
-    "esdown": "^1.2.4",
+    "esdown": "^1.2.5",
     "eslint": "^4.2.0"
   },
   "scripts": {
-    "test": "eslint src/**/*.js test/*.js && esdown test/index.js",
+    "test": "eslint src/*.js src/*/*.js test/*.js && esdown test/index.js",
     "pack": "esdown - src/index.js dist/index.js -b",
     "pack-global": "esdown - src/index.js dist/straylight.js -b --deep -g Straylight",
     "prepublishOnly": "npm run pack && npm run pack-global"

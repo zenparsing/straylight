@@ -1,18 +1,23 @@
+import Observable from 'zen-observable';
 import PushStream from 'zen-push';
 import * as symbols from './symbols.js';
 
 export class Store {
 
-  constructor(data) {
-    this._stream = new PushStream();
+  constructor(data, options) {
     this._data = Object.assign({}, data);
+    this._stream = new PushStream(options);
+    this._updates = new Observable(sink => {
+      sink.next(this._data);
+      return this._stream.observable.subscribe(sink);
+    });
   }
 
-  read(fn) {
+  getState(fn) {
     return fn ? fn(this._data) : this._data;
   }
 
-  update(data) {
+  setState(data) {
     if (typeof data === 'function') {
       data = data(this._data);
     }
@@ -42,12 +47,12 @@ export class Store {
     }
   }
 
-  subscribe(...args) {
-    return this._stream.observable.subscribe(...args);
+  subscribe(fn) {
+    return this._updates.subscribe(fn);
   }
 
   [symbols.observable]() {
-    return this._stream.observable;
+    return this._updates;
   }
 
 }

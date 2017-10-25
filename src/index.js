@@ -4,8 +4,9 @@ import * as symbols from './symbols.js';
 
 export { symbols };
 export { Element };
-export { UI } from './UI.js';
 
+export { UI } from './UI.js';
+export { Store } from './Store.js';
 export { renderToDOM } from './targets/dom.js';
 export { renderToString } from './targets/string.js';
 

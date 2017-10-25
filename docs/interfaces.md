@@ -60,6 +60,17 @@ interface ContentManager {
 
 ```
 
+### Data Stores
+
+```ts
+interface Store extends ObservableLike<object> {
+  getState(fn?: object => any): object;
+  setState(data: object): void;
+  setState(fn: object => object): void;
+  subscribe(onNext: object => void): Subscription;
+}
+```
+
 ### User Interfaces
 
 ```ts

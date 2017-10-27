@@ -154,7 +154,7 @@ const NodeData = {
 const Lifecycle = {
 
   created(node, props) {
-    let { contentManager, onTargetCreated, onTargetUpdated, onTargetRemoved } = props;
+    let { contentManager, onTargetCreated } = props;
 
     if (contentManager) {
       let states = new PushStream();
@@ -164,37 +164,25 @@ const Lifecycle = {
       NodeData.assign(node, { states, subscription, contentManager });
     }
 
-    if (onTargetUpdated || onTargetRemoved) {
-      NodeData.assign(node, { onTargetUpdated, onTargetRemoved });
-    }
-
     if (onTargetCreated) {
       schedule(() => onTargetCreated({ target: node }));
     }
   },
 
   updated(node, props) {
-    let { states, onTargetUpdated } = NodeData.get(node);
+    let { states } = NodeData.get(node);
 
     if (states) {
       states.next(props.contentManagerState);
     }
-
-    if (onTargetUpdated) {
-      schedule(() => onTargetUpdated({ target: node }));
-    }
   },
 
   removed(node) {
-    let { subscription, states, onTargetRemoved } = NodeData.get(node);
+    let { states, subscription } = NodeData.get(node);
 
     if (states) {
       states.complete();
       subscription.unsubscribe();
-    }
-
-    if (onTargetRemoved) {
-      schedule(() => onTargetRemoved({ target: node }));
     }
 
     NodeData.clear(node);

@@ -42,15 +42,21 @@ export function renderToDOM(node, updates) {
   }
 
   let current = null;
+  let queued = false;
 
   function patch() {
+    queued = false;
     let tree = Element.from(current);
+    current = null;
     patchChildren(node, tree.tag === '#document-fragment' ? tree.children : [tree]);
   }
 
   return Observable.from(updates).subscribe(value => {
     current = value;
-    schedule(patch);
+    if (!queued) {
+      schedule(patch);
+      queued = true;
+    }
   });
 }
 

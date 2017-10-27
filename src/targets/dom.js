@@ -171,7 +171,6 @@ const Lifecycle = {
 
   updated(node, props) {
     let { states } = NodeData.get(node);
-
     if (states) {
       states.next(props.contentManagerState);
     }
@@ -179,12 +178,10 @@ const Lifecycle = {
 
   removed(node) {
     let { states, subscription } = NodeData.get(node);
-
     if (states) {
       states.complete();
       subscription.unsubscribe();
     }
-
     NodeData.clear(node);
   },
 
@@ -276,18 +273,16 @@ function shouldPatch(node, element) {
   if (!compatible(node, element)) {
     return false;
   }
-  let { props } = element;
-  if (props.contentManager) {
-    let data = node[symbols.nodeData];
-    if (!data || data.contentManager !== props.contentManager) {
-      return false;
-    }
+
+  let { id, key, contentManager } = element.props;
+
+  if (contentManager && contentManager !== NodeData.get(node).contentManager) {
+    return false;
+  } else if (id) {
+    return node.id === id;
+  } else if (key) {
+    return node.getAttribute('ui-key') === key;
   }
-  if (props.id) {
-    return node.id === props.id;
-  }
-  if (props.key) {
-    return node.getAttribute('ui-key') === props.key;
-  }
+
   return true;
 }

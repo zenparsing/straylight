@@ -102,3 +102,29 @@ test('store[symbol.observable]()', () => {
   assert.deepEqual(value, { a: 1, b: 2 });
   sub.unsubscribe();
 });
+
+test('store.start', () => {
+  let s = new Store();
+  let calls = [];
+  s.start = (...a) => calls.push(a);
+  let sub1 = s.subscribe(() => {});
+  assert.deepEqual(calls, [[]]);
+  let sub2 = s.subscribe(() => {});
+  assert.equal(calls.length, 1);
+  sub1.unsubscribe();
+  sub2.unsubscribe();
+  s.subscribe(() => {});
+  assert.equal(calls.length, 2);
+});
+
+test('store.pause()', () => {
+  let s = new Store();
+  let calls = [];
+  s.pause = (...a) => calls.push(a);
+  let sub1 = s.subscribe(() => {});
+  let sub2 = s.subscribe(() => {});
+  sub1.unsubscribe();
+  assert.equal(calls.length, 0);
+  sub2.unsubscribe();
+  assert.deepEqual(calls, [[]]);
+});

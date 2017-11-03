@@ -20,6 +20,7 @@
   },
   "scripts": {
     "test": "eslint src/*.js src/*/*.js test/*.js && esdown test/index.js",
+    "test-js": "esdown test/index.js",
     "pack": "esdown - src/index.js dist/index.js -b",
     "pack-global": "esdown - src/index.js dist/straylight.js -b --deep -g Straylight",
     "prepublishOnly": "npm run pack && npm run pack-global"

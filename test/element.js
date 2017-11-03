@@ -102,7 +102,7 @@ test('Element.evaluate: A new object is returned', () => {
   assert.notEqual(a, b);
 });
 
-test('Element.evaluate: Render function tag', () => {
+test('element.evaluate: Render function tag', () => {
   function render(props, context) {
     return new Element('div', { props, context });
   }
@@ -117,7 +117,7 @@ test('Element.evaluate: Render function tag', () => {
   }));
 });
 
-test('Element.evaluate: Renderable tag', () => {
+test('element.evaluate: Renderable tag', () => {
   let renderable = {
     [symbols.render](props, context) {
       return new Element('div', {
@@ -139,13 +139,13 @@ test('Element.evaluate: Renderable tag', () => {
   }));
 });
 
-test('Element.evaluate: invalid tag', () => {
+test('element.evaluate: invalid tag', () => {
   assert.throws(() => {
     Element.evaluate(new Element(1));
   });
 });
 
-test('Element.evaluate: key is propagated', () => {
+test('element.evaluate: key is propagated', () => {
   function renderA() { return new Element('div'); }
   function renderB() { return new Element('div', { key: 'y' }); }
 
@@ -156,7 +156,7 @@ test('Element.evaluate: key is propagated', () => {
   assert.equal(b.props.key, 'y');
 });
 
-test('Element.evaluate: children are evaluated', () => {
+test('element.evaluate: children are evaluated', () => {
   function render(props, context) {
     return new Element('div', { props, context });
   }
@@ -172,7 +172,7 @@ test('Element.evaluate: children are evaluated', () => {
   }));
 });
 
-test('Element.evaluate: recursive rendering', () => {
+test('element.evaluate: recursive rendering', () => {
   function renderA() { return new Element(renderB, { a: 1, b: 2 }); }
   function renderB(props, context) { return new Element('div', { props, context }); }
 
@@ -184,7 +184,7 @@ test('Element.evaluate: recursive rendering', () => {
   }));
 });
 
-test('Element.evaluate: element sources', () => {
+test('element.evaluate: element sources', () => {
   assert.deepEqual(Element.evaluate(null), Element.from(null));
   assert.deepEqual(Element.evaluate(undefined), Element.from(undefined));
   assert.deepEqual(Element.evaluate('x'), Element.from('x'));

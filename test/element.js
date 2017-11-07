@@ -170,6 +170,8 @@ test('Element.evaluate: children are evaluated', () => {
     props: { a: 1, b: 2, children: [] },
     context: { x: 'a', y: 'b' },
   }));
+
+  assert.deepEqual(e.props.children[0], e.children[0]);
 });
 
 test('Element.evaluate: recursive rendering', () => {

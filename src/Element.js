@@ -53,7 +53,8 @@ export class Element {
     }
 
     // Evaluate children
-    node.children = node.children.map(child => Element.evaluate(child, context));
+    let children = node.children.map(child => Element.evaluate(child, context));
+    node.props.children = node.children = children;
 
     return node;
   }

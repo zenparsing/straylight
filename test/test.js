@@ -55,8 +55,8 @@ async function runTests() {
 
   fails.forEach(({ error, name }) => {
     print('Test Failed:', inspect(name, { colors: true }));
-    print('Expected:', inspect(error.expected, { colors: true }));
-    print('Actual:', inspect(error.actual, { colors: true }));
+    print('Expected:', inspect(error.expected, { depth: 10, colors: true }));
+    print('Actual:', inspect(error.actual, { depth: 10, colors: true }));
     print('Operator:', error.operator);
     print(getFrames(error), '\n');
   });

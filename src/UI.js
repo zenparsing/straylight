@@ -82,7 +82,7 @@ export class UI {
     if (!name) { // IE11
       name = 'UI';
     }
-    return `ui-${ name === 'UI' ? 'x' : name.toLowerCase() }`;
+    return `ui-${name === 'UI' ? 'x' : name.toLowerCase()}`;
   }
 
   static [symbols.mapStateToContent](states) {

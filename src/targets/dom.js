@@ -279,9 +279,9 @@ function shouldPatch(node, element) {
   if (contentManager && contentManager !== NodeData.get(node).contentManager) {
     return false;
   } else if (id) {
-    return node.id === id;
+    return node.id === String(id);
   } else if (key) {
-    return node.getAttribute('ui-key') === key;
+    return node.getAttribute('ui-key') === String(key);
   }
 
   return true;

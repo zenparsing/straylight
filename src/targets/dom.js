@@ -174,6 +174,9 @@ const Lifecycle = {
     if (states) {
       states.next(props.contentManagerState);
     }
+    if (props.onTargetUpdated) {
+      schedule(() => props.onTargetUpdated({ target: node }));
+    }
   },
 
   removed(node) {
@@ -239,6 +242,7 @@ function propsToAttributes(props) {
       case 'contentManager':
       case 'contentManagerState':
       case 'onTargetCreated':
+      case 'onTargetUpdated':
         value = null;
         break;
     }

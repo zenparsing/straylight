@@ -61,6 +61,7 @@ function toAttributes(props) {
       case 'contentManager':
       case 'contentManagerState':
       case 'onTargetCreated':
+      case 'onTargetUpdated':
         return;
     }
 

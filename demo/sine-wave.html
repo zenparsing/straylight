@@ -52,13 +52,21 @@
       }
     }
 
-    render({ bars, barWidth, count, running }) {
+    increment() {
+      let { running, count } = this.getState();
       if (running) {
         window.requestAnimationFrame(() => this.setState({ count: count + 1 }));
       }
+    }
 
+    render({ bars, barWidth, count }) {
       return Straylight.html`
-        <div class='animated-sin-wave' onClick=${() => this.toggle()}>
+        <div
+          class='animated-sin-wave'
+          onclick=${() => this.toggle()}
+          onTargetCreated=${() => this.increment()}
+          onTargetUpdated=${() => this.increment()}
+          >
           ${
             Array(bars).fill(0).map((x, i) => {
               let translateY = Math.sin(count / 10 + i / 5) * 100 * .5;

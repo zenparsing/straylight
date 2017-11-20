@@ -47,12 +47,21 @@ export class UI {
   }
 
   getContext() {
-    let parentContext = this.getState().parentContext || null;
-    return Object.assign(Object.create(parentContext), this._context);
+    let context = Object.create(this.getState().parentContext || null);
+    if (this._context) {
+      for (let key in this._context) {
+        context[key] = this._context[key];
+      }
+    }
+    return context;
   }
 
   setContext(data) {
     this._context = data;
+  }
+
+  [symbols.render](state, context) {
+    return this.render(state, context);
   }
 
   render() {
@@ -68,37 +77,20 @@ export class UI {
   }
 
   renderState() {
-    let state = this.getState();
-    let context = this.getContext();
-    return Element.evaluate(this.render(state, context), context);
+    return Element.evaluate(new Element(this, this.getState()), this.getContext());
   }
 
   static mapPropsToState(props) {
     return props;
   }
 
-  static get tagName() {
-    let { name } = this;
-    if (!name) { // IE11
-      name = 'UI';
-    }
-    return `ui-${name === 'UI' ? 'x' : name.toLowerCase()}`;
-  }
-
-  static [symbols.mapStateToContent](states) {
-    let ui = new this();
-    states.subscribe(state => ui.setState(state));
-    return ui;
-  }
-
   static [symbols.render](props, context) {
-    return new Element(this.tagName, {
-      key: props.key,
+    let state = this.mapPropsToState(props, context);
+    state.parentContext = context;
+    return new Element('#document-fragment', {
+      id: props.id,
       contentManager: this,
-      contentManagerState: Object.assign(
-        { parentContext: context },
-        this.mapPropsToState(props, context)
-      ),
+      contentManagerState: state,
     });
   }
 

@@ -9,7 +9,7 @@
   },
   "homepage": "https://github.com/zenparsing/straylight",
   "dependencies": {
-    "htmltag": "^0.1.12",
+    "htmltag": "^0.2.0",
     "symbol-observable": "^1.0.4",
     "zen-observable": "^0.6.0",
     "zen-push": "^0.1.4"

@@ -5,12 +5,19 @@ import * as symbols from './symbols.js';
 export class Store {
 
   constructor(data) {
-    this._data = Object.assign(Object.create(null), data);
+    this._data = Object.create(null);
     this._stream = new PushStream(this);
     this._updates = new Observable(sink => {
+      let subscription = this._stream.observable.subscribe(sink);
       sink.next(this._data);
-      return this._stream.observable.subscribe(sink);
+      return subscription;
     });
+
+    if (data) {
+      for (let key in data) {
+        this._data[key] = data[key];
+      }
+    }
   }
 
   getState(fn) {
@@ -27,8 +34,7 @@ export class Store {
     }
 
     let updated = false;
-
-    Object.keys(data).forEach(key => {
+    for (let key in data) {
       let prev = this._data[key];
       let next = data[key];
 
@@ -40,7 +46,7 @@ export class Store {
         // Assume that identitical objects have been mutated
         updated = true;
       }
-    });
+    }
 
     if (updated) {
       this._stream.next(this._data);

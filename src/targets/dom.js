@@ -1,32 +1,9 @@
-import Observable from 'zen-observable';
-import PushStream from 'zen-push';
-import { Element } from '../Element.js';
-import * as symbols from '../symbols.js';
+import { Scheduler } from './Scheduler.js';
+import { diff } from './diff.js';
 
-const schedule = function makeScheduler() {
-  let scheduled = false;
-  let callbacks = [];
+const htmlNS = 'http://www.w3.org/1999/xhtml';
 
-  function run() {
-    try {
-      while (callbacks.length > 0) {
-        callbacks.shift()();
-      }
-      scheduled = false;
-    } catch (err) {
-      window.requestAnimationFrame(run);
-      throw err;
-    }
-  }
-
-  return function schedule(fn) {
-    callbacks.push(fn);
-    if (!scheduled) {
-      scheduled = true;
-      window.requestAnimationFrame(run);
-    }
-  };
-}();
+const scheduler = new Scheduler(fn => window.requestAnimationFrame(fn));
 
 export function renderToDOM(node, updates) {
   if (typeof node === 'string') {
@@ -37,26 +14,8 @@ export function renderToDOM(node, updates) {
     throw new TypeError(`${node} is not a DOM element`);
   }
 
-  if (updates[symbols.element]) {
-    updates = Observable.of(updates);
-  }
-
-  let current = null;
-  let queued = false;
-
-  function patch() {
-    queued = false;
-    let tree = Element.from(current);
-    current = null;
+  return diff(updates, scheduler).subscribe(tree => {
     patchChildren(node, tree.tag === '#document-fragment' ? tree.children : [tree]);
-  }
-
-  return Observable.from(updates).subscribe(value => {
-    current = value;
-    if (!queued) {
-      schedule(patch);
-      queued = true;
-    }
   });
 }
 
@@ -64,229 +23,170 @@ function getNamespace(element, context) {
   if (element.props.xmlns) {
     return element.props.xmlns;
   }
-  switch (element.tag.toLowerCase()) {
+  switch (element.tag) {
     case 'svg':
       return 'http://www.w3.org/2000/svg';
     default:
-      return context.namespaceURI || 'http://www.w3.org/1999/xhtml';
+      return context.namespaceURI || htmlNS;
   }
 }
 
-function patchNode(target, element, context) {
-  if (typeof element.tag !== 'string') {
-    throw new Error(`Invalid element tag ${element.tag}`);
-  }
-
-  if (element.tag === '#document-fragment') {
-    throw new Error('Cannot patch a document fragment');
-  }
-
+function createNode(element, context) {
   if (element.tag === '#text') {
-    if (target && target.nodeName === '#text') {
-      if (target.nodeValue !== element.props.text) {
-        target.nodeValue = element.props.text;
-      }
-      return target;
-    }
     return context.ownerDocument.createTextNode(element.props.text);
   }
 
-  if (!target || !compatible(target, element)) {
-    let ns = getNamespace(element, context);
-    target = context.ownerDocument.createElementNS(ns, element.tag);
+  let namespace = getNamespace(element, context);
+  let document = context.ownerDocument;
+
+  let node = namespace === htmlNS ?
+    document.createElement(element.tag) :
+    document.createElementNS(namespace, element.tag);
+
+  patchNode(node, element);
+  return node;
+}
+
+function patchNode(target, element) {
+  if (element.tag === '#text') {
+    if (target.nodeValue !== element.props.text) {
+      target.nodeValue = element.props.text;
+    }
+  } else {
+    patchAttributes(target, element.props);
+    if (!element.props.contentManager) {
+      patchChildren(target, element.children);
+    }
   }
+}
 
-  patchAttributes(target, element.props);
-
-  if (!element.props.contentManager) {
-    patchChildren(target, element.children);
+function getAttributeNames(target) {
+  if (target.getAttributeNames) {
+    return target.getAttributeNames();
   }
+  let names = [];
+  for (let i = 0; i < target.attributes.length; ++i) {
+    names.push(target.attributes[i].name);
+  }
+  return names;
+}
 
-  return target;
+function isMagicProp(name) {
+  switch (name) {
+    case 'children':
+    case 'contentManager':
+    case 'contentManagerState':
+    case 'onTargetCreated':
+    case 'onTargetUpdated':
+      return true;
+  }
+  return false;
 }
 
 function patchAttributes(target, props) {
-  let attributes = propsToAttributes(props);
-
-  // Set attributes defined by the element
-  attributes.forEach((value, name) => {
-    if (isEventHandler(name)) {
-      target.setAttribute(name, '');
-      target[name] = value;
-    } else {
-      target.setAttribute(name, value);
+  // Assign attributes in props
+  for (let name in props) {
+    if (isMagicProp(name)) {
+      continue;
     }
-  });
-
-  // Remove attributes not defined by the element
-  for (let i = target.attributes.length - 1; i >= 0; --i) {
-    let { name } = target.attributes[i];
-    if (!attributes.has(name)) {
-      target.removeAttribute(name);
-      if (isEventHandler(name)) {
-        target[name] = undefined;
-      }
-    }
-  }
-}
-
-const NodeData = {
-
-  get(node) {
-    return node[symbols.nodeData] || {};
-  },
-
-  assign(node, data) {
-    let nodeData = node[symbols.nodeData];
-    if (!nodeData) {
-      node[symbols.nodeData] = data;
-    } else {
-      Object.assign(nodeData, data);
-    }
-  },
-
-  clear(node) {
-    node[symbols.nodeData] = null;
-  },
-
-};
-
-const Lifecycle = {
-
-  created(node, props) {
-    let { contentManager, onTargetCreated } = props;
-
-    if (contentManager) {
-      let states = new PushStream();
-      let updates = contentManager[symbols.mapStateToContent](states.observable);
-      states.next(props.contentManagerState);
-      let subscription = renderToDOM(node, updates);
-      NodeData.assign(node, { states, subscription, contentManager });
-    }
-
-    if (onTargetCreated) {
-      schedule(() => onTargetCreated({ target: node }));
-    }
-  },
-
-  updated(node, props) {
-    let { states } = NodeData.get(node);
-    if (states) {
-      states.next(props.contentManagerState);
-    }
-    if (props.onTargetUpdated) {
-      schedule(() => props.onTargetUpdated({ target: node }));
-    }
-  },
-
-  removed(node) {
-    let { states, subscription } = NodeData.get(node);
-    if (states) {
-      states.complete();
-      subscription.unsubscribe();
-    }
-    NodeData.clear(node);
-  },
-
-};
-
-function patchChildren(target, children) {
-  let size = 0;
-  children.forEach(function patchChild(child) {
-    // Recurse into fragments
-    if (child.tag === '#document-fragment') {
-      child.children.forEach(patchChild);
-      return;
-    }
-    // Try to find a matching child in the target
-    let matched = null;
-    for (let i = size; i < target.childNodes.length; ++i) {
-      let node = target.childNodes[i];
-      if (shouldPatch(node, child)) {
-        matched = node;
-        break;
-      }
-    }
-    // Patch a DOM node
-    let patched = patchNode(matched, child, target);
-    // Insert into the tree if not already in the correct position
-    let sibling = target.childNodes[size] || null;
-    if (patched !== sibling) {
-      target.insertBefore(patched, sibling);
-    }
-    // Call lifecycle hooks for the DOM node
-    if (patched === matched) {
-      Lifecycle.updated(patched, child.props);
-    } else {
-      Lifecycle.created(patched, child.props);
-    }
-    size += 1;
-  });
-  // Remove remaining children in the target node
-  while (target.childNodes.length > size) {
-    let node = target.lastChild;
-    target.removeChild(node);
-    Lifecycle.removed(node);
-  }
-}
-
-function propsToAttributes(props) {
-  let map = new Map();
-  Object.keys(props).forEach(name => {
     let value = props[name];
-    switch (name) {
-      case 'key':
-        name = 'ui-key';
-        break;
-      case 'children':
-      case 'contentManager':
-      case 'contentManagerState':
-      case 'onTargetCreated':
-      case 'onTargetUpdated':
-        value = null;
-        break;
-    }
+    let assign = typeof value === 'function' && /^on\w/.test(name);
     if (value === null || value === undefined || value === false) {
-      return;
+      if (assign) {
+        target[name] = undefined;
+      } else {
+        target.removeAttribute(name);
+      }
+    } else {
+      if (assign) {
+        target[name] = value;
+      } else {
+        target.setAttribute(name, value === true ? name : value);
+      }
     }
-    name = name.toLowerCase();
-    if (value === true) {
-      value = name;
+  }
+  // Remove attributes not in props
+  let names = getAttributeNames(target);
+  for (let i = 0; i < names.length; ++i) {
+    let name = names[i];
+    if (!(name in props)) {
+      target.removeAttribute(name);
     }
-    map.set(name, value);
-  });
-  return map;
+  }
 }
 
-function isEventHandler(name) {
-  return name !== 'on' && name.startsWith('on');
+function onNodeCreated(node, props) {
+  if (props.onTargetCreated) {
+    scheduler.enqueue(() => props.onTargetCreated({ target: node }));
+  }
+}
+
+function onNodeUpdated(node, props) {
+  if (props.onTargetUpdated) {
+    scheduler.enqueue(() => props.onTargetUpdated({ target: node }));
+  }
+}
+
+function onNodeRemoved() {
+  // Empty
 }
 
 function compatible(node, element) {
-  let { tag } = element;
-  let { nodeName } = node;
-  return (
-    typeof tag === 'string' &&
-    typeof nodeName === 'string' &&
-    tag.toLowerCase() === nodeName.toLowerCase() &&
-    (nodeName !== 'INPUT' || element.props.type === node.type)
-  );
+  let props = element.props;
+  if (props.id && props.id !== node.id) {
+    return false;
+  }
+  let nodeName = node.nodeName.toLowerCase();
+  if (nodeName === 'input' && props.type !== node.type) {
+    return false;
+  }
+  return nodeName === element.tag;
 }
 
-function shouldPatch(node, element) {
-  if (!compatible(node, element)) {
-    return false;
+function patchChildrenFrom(target, reference, children) {
+  for (let i = 0; i < children.length; ++i) {
+    let child = children[i];
+    if (typeof child.tag !== 'string') {
+      throw new Error(`Invalid element tag ${child.tag}`);
+    }
+    // Recurse into fragments
+    if (child.tag === '#document-fragment') {
+      reference = patchChildrenFrom(target, reference, child.children);
+      continue;
+    }
+    // Search for a matching child in the target
+    let node = null;
+    for (node = reference; node !== null; node = node.nextSibling) {
+      if (compatible(node, child)) {
+        break;
+      }
+    }
+    if (node !== null) {
+      // Patch a DOM node
+      patchNode(node, child);
+      onNodeUpdated(node, child.props);
+    } else {
+      // Create a DOM node
+      node = createNode(child, target);
+      onNodeCreated(node, child.props);
+    }
+    // Insert into the correct position
+    if (reference === null) {
+      target.appendChild(node);
+    } else if (node !== reference) {
+      target.insertBefore(node, reference);
+    }
+    reference = node.nextSibling;
   }
+  return reference;
+}
 
-  let { id, key, contentManager } = element.props;
-
-  if (contentManager && contentManager !== NodeData.get(node).contentManager) {
-    return false;
-  } else if (id) {
-    return node.id === String(id);
-  } else if (key) {
-    return node.getAttribute('ui-key') === String(key);
+function patchChildren(target, children) {
+  let reference = patchChildrenFrom(target, target.firstChild, children);
+  while (reference !== null) {
+    let node = reference;
+    reference = reference.nextSibling;
+    target.removeChild(node);
+    onNodeRemoved(node);
   }
-
-  return true;
 }

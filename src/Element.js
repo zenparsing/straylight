@@ -3,16 +3,12 @@ import * as symbols from './symbols.js';
 export class Element {
 
   constructor(tag, props = null, children = null) {
-    // Pull children from props
     if (props && (!children || children.length === 0) && Array.isArray(props.children)) {
       children = props.children;
     }
 
-    // Convert children to elements
-    children = children ? children.map(Element.from) : [];
-
-    // Copy props
-    props = Object.assign({}, props);
+    props = props || {};
+    children = children || [];
     props.children = children;
 
     this.tag = tag;
@@ -28,7 +24,6 @@ export class Element {
     let element = Element.from(source);
     let node = element;
 
-    // Execute rendering functions
     while (typeof node.tag !== 'string') {
       let receiver = undefined;
       let render = node.tag;
@@ -42,19 +37,9 @@ export class Element {
       node = Element.from(render.call(receiver, node.props, context));
     }
 
-    if (node === element) {
-      // Ensure non-mutation
-      node = new Element(node.tag, node.props, node.children);
-    } else {
-      // Propagate key to rendered element
-      if (element.props.key && !node.props.key) {
-        node.props.key = element.props.key;
-      }
+    for (let i = 0; i < node.children.length; ++i) {
+      node.children[i] = Element.evaluate(node.children[i], context);
     }
-
-    // Evaluate children
-    let children = node.children.map(child => Element.evaluate(child, context));
-    node.props.children = node.children = children;
 
     return node;
   }

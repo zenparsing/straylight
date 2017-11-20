@@ -19,7 +19,6 @@ test('new Element(tag, props)', () => {
   let p = { a: 1, b: 2 };
   let e = new Element('div', p);
   assert.deepEqual(e.props, { a: 1, b: 2, children: [] });
-  assert.ok(e.props !== p);
 });
 
 test('new Element(tag, props, children)', () => {
@@ -75,11 +74,7 @@ test('Element.from(boolean)', () => {
 test('Element.from(array)', () => {
   assert.deepEqual(
     Element.from([1, 'a', new Element('div')]),
-    new Element('#document-fragment', {}, [
-      Element.from(1),
-      Element.from('a'),
-      new Element('div'),
-    ])
+    new Element('#document-fragment', {}, [1, 'a', new Element('div')])
   );
 });
 
@@ -94,12 +89,6 @@ test('Element.from(elementLike)', () => {
 
 test('Element.from(invalid)', () => {
   assert.throws(() => Element.from({}));
-});
-
-test('Element.evaluate: A new object is returned', () => {
-  let a = new Element('div');
-  let b = Element.evaluate(a);
-  assert.notEqual(a, b);
 });
 
 test('Element.evaluate: Render function tag', () => {
@@ -145,17 +134,6 @@ test('Element.evaluate: invalid tag', () => {
   });
 });
 
-test('Element.evaluate: key is propagated', () => {
-  function renderA() { return new Element('div'); }
-  function renderB() { return new Element('div', { key: 'y' }); }
-
-  let a = Element.evaluate(new Element(renderA, { key: 'x' }));
-  assert.equal(a.props.key, 'x');
-
-  let b = Element.evaluate(new Element(renderB, { key: 'x' }));
-  assert.equal(b.props.key, 'y');
-});
-
 test('Element.evaluate: children are evaluated', () => {
   function render(props, context) {
     return new Element('div', { props, context });
@@ -192,5 +170,9 @@ test('Element.evaluate: element sources', () => {
   assert.deepEqual(Element.evaluate('x'), Element.from('x'));
   assert.deepEqual(Element.evaluate(1), Element.from(1));
   assert.deepEqual(Element.evaluate(true), Element.from(true));
-  assert.deepEqual(Element.evaluate([1]), Element.from([1]));
+  assert.deepEqual(Element.evaluate([1]),
+    new Element('#document-fragment', {}, [
+      new Element('#text', { text: '1' }),
+    ])
+  );
 });

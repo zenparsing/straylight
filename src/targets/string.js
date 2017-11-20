@@ -43,8 +43,9 @@ function esc(s) {
 }
 
 function toAttributes(props) {
-  let attr = {};
-  Object.keys(props).forEach(name => {
+  let pairs = [];
+
+  for (let name in props) {
     let value = props[name];
 
     if (
@@ -53,7 +54,7 @@ function toAttributes(props) {
       value === false ||
       typeof value === 'function'
     ) {
-      return;
+      continue;
     }
 
     switch (name) {
@@ -62,22 +63,13 @@ function toAttributes(props) {
       case 'contentManagerState':
       case 'onTargetCreated':
       case 'onTargetUpdated':
-        return;
+        continue;
     }
 
-    if (name === 'key') {
-      name = 'ui-key';
-    } else {
-      name = name.toLowerCase();
-    }
+    pairs.push(`${esc(name)}="${esc(value === true ? name : value)}"`);
+  }
 
-    if (value === true) {
-      value = name;
-    }
-
-    attr[name] = value;
-  });
-  return attr;
+  return pairs;
 }
 
 function tryAsync(fn) {
@@ -94,24 +86,25 @@ function stringify(element) {
       return esc(element.props.text);
     }
 
-    let { tag, props, children } = element;
+    let tag = element.tag;
+    let props = element.props;
+    let children = element.children;
 
     if (props.contentManager) {
       return renderContentManager(props.contentManager, props.contentManagerState);
     }
 
-    let subtrees = isRawTag(element.tag) ?
+    let subtrees = isRawTag(tag) ?
       children.map(c => c.props.text || '') :
       children.map(stringify);
 
     return Promise.all(subtrees).then(list => {
       let html = list.join('');
       if (tag !== '#document-fragment') {
-        let attributes = toAttributes(props);
         let open = element.tag;
-        let pairs = Object.keys(attributes).map(k => `${esc(k)}="${esc(attributes[k])}"`);
-        if (pairs.length > 0) {
-          open += ' ' + pairs.join(' ');
+        let attributes = toAttributes(props);
+        if (attributes.length > 0) {
+          open += ' ' + attributes.join(' ');
         }
         if (!html && SELF_CLOSING.test(tag)) {
           html = `<${open} />`;

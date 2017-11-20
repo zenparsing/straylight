@@ -120,7 +120,7 @@ test('ui.renderState()', () => {
   ]));
 
   assert.equal(args.thisValue, ui);
-  assert.deepEqual(args.props, { a: 1, b: 2 });
+  assert.deepEqual(args.props, { a: 1, b: 2, children: [] });
   assert.deepEqual(args.context, { c: 3, d: 4 });
 
   assert.deepEqual(nested.props, { x: 1, children: [] });
@@ -170,57 +170,31 @@ test('UI.mapPropsToState', () => {
   assert.equal(UI.mapPropsToState(props), props);
 });
 
-test('UI.tagName', () => {
-  let desc = Object.getOwnPropertyDescriptor(UI, 'tagName');
-  let obj = {};
-  Object.defineProperty(obj, 'tagName', desc);
-  assert.equal(obj.tagName, 'ui-x');
-  obj.name = 'UI';
-  assert.equal(obj.tagName, 'ui-x');
-  obj.name = 'Widget';
-  assert.equal(obj.tagName, 'ui-widget');
-});
-
-test('UI[symbols.mapStateToContent](states)', () => {
-  let callback;
-  let ui = UI[symbols.mapStateToContent]({ subscribe(fn) { callback = fn; } });
-  assert.equal(ui.constructor, UI);
-  callback({ a: 1, b: 2 });
-  assert.deepEqual(ui.getState(), { a: 1, b: 2 });
-  callback({ a: 3, c: 4 });
-  assert.deepEqual(ui.getState(), { a: 3, b: 2, c: 4 });
-
-  function ctor() {}
-  let instance = UI[symbols.mapStateToContent].call(ctor, { subscribe() {} });
-  assert.equal(instance.constructor, ctor);
-});
-
 test('UI[symbols.render](props, context)', () => {
   let mock = {
-    tagName: 'ui-mock',
     mapPropsToState(props, context) {
-      this._props = props;
+      this._props = Object.assign({}, props);
       this._context = context;
       return props;
     },
   };
 
   let tree = UI[symbols.render].call(mock,
-    { key: 'k', a: 1, b: 2 },
+    { id: 'x', a: 1, b: 2 },
     { c: 3, d: 4 }
   );
 
-  assert.deepEqual(tree, new Element('ui-mock', {
-    key: 'k',
+  assert.deepEqual(tree, new Element('#document-fragment', {
+    id: 'x',
     contentManager: mock,
     contentManagerState: {
-      key: 'k',
+      id: 'x',
       a: 1,
       b: 2,
       parentContext: { c: 3, d: 4 },
     },
   }));
 
-  assert.deepEqual(mock._props, { key: 'k', a: 1, b: 2 });
+  assert.deepEqual(mock._props, { id: 'x', a: 1, b: 2 });
   assert.deepEqual(mock._context, { c: 3, d: 4 });
 });

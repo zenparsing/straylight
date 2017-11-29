@@ -12,7 +12,7 @@
     overflow: hidden;
   }
 
-  .animated-sin-wave > .bar {
+  .animated-sin-wave .bar {
     position: absolute;
     height: 100%;
     border-radius: 50%;
@@ -64,8 +64,8 @@
         <div
           class='animated-sin-wave'
           onclick=${() => this.toggle()}
-          onTargetCreated=${() => this.increment()}
-          onTargetUpdated=${() => this.increment()}
+          createdCallback=${() => this.increment()}
+          updatedCallback=${() => this.increment()}
           >
           ${
             Array(bars).fill(0).map((x, i) => {

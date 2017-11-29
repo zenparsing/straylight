@@ -89,8 +89,8 @@ export class UI {
     state.parentContext = context;
     return new Element('#document-fragment', {
       id: props.id,
-      contentManager: this,
-      contentManagerState: state,
+      uiClass: this,
+      uiState: state,
     });
   }
 

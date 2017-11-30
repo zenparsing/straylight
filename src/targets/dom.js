@@ -1,49 +1,54 @@
+import PushStream from 'zen-push';
+import { Element } from '../Element.js';
 import { Scheduler } from './Scheduler.js';
+import { toContentStream } from './content-stream.js';
 import { persist } from './persist.js';
 
 const htmlNS = 'http://www.w3.org/1999/xhtml';
 const scheduler = new Scheduler(fn => window.requestAnimationFrame(fn));
 
-export function renderToDOM(node, updates) {
-  return persist(updates, {
-    actions: new DOMActions(node),
+export function renderToDOM(mount, updates) {
+  if (typeof mount === 'string') {
+    mount = window.document.querySelector(mount);
+  }
+  if (!mount || !mount.nodeName) {
+    throw new TypeError(`${mount} is not a DOM element`);
+  }
+  return renderStream(updates, { dom: mount });
+}
+
+function renderStream(updates, rootData) {
+  let root = new Element('#root');
+  root.data = rootData;
+  return persist(toContentStream(updates), DOMActions, {
     nodesMatch,
+    root,
     scheduler,
   }).subscribe(() => {});
 }
 
-class DOMActions {
-
-  constructor(mount) {
-    if (typeof mount === 'string') {
-      mount = window.document.querySelector(mount);
-    }
-    if (!mount || !mount.nodeName) {
-      throw new TypeError(`${mount} is not a DOM element`);
-    }
-    this.mount = mount;
-  }
+const DOMActions = {
 
   onCreate(element, parent, pos) {
-    element.previous = getPrevious(parent, pos);
+    element.data.previous = getPrevious(parent, pos);
 
-    let parentNode = parent ? parent.dom : this.mount;
+    let parentNode = dom(parent);
     let document = parentNode.ownerDocument;
 
     if (isFragment(element)) {
-      element.dom = parentNode;
+      element.data.dom = parentNode;
       return;
     }
 
     if (isText(element)) {
-      element.dom = document.createTextNode(element.props.text || '');
+      element.data.dom = document.createTextNode(element.props.text || '');
       return;
     }
 
     let tag = element.tag;
     let namespace = getNamespace(element, parentNode);
 
-    element.dom = namespace === htmlNS ?
+    element.data.dom = namespace === htmlNS ?
       document.createElement(tag) :
       document.createElementNS(namespace, tag);
 
@@ -52,27 +57,22 @@ class DOMActions {
         setProp(element, key, element.props[key]);
       }
     }
-  }
+  },
 
-  afterCreate(element, parent) {
-    if (!parent) {
-      this.mount.textContent = '';
-    }
-    for (let i = 0; i < element.children.length; ++i) {
-      appendChild(element.children[i], element);
-    }
-    if (!parent && !isFragment(element)) {
-      this.mount.appendChild(element.dom);
-    }
+  afterCreate(element) {
     if (element.props.createdCallback) {
-      scheduler.enqueue(() => element.props.createdCallback(element.dom));
+      scheduler.enqueue(() => element.props.createdCallback(dom(element)));
     }
-  }
+    if (element.props.ui) {
+      let states = new PushStream();
+      let content = element.props.ui.mapStateToContent(states.observable);
+      states.next(element.props.uiState);
+      element.data.states = states;
+      element.data.subscription = renderStream(content, element.data);
+    }
+  },
 
   onUpdate(current, next) {
-    next.dom = current.dom;
-    next.previous = current.previous;
-
     let seen = Object.create(null);
 
     for (let key in next.props) {
@@ -90,25 +90,28 @@ class DOMActions {
         setProp(next, key, undefined);
       }
     }
-  }
+  },
 
   afterUpdate(current, next) {
     if (next.props.updatedCallback) {
-      scheduler.enqueue(() => next.props.updatedCallback(next.dom));
+      scheduler.enqueue(() => next.props.updatedCallback(dom(next)));
     }
-  }
+    if (next.data.states) {
+      next.data.states.next(next.props.uiState);
+    }
+  },
 
   onInsert(element, parent) {
     moveChild(element, parent);
-  }
+  },
 
   onMove(element, parent, pos) {
     let prev = getPrevious(parent, pos);
-    if (element.previous !== prev) {
-      element.previous = prev;
+    if (element.data.previous !== prev) {
+      element.data.previous = prev;
       moveChild(element, parent);
     }
-  }
+  },
 
   onRemove(element, parent) {
     if (isFragment(element)) {
@@ -116,12 +119,18 @@ class DOMActions {
         this.onRemove(element.children[i], parent);
       }
     } else {
-      let parentNode = parent ? parent.dom : this.mount;
-      parentNode.removeChild(element.dom);
+      let parentNode = parent ? dom(parent) : this.mount;
+      parentNode.removeChild(dom(element));
     }
-  }
+    if (element.props.removedCallback) {
+      scheduler.enqueue(() => element.props.removedCallback(dom(element)));
+    }
+    if (element.data.subscription) {
+      element.data.subscription.unsubscribe();
+    }
+  },
 
-}
+};
 
 function moveChild(element, parent) {
   if (isFragment(element)) {
@@ -129,31 +138,22 @@ function moveChild(element, parent) {
       moveChild(element.children[i], element);
     }
   } else {
-    let next = element.previous ? element.previous.dom.nextSibling : null;
-    parent.dom.insertBefore(element.dom, next);
-  }
-}
-
-function appendChild(element, parent) {
-  if (isFragment(element)) {
-    for (let i = 0; i < element.children.length; ++i) {
-      appendChild(element.children[i], parent);
-    }
-  } else {
-    parent.dom.appendChild(element.dom);
+    let prev = element.data.previous;
+    let next = prev ? dom(prev).nextSibling : null;
+    dom(parent).insertBefore(dom(element), next);
   }
 }
 
 function getPrevious(parent, pos) {
   if (pos === 0) {
-    return parent && isFragment(parent) ? parent.previous : null;
+    return isFragment(parent) ? parent.data.previous : null;
   }
   let prev = parent.children[pos - 1];
   return isFragment(prev) ? getPrevious(prev, prev.children.length) : prev;
 }
 
 function setProp(element, key, value) {
-  let node = element.dom;
+  let node = dom(element);
   if (isText(element)) {
     if (key === 'text') {
       node.nodeValue = value || '';
@@ -165,6 +165,10 @@ function setProp(element, key, value) {
   } else {
     node.setAttribute(key, value === true ? key : value);
   }
+}
+
+function dom(element) {
+  return element.data.dom;
 }
 
 function shouldAssign(name, value) {
@@ -198,7 +202,6 @@ function isMagicProp(name) {
     case 'updatedCallback':
     case 'removedCallback':
     case 'uiClass':
-    case 'uiState':
       return true;
   }
   return false;
@@ -208,7 +211,6 @@ function nodesMatch(a, b) {
   return (
     a.tag === b.tag &&
     (a.props.id || '') === (b.props.id || '') &&
-    (a.tag !== 'input' || a.props.type === b.props.type) &&
-    (a.props.uiClass || null) === (b.props.uiClass || null)
+    (a.tag !== 'input' || a.props.type === b.props.type)
   );
 }

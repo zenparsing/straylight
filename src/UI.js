@@ -84,12 +84,18 @@ export class UI {
     return props;
   }
 
+  static mapStateToContent(states) {
+    let instance = new this();
+    states.subscribe(state => instance.setState(state));
+    return instance;
+  }
+
   static [symbols.render](props, context) {
     let state = this.mapPropsToState(props, context);
     state.parentContext = context;
     return new Element('#document-fragment', {
       id: props.id,
-      uiClass: this,
+      ui: this,
       uiState: state,
     });
   }

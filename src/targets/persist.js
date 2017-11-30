@@ -1,26 +1,22 @@
 import Observable from 'zen-observable';
 import { immediate } from './Scheduler.js';
 import { Element } from '../Element.js';
-import * as symbols from '../symbols.js';
 
-export function persist(updates, options) {
-  return new Observable(sink => {
-    let stream = updates[symbols.element] ?
-      Observable.of(updates) :
-      Observable.from(updates);
-
-    return stream.subscribe(new PersistenceObserver(sink, options));
-  });
+export function persist(updates, actions, options) {
+  return new Observable(sink =>
+    updates.subscribe(new PersistenceObserver(sink, actions, options))
+  );
 }
 
 class PersistenceObserver {
 
-  constructor(sink, options = {}) {
+  constructor(sink, actions, options = {}) {
     this.sink = sink;
     this.current = null;
     this.pending = null;
     this.queued = false;
-    this.actions = options.actions;
+    this.actions = actions;
+    this.root = options.root || null;
     this.scheduler = options.scheduler || immediate;
     this.nodesMatch = options.nodesMatch || nodesMatch;
   }
@@ -52,25 +48,28 @@ class PersistenceObserver {
 
   visitRoot(current, next) {
     if (current && !this.nodesMatch(current, next)) {
-      this.actions.onRemove(current, null);
+      this.actions.onRemove(current, this.root);
       current = null;
     }
     if (current) {
       this.updateNode(current, next);
     } else {
-      this.createNode(next, null, 0);
+      this.createNode(next, this.root, 0);
     }
   }
 
   createNode(element, parent, pos) {
+    element.data = {};
     this.actions.onCreate(element, parent, pos);
     for (let i = 0; i < element.children.length; ++i) {
       this.createNode(element.children[i], element, i);
     }
     this.actions.afterCreate(element, parent, pos);
+    this.actions.onInsert(element, parent, pos);
   }
 
   updateNode(current, next) {
+    next.data = current.data;
     this.actions.onUpdate(current, next);
     let nextList = next.children;
     let currentList = current.children;
@@ -95,7 +94,6 @@ class PersistenceObserver {
       }
       if (!matched) {
         this.createNode(child, next, i);
-        this.actions.onInsert(child, next, i);
       }
     }
     for (let i = from; i < currentList.length; ++i) {

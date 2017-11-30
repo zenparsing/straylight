@@ -186,7 +186,7 @@ test('UI[symbols.render](props, context)', () => {
 
   assert.deepEqual(tree, new Element('#document-fragment', {
     id: 'x',
-    uiClass: mock,
+    ui: mock,
     uiState: {
       id: 'x',
       a: 1,

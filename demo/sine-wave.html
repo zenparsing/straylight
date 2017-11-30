@@ -25,6 +25,25 @@
   <div id='mount'></div>
   <script>
 
+  class Clock extends Straylight.UI {
+    constructor() {
+      super();
+      this.setState({ now: Date.now() });
+    }
+
+    start() {
+      this._timer = setInterval(() => this.setState({ now: Date.now() }), 1000);
+    }
+
+    pause() {
+      clearInterval(this._timer);
+    }
+
+    render({ now }) {
+      return Straylight.html`<div class='clock'>${ new Date(now).toLocaleString() }</div>`;
+    }
+  }
+
   class SineWave extends Straylight.UI {
     constructor() {
       super();
@@ -87,6 +106,7 @@
               `;
             })
           }
+          <${Clock} />
         </div>
       `;
     }

@@ -37,23 +37,23 @@ test('element[symbols.element]()', () => {
 });
 
 test('Element.from(null)', () => {
-  assert.deepEqual(Element.from(null), new Element('#text', { text: '' }));
+  assert.deepEqual(Element.from(null), new Element('#text', { value: '' }));
 });
 
 test('Element.from(undefined)', () => {
-  assert.deepEqual(Element.from(null), new Element('#text', { text: '' }));
+  assert.deepEqual(Element.from(null), new Element('#text', { value: '' }));
 });
 
 test('Element.from(string)', () => {
-  assert.deepEqual(Element.from('x'), new Element('#text', { text: 'x' }));
+  assert.deepEqual(Element.from('x'), new Element('#text', { value: 'x' }));
 });
 
 test('Element.from(number)', () => {
-  assert.deepEqual(Element.from(1), new Element('#text', { text: '1' }));
+  assert.deepEqual(Element.from(1), new Element('#text', { value: '1' }));
 });
 
 test('Element.from(boolean)', () => {
-  assert.deepEqual(Element.from(true), new Element('#text', { text: 'true' }));
+  assert.deepEqual(Element.from(true), new Element('#text', { value: 'true' }));
 });
 
 test('Element.from(array)', () => {
@@ -165,7 +165,7 @@ test('Element.evaluate: element sources', () => {
   assert.deepEqual(Element.evaluate(true), Element.from(true));
   assert.deepEqual(Element.evaluate([1]),
     new Element('#document-fragment', {}, [
-      new Element('#text', { text: '1' }),
+      new Element('#text', { value: '1' }),
     ])
   );
 });

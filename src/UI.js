@@ -87,15 +87,19 @@ export class UI {
 
   static [symbols.render](props, children, context) {
     return new Element('#document-fragment', {
-      createContentStream: () => {
-        let instance = new this();
-        instance._parentContext = context;
-        instance.setState(instance.mapPropsToState(props, children));
+      props,
+      children,
+      context,
+      constructor: this,
+      createContentStream() {
+        let instance = new this.constructor();
+        instance._parentContext = this.context;
+        instance.setState(instance.mapPropsToState(this.props, this.children));
         return instance;
       },
-      updateContentStream: instance => {
-        instance._parentContext = context;
-        instance.setState(instance.mapPropsToState(props, children));
+      updateContentStream(instance) {
+        instance._parentContext = this.context;
+        instance.setState(instance.mapPropsToState(this.props, this.children));
       },
     });
   }

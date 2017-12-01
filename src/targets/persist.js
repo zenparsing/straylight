@@ -52,7 +52,7 @@ class PersistenceObserver {
       current = null;
     }
     if (current) {
-      this.updateNode(current, next);
+      this.visitNode(current, next);
     } else {
       this.createNode(next, this.root, 0);
     }
@@ -68,7 +68,7 @@ class PersistenceObserver {
     this.actions.onInsert(element, parent, pos);
   }
 
-  updateNode(current, next) {
+  visitNode(current, next) {
     next.data = current.data;
     this.actions.onUpdate(current, next);
     let nextList = next.children;
@@ -81,7 +81,7 @@ class PersistenceObserver {
         let node = currentList[j];
         if (!node.matched && this.nodesMatch(node, child)) {
           node.matched = true;
-          this.updateNode(node, child);
+          this.visitNode(node, child);
           if (i !== j) {
             this.actions.onMove(child, next, i);
           }

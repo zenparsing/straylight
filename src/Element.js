@@ -38,13 +38,13 @@ export class Element {
 
   static from(source) {
     if (source === null || source === undefined) {
-      return new Element('#text', { text: '' });
+      return new Element('#text', { value: '' });
     } else if (
       typeof source === 'string' ||
       typeof source === 'number' ||
       typeof source === 'boolean'
     ) {
-      return new Element('#text', { text: String(source) });
+      return new Element('#text', { value: String(source) });
     } else if (Array.isArray(source)) {
       return new Element('#document-fragment', {}, source);
     } else if (source[symbols.element]) {

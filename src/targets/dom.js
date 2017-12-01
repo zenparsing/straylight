@@ -16,14 +16,14 @@ export function renderToDOM(mount, updates) {
   return renderStream(updates, { dom: mount });
 }
 
-function renderStream(updates, rootData) {
+function renderStream(updates, rootData, onNext) {
   let root = new Element('#root');
   root.data = rootData;
   return persist(toContentStream(updates), DOMActions, {
     nodesMatch,
     root,
     scheduler,
-  }).subscribe(() => {});
+  }).subscribe(onNext || (() => {}));
 }
 
 const DOMActions = {
@@ -40,7 +40,7 @@ const DOMActions = {
     }
 
     if (isText(element)) {
-      element.data.dom = document.createTextNode(element.props.text || '');
+      element.data.dom = document.createTextNode(element.props.value || '');
       return;
     }
 
@@ -65,7 +65,10 @@ const DOMActions = {
     if (element.props.createContentStream) {
       let stream = element.props.createContentStream();
       element.data.contentStream = stream;
-      element.data.contentSubscription = renderStream(stream, element.data);
+      element.data.contentRoot = null;
+      element.data.contentSubscription = renderStream(stream, element.data, tree => {
+        element.data.contentRoot = tree;
+      });
     }
   },
 
@@ -128,6 +131,7 @@ const DOMActions = {
     }
     if (element.data.contentSubscription) {
       element.data.contentSubscription.unsubscribe();
+      this.onRemove(element.data.contentRoot, element);
     }
   },
 
@@ -156,7 +160,7 @@ function getPrevious(parent, pos) {
 function setProp(element, key, value) {
   let node = dom(element);
   if (isText(element)) {
-    if (key === 'text') {
+    if (key === 'value') {
       node.nodeValue = value || '';
     }
   } else if (shouldAssign(key, value)) {

@@ -1,11 +1,16 @@
 import Observable from 'zen-observable';
 import { immediate } from './Scheduler.js';
 import { Element } from '../Element.js';
+import * as symbols from '../symbols.js';
 
 export function persist(updates, actions, options) {
   return new Observable(sink =>
-    updates.subscribe(new PersistenceObserver(sink, actions, options))
+    toContentStream(updates).subscribe(new PersistenceObserver(sink, actions, options))
   );
+}
+
+export function toContentStream(updates) {
+  return updates[symbols.element] ? Observable.of(updates) : Observable.from(updates);
 }
 
 class PersistenceObserver {
@@ -18,7 +23,6 @@ class PersistenceObserver {
     this.actions = actions;
     this.root = options.root || null;
     this.scheduler = options.scheduler || immediate;
-    this.nodesMatch = options.nodesMatch || nodesMatch;
   }
 
   run() {
@@ -47,8 +51,8 @@ class PersistenceObserver {
   }
 
   visitRoot(current, next) {
-    if (current && !this.nodesMatch(current, next)) {
-      this.actions.onRemove(current, this.root);
+    if (current && !nodesMatch(current, next)) {
+      this.removeNode(current, this.root);
       current = null;
     }
     if (current) {
@@ -59,13 +63,36 @@ class PersistenceObserver {
   }
 
   createNode(element, parent, pos) {
-    element.data = {};
+    let data = {};
+    element.data = data;
     this.actions.onCreate(element, parent, pos);
     for (let i = 0; i < element.children.length; ++i) {
       this.createNode(element.children[i], element, i);
     }
-    this.actions.afterCreate(element, parent, pos);
     this.actions.onInsert(element, parent, pos);
+    if (element.props.createdCallback) {
+      element.props.createdCallback(data);
+    }
+    if (data.contentStream) {
+      data.contentRoot = null;
+      data.contentSubscription = persist(data.contentStream, this.actions, {
+        root: element,
+        scheduler: this.scheduler,
+      }).subscribe(tree => {
+        data.contentRoot = tree;
+      });
+    }
+  }
+
+  removeNode(element, parent) {
+    this.actions.onRemove(element, parent);
+    if (element.props.removedCallback) {
+      element.props.removedCallback(element.data);
+    }
+    if (element.data.contentSubscription) {
+      element.data.contentSubscription.unsubscribe();
+      this.removeNode(element.data.contentRoot, element);
+    }
   }
 
   visitNode(current, next) {
@@ -79,7 +106,7 @@ class PersistenceObserver {
       let matched = false;
       for (let j = from; j < currentList.length; ++j) {
         let node = currentList[j];
-        if (!node.matched && this.nodesMatch(node, child)) {
+        if (!node.matched && nodesMatch(node, child)) {
           node.matched = true;
           this.visitNode(node, child);
           if (i !== j) {
@@ -99,14 +126,16 @@ class PersistenceObserver {
     for (let i = from; i < currentList.length; ++i) {
       let node = currentList[i];
       if (!node.matched) {
-        this.actions.onRemove(node, next);
+        this.removeNode(node, next);
       }
     }
-    this.actions.afterUpdate(current, next);
+    if (next.props.updatedCallback) {
+      next.props.updatedCallback(next.data);
+    }
   }
 
 }
 
 function nodesMatch(a, b) {
-  return a.tag === b.tag && (a.props.id || '') === (b.props.id || '');
+  return a.tag === b.tag && (a.props.type || null) === (b.props.type || null);
 }

@@ -1,6 +1,5 @@
 import { Element } from '../Element.js';
 import { Scheduler } from './Scheduler.js';
-import { toContentStream } from './content-stream.js';
 import { persist } from './persist.js';
 
 const htmlNS = 'http://www.w3.org/1999/xhtml';
@@ -13,17 +12,9 @@ export function renderToDOM(mount, updates) {
   if (!mount || !mount.nodeName) {
     throw new TypeError(`${mount} is not a DOM element`);
   }
-  return renderStream(updates, { dom: mount });
-}
-
-function renderStream(updates, rootData, onNext) {
   let root = new Element('#root');
-  root.data = rootData;
-  return persist(toContentStream(updates), DOMActions, {
-    nodesMatch,
-    root,
-    scheduler,
-  }).subscribe(onNext || (() => {}));
+  root.data = { target: mount };
+  return persist(updates, DOMActions, { root, scheduler }).subscribe(() => {});
 }
 
 const DOMActions = {
@@ -35,19 +26,19 @@ const DOMActions = {
     let document = parentNode.ownerDocument;
 
     if (isFragment(element)) {
-      element.data.dom = parentNode;
+      element.data.target = parentNode;
       return;
     }
 
     if (isText(element)) {
-      element.data.dom = document.createTextNode(element.props.value || '');
+      element.data.target = document.createTextNode(element.props.value || '');
       return;
     }
 
     let tag = element.tag;
     let namespace = getNamespace(element, parentNode);
 
-    element.data.dom = namespace === htmlNS ?
+    element.data.target = namespace === htmlNS ?
       document.createElement(tag) :
       document.createElementNS(namespace, tag);
 
@@ -55,20 +46,6 @@ const DOMActions = {
       if (!isMagicProp(key)) {
         setProp(element, key, element.props[key]);
       }
-    }
-  },
-
-  afterCreate(element) {
-    if (element.props.createdCallback) {
-      scheduler.enqueue(() => element.props.createdCallback(dom(element)));
-    }
-    if (element.props.createContentStream) {
-      let stream = element.props.createContentStream();
-      element.data.contentStream = stream;
-      element.data.contentRoot = null;
-      element.data.contentSubscription = renderStream(stream, element.data, tree => {
-        element.data.contentRoot = tree;
-      });
     }
   },
 
@@ -96,15 +73,6 @@ const DOMActions = {
     }
   },
 
-  afterUpdate(current, next) {
-    if (next.props.updatedCallback) {
-      scheduler.enqueue(() => next.props.updatedCallback(dom(next)));
-    }
-    if (next.props.updateContentStream) {
-      next.props.updateContentStream(next.data.contentStream);
-    }
-  },
-
   onInsert(element, parent) {
     moveChild(element, parent);
   },
@@ -125,13 +93,6 @@ const DOMActions = {
     } else {
       let parentNode = parent ? dom(parent) : this.mount;
       parentNode.removeChild(dom(element));
-    }
-    if (element.props.removedCallback) {
-      scheduler.enqueue(() => element.props.removedCallback(dom(element)));
-    }
-    if (element.data.contentSubscription) {
-      element.data.contentSubscription.unsubscribe();
-      this.onRemove(element.data.contentRoot, element);
     }
   },
 
@@ -173,7 +134,7 @@ function setProp(element, key, value) {
 }
 
 function dom(element) {
-  return element.data.dom;
+  return element.data.target;
 }
 
 function shouldAssign(name, value) {
@@ -205,17 +166,7 @@ function isMagicProp(name) {
     case 'createdCallback':
     case 'updatedCallback':
     case 'removedCallback':
-    case 'createContentStream':
-    case 'updateContentStream':
       return true;
   }
   return false;
-}
-
-function nodesMatch(a, b) {
-  return (
-    a.tag === b.tag &&
-    (a.props.id || '') === (b.props.id || '') &&
-    (a.tag !== 'input' || a.props.type === b.props.type)
-  );
 }

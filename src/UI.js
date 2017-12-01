@@ -3,29 +3,6 @@ import { Element } from './Element.js';
 import { Store } from './Store.js';
 import * as symbols from './symbols.js';
 
-class UIStore extends Store {
-  constructor(ui) { super(); this._ui = ui; }
-  start() { this._ui.start(); }
-  pause() { this._ui.pause(); }
-}
-
-class UIUpdate {
-
-  constructor(ui) {
-    this._ui = ui;
-    this._element = null;
-  }
-
-  [symbols.element]() {
-    if (!this._element) {
-      this._element = this._ui.renderState();
-      this._ui = null;
-    }
-    return this._element;
-  }
-
-}
-
 export class UI {
 
   constructor() {
@@ -86,22 +63,63 @@ export class UI {
   }
 
   static [symbols.render](props, children, context) {
-    return new Element('#document-fragment', {
-      props,
-      children,
-      context,
-      constructor: this,
-      createContentStream() {
-        let instance = new this.constructor();
-        instance._parentContext = this.context;
-        instance.setState(instance.mapPropsToState(this.props, this.children));
-        return instance;
-      },
-      updateContentStream(instance) {
-        instance._parentContext = this.context;
-        instance.setState(instance.mapPropsToState(this.props, this.children));
-      },
-    });
+    return new Element('#document-fragment', new UIProps(this, props, children, context));
+  }
+
+}
+
+class UIStore extends Store {
+
+  constructor(ui) {
+    super();
+    this._ui = ui;
+  }
+
+  start() {
+    this._ui.start();
+  }
+
+  pause() {
+    this._ui.pause();
+  }
+
+}
+
+class UIUpdate {
+
+  constructor(ui) {
+    this._ui = ui;
+    this._element = null;
+  }
+
+  [symbols.element]() {
+    if (!this._element) {
+      this._element = this._ui.renderState();
+      this._ui = null;
+    }
+    return this._element;
+  }
+
+}
+
+class UIProps {
+
+  constructor(uiClass, props, children, context) {
+    this.type = uiClass;
+    this.props = props;
+    this.children = children;
+    this.context = context;
+  }
+
+  createdCallback(data) {
+    data.contentStream = new this.type();
+    this.updatedCallback(data);
+  }
+
+  updatedCallback(data) {
+    let ui = data.contentStream;
+    ui._parentContext = this.context;
+    ui.setState(ui.mapPropsToState(this.props, this.children));
   }
 
 }

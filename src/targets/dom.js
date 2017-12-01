@@ -1,4 +1,3 @@
-import PushStream from 'zen-push';
 import { Element } from '../Element.js';
 import { Scheduler } from './Scheduler.js';
 import { toContentStream } from './content-stream.js';
@@ -63,16 +62,18 @@ const DOMActions = {
     if (element.props.createdCallback) {
       scheduler.enqueue(() => element.props.createdCallback(dom(element)));
     }
-    if (element.props.ui) {
-      let states = new PushStream();
-      let content = element.props.ui.mapStateToContent(states.observable);
-      states.next(element.props.uiState);
-      element.data.states = states;
-      element.data.subscription = renderStream(content, element.data);
+    if (element.props.createContentStream) {
+      let stream = element.props.createContentStream();
+      element.data.contentStream = stream;
+      element.data.contentSubscription = renderStream(stream, element.data);
     }
   },
 
   onUpdate(current, next) {
+    if (isFragment(next)) {
+      return;
+    }
+
     let seen = Object.create(null);
 
     for (let key in next.props) {
@@ -96,8 +97,8 @@ const DOMActions = {
     if (next.props.updatedCallback) {
       scheduler.enqueue(() => next.props.updatedCallback(dom(next)));
     }
-    if (next.data.states) {
-      next.data.states.next(next.props.uiState);
+    if (next.props.updateContentStream) {
+      next.props.updateContentStream(next.data.contentStream);
     }
   },
 
@@ -125,8 +126,8 @@ const DOMActions = {
     if (element.props.removedCallback) {
       scheduler.enqueue(() => element.props.removedCallback(dom(element)));
     }
-    if (element.data.subscription) {
-      element.data.subscription.unsubscribe();
+    if (element.data.contentSubscription) {
+      element.data.contentSubscription.unsubscribe();
     }
   },
 
@@ -197,11 +198,11 @@ function getNamespace(element, context) {
 
 function isMagicProp(name) {
   switch (name) {
-    case 'children':
     case 'createdCallback':
     case 'updatedCallback':
     case 'removedCallback':
-    case 'uiClass':
+    case 'createContentStream':
+    case 'updateContentStream':
       return true;
   }
   return false;

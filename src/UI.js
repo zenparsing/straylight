@@ -30,6 +30,7 @@ export class UI {
 
   constructor() {
     this._context = null;
+    this._parentContext = null;
     this._store = new UIStore(this);
     this._updates = Observable.from(this._store).map(() => new UIUpdate(this));
   }
@@ -47,7 +48,7 @@ export class UI {
   }
 
   getContext() {
-    let context = Object.create(this.getState().parentContext || null);
+    let context = Object.create(this._parentContext);
     if (this._context) {
       for (let key in this._context) {
         context[key] = this._context[key];
@@ -60,8 +61,8 @@ export class UI {
     this._context = data;
   }
 
-  [symbols.render](state, context) {
-    return this.render(state, context);
+  [symbols.render](state, children, context) {
+    return this.render(state, children, context);
   }
 
   render() {
@@ -80,23 +81,22 @@ export class UI {
     return Element.evaluate(new Element(this, this.getState()), this.getContext());
   }
 
-  static mapPropsToState(props) {
-    return props;
+  mapPropsToState() {
+    return null;
   }
 
-  static mapStateToContent(states) {
-    let instance = new this();
-    states.subscribe(state => instance.setState(state));
-    return instance;
-  }
-
-  static [symbols.render](props, context) {
-    let state = this.mapPropsToState(props, context);
-    state.parentContext = context;
+  static [symbols.render](props, children, context) {
     return new Element('#document-fragment', {
-      id: props.id,
-      ui: this,
-      uiState: state,
+      createContentStream: () => {
+        let instance = new this();
+        instance._parentContext = context;
+        instance.setState(instance.mapPropsToState(props, children));
+        return instance;
+      },
+      updateContentStream: instance => {
+        instance._parentContext = context;
+        instance.setState(instance.mapPropsToState(props, children));
+      },
     });
   }
 

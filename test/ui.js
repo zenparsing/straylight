@@ -161,16 +161,11 @@ test('ui.pause()', () => {
   assert.deepEqual(calls, [[]]);
 });
 
-test('ui.render(props, context)', () => {
+test('ui.render(props, children, context)', () => {
   assert.throws(() => { new UI().render(); });
 });
 
-test('UI.mapPropsToState', () => {
-  let props = { a: 1, b: 2 };
-  assert.equal(UI.mapPropsToState(props), props);
-});
-
-test('UI[symbols.render](props, context)', () => {
+test('UI[symbols.render](props, children, context)', () => {
   let mock = {
     mapPropsToState(props, context) {
       this._props = Object.assign({}, props);
@@ -181,6 +176,7 @@ test('UI[symbols.render](props, context)', () => {
 
   let tree = UI[symbols.render].call(mock,
     { id: 'x', a: 1, b: 2 },
+    [],
     { c: 3, d: 4 }
   );
 

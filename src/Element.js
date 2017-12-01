@@ -2,18 +2,10 @@ import * as symbols from './symbols.js';
 
 export class Element {
 
-  constructor(tag, props = null, children = null) {
-    if (props && (!children || children.length === 0) && Array.isArray(props.children)) {
-      children = props.children;
-    }
-
-    props = props || {};
-    children = children || [];
-    props.children = children;
-
+  constructor(tag, props, children) {
     this.tag = tag;
-    this.props = props;
-    this.children = children;
+    this.props = props || {};
+    this.children = children || [];
   }
 
   [symbols.element]() {
@@ -34,7 +26,7 @@ export class Element {
       if (typeof render !== 'function') {
         throw new TypeError(`${render} is not a function`);
       }
-      node = Element.from(render.call(receiver, node.props, context));
+      node = Element.from(render.call(receiver, node.props, node.children, context));
     }
 
     for (let i = 0; i < node.children.length; ++i) {

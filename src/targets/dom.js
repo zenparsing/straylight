@@ -14,7 +14,7 @@ export function renderToDOM(mount, updates) {
   }
   let root = new Element('#root');
   root.data = { target: mount };
-  return persist(updates, DOMActions, { root, scheduler }).subscribe(() => {});
+  return persist(updates, { actions: DOMActions, root, scheduler }).subscribe(() => {});
 }
 
 const DOMActions = {
@@ -49,6 +49,12 @@ const DOMActions = {
     }
   },
 
+  afterCreate(element) {
+    if (!isFragment(element) && element.props.createdCallback) {
+      scheduler.enqueue(() => element.props.createdCallback(dom(element)));
+    }
+  },
+
   onUpdate(current, next) {
     if (isFragment(next)) {
       return;
@@ -73,6 +79,12 @@ const DOMActions = {
     }
   },
 
+  afterUpdate(element) {
+    if (!isFragment(element) && element.props.updatedCallback) {
+      scheduler.enqueue(() => element.props.updatedCallback(dom(element)));
+    }
+  },
+
   onInsert(element, parent) {
     moveChild(element, parent);
   },
@@ -93,6 +105,9 @@ const DOMActions = {
     } else {
       let parentNode = parent ? dom(parent) : this.mount;
       parentNode.removeChild(dom(element));
+      if (element.props.removedCallback) {
+        scheduler.enqueue(() => element.props.removedCallback(dom(element)));
+      }
     }
   },
 

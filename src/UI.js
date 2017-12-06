@@ -8,6 +8,7 @@ export class UI {
   constructor() {
     this._context = null;
     this._parentContext = null;
+    this._children = [];
     this._store = new UIStore(this);
     this._updates = Observable.from(this._store).map(() => new UIUpdate(this));
   }
@@ -55,11 +56,12 @@ export class UI {
   }
 
   renderState() {
-    return Element.evaluate(new Element(this, this.getState()), this.getContext());
+    let root = new Element(this, this.getState(), this._children);
+    return Element.evaluate(root, this.getContext());
   }
 
-  mapPropsToState() {
-    return null;
+  static mapPropsToState(props) {
+    return props;
   }
 
   static [symbols.render](props, children, context) {
@@ -104,22 +106,23 @@ class UIUpdate {
 
 class UIProps {
 
-  constructor(uiClass, props, children, context) {
-    this.type = uiClass;
-    this.props = props;
+  constructor(type, props, children, context) {
+    this.type = type;
     this.children = children;
     this.context = context;
+    this.state = type.mapPropsToState(props, children, context);
   }
 
-  createdCallback(data) {
-    data.contentStream = new this.type();
-    this.updatedCallback(data);
+  createComponent() {
+    let ui = new this.type();
+    this.updateComponent(ui);
+    return ui;
   }
 
-  updatedCallback(data) {
-    let ui = data.contentStream;
+  updateComponent(ui) {
     ui._parentContext = this.context;
-    ui.setState(ui.mapPropsToState(this.props, this.children));
+    ui._children = this.children;
+    ui.setState(this.state);
   }
 
 }

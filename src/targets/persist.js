@@ -3,35 +3,48 @@ import { immediate } from './Scheduler.js';
 import { Element } from '../Element.js';
 import * as symbols from '../symbols.js';
 
-export function persist(updates, actions, options) {
+export function persist(updates, options) {
   return new Observable(sink =>
-    toContentStream(updates).subscribe(new PersistenceObserver(sink, actions, options))
+    toContentStream(updates).subscribe(new PersistenceObserver(sink, options))
   );
 }
 
 export function toContentStream(updates) {
-  return updates[symbols.element] ? Observable.of(updates) : Observable.from(updates);
+  if (updates[symbols.element]) {
+    return Observable.of(Element.evaluate(updates));
+  }
+  return Observable.from(updates);
 }
 
 class PersistenceObserver {
 
-  constructor(sink, actions, options = {}) {
+  constructor(sink, options = {}) {
     this.sink = sink;
     this.current = null;
     this.pending = null;
     this.queued = false;
-    this.actions = actions;
+    this.actions = options.actions || nullActions;
     this.root = options.root || null;
     this.scheduler = options.scheduler || immediate;
   }
 
   run() {
+    if (this.subscription.closed) {
+      return;
+    }
     let tree = Element.from(this.pending);
+    if (this.root) {
+      this.root.children = [tree];
+    }
     this.pending = null;
     this.visitRoot(this.current, tree);
     this.current = tree;
     this.queued = false;
-    this.sink.next(this.current);
+    this.notify();
+  }
+
+  start(subscription) {
+    this.subscription = subscription;
   }
 
   next(tree) {
@@ -50,6 +63,12 @@ class PersistenceObserver {
     this.sink.complete();
   }
 
+  notify() {
+    if (!this.queued) {
+      this.sink.next(this.current);
+    }
+  }
+
   visitRoot(current, next) {
     if (current && !nodesMatch(current, next)) {
       this.removeNode(current, this.root);
@@ -63,41 +82,42 @@ class PersistenceObserver {
   }
 
   createNode(element, parent, pos) {
-    let data = {};
-    element.data = data;
+    element.data = {};
     this.actions.onCreate(element, parent, pos);
-    for (let i = 0; i < element.children.length; ++i) {
-      this.createNode(element.children[i], element, i);
+    if (isComponentElement(element)) {
+      this.createComponent(element);
+    } else {
+      for (let i = 0; i < element.children.length; ++i) {
+        this.createNode(element.children[i], element, i);
+      }
     }
     this.actions.onInsert(element, parent, pos);
-    if (element.props.createdCallback) {
-      element.props.createdCallback(data);
-    }
-    if (data.contentStream) {
-      data.contentRoot = null;
-      data.contentSubscription = persist(data.contentStream, this.actions, {
-        root: element,
-        scheduler: this.scheduler,
-      }).subscribe(tree => {
-        data.contentRoot = tree;
-      });
-    }
+    this.actions.afterCreate(element);
   }
 
   removeNode(element, parent) {
+    if (isComponentElement(element)) {
+      this.removeComponent(element);
+    }
     this.actions.onRemove(element, parent);
-    if (element.props.removedCallback) {
-      element.props.removedCallback(element.data);
-    }
-    if (element.data.contentSubscription) {
-      element.data.contentSubscription.unsubscribe();
-      this.removeNode(element.data.contentRoot, element);
-    }
   }
 
   visitNode(current, next) {
+    let componentElement = isComponentElement(next);
+    if (componentElement) {
+      next.children = current.children;
+    }
     next.data = current.data;
     this.actions.onUpdate(current, next);
+    if (componentElement) {
+      next.props.updateComponent(next.data.component);
+    } else {
+      this.visitChildren(current, next);
+    }
+    this.actions.afterUpdate(next);
+  }
+
+  visitChildren(current, next) {
     let nextList = next.children;
     let currentList = current.children;
     let from = 0;
@@ -129,11 +149,53 @@ class PersistenceObserver {
         this.removeNode(node, next);
       }
     }
-    if (next.props.updatedCallback) {
-      next.props.updatedCallback(next.data);
-    }
   }
 
+  createComponent(element) {
+    let scheduler = this.scheduler;
+    let actions = this.actions;
+    let root = element;
+    let component = element.props.createComponent();
+    let updates = persist(component, { actions, root, scheduler });
+    element.data.component = component;
+    updates.subscribe(new ComponentObserver(element, this));
+  }
+
+  removeComponent(element) {
+    element.data.componentSubscription.unsubscribe();
+  }
+
+}
+
+class ComponentObserver {
+
+  constructor(element, persistenceObserver) {
+    this.data = element.data;
+    this.persistenceObserver = persistenceObserver;
+  }
+
+  start(subscription) {
+    this.data.componentSubscription = subscription;
+  }
+
+  next() {
+    this.persistenceObserver.notify();
+  }
+
+}
+
+const nullActions = {
+  onCreate() {},
+  afterCreate() {},
+  onUpdate() {},
+  afterUpdate() {},
+  onInsert() {},
+  onMove() {},
+  onRemove() {},
+};
+
+function isComponentElement(element) {
+  return Boolean(element.props.createComponent);
 }
 
 function nodesMatch(a, b) {

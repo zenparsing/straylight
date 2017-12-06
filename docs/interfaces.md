@@ -5,7 +5,7 @@
 ```ts
 
 interface RenderFunction {
-  (props, context): Element;
+  (props: object, children: Element[], context: any): ElementSource;
 }
 
 interface Renderable {
@@ -50,16 +50,6 @@ interface ElementConstructor {
 
 ```
 
-### Content Managers
-
-```ts
-
-interface ContentManager {
-  [symbols.mapStateToContent](states: Observable<any>): ObservableLike<ElementSource>;
-}
-
-```
-
 ### Data Stores
 
 ```ts
@@ -75,13 +65,12 @@ interface Store extends ObservableLike<object> {
 
 ```ts
 
-interface UIConstructor extends Renderable, ContentManager {
+interface UIConstructor extends Renderable {
   new(): UI;
-  mapPropsToState(props: object, context: object): any;
-  tagName: string;
+  mapPropsToState(props: object, children: Element[], context: any): any;
 }
 
-interface UI extends ObservableLike<ElementSource> {
+interface UI extends Renderable, ObservableLike<ElementSource> {
   getContext(): object;
   setContext(context): void;
 

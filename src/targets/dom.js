@@ -139,7 +139,9 @@ function setProp(element, key, value) {
     if (key === 'value') {
       node.nodeValue = value || '';
     }
-  } else if (shouldAssign(key, value)) {
+  } else if (key[0] === '.') {
+    node[key.slice(1)] = value;
+  } else if (typeof value === 'function' && /^on\w/.test(key)) {
     node[key] = value;
   } else if (value === null || value === undefined || value === false) {
     node.removeAttribute(key);
@@ -150,10 +152,6 @@ function setProp(element, key, value) {
 
 function dom(element) {
   return element.data.target;
-}
-
-function shouldAssign(name, value) {
-  return typeof value === 'function' && /^on\w/.test(name);
 }
 
 function isText(element) {

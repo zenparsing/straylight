@@ -45,7 +45,8 @@ function toAttributes(props) {
       value === null ||
       value === undefined ||
       value === false ||
-      typeof value === 'function'
+      typeof value === 'function' ||
+      name[0] === '.'
     ) {
       continue;
     }

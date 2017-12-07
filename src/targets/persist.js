@@ -103,14 +103,10 @@ class PersistenceObserver {
   }
 
   visitNode(current, next) {
-    let componentElement = isComponentElement(next);
-    if (componentElement) {
-      next.children = current.children;
-    }
     next.data = current.data;
     this.actions.onUpdate(current, next);
-    if (componentElement) {
-      next.props.updateComponent(next.data.component);
+    if (isComponentElement(next)) {
+      this.updateComponent(current, next);
     } else {
       this.visitChildren(current, next);
     }
@@ -159,6 +155,11 @@ class PersistenceObserver {
     let updates = persist(component, { actions, root, scheduler });
     element.data.component = component;
     updates.subscribe(new ComponentObserver(element, this));
+  }
+
+  updateComponent(current, next) {
+    next.children = current.children;
+    next.props.updateComponent(next.data.component);
   }
 
   removeComponent(element) {

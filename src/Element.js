@@ -12,7 +12,7 @@ export class Element {
     return this;
   }
 
-  static evaluate(source, context) {
+  static evaluate(source) {
     let element = Element.from(source);
     let node = element;
 
@@ -26,11 +26,11 @@ export class Element {
       if (typeof render !== 'function') {
         throw new TypeError(`${render} is not a function`);
       }
-      node = Element.from(render.call(receiver, node.props, node.children, context));
+      node = Element.from(render.call(receiver, node.props, node.children));
     }
 
     for (let i = 0; i < node.children.length; ++i) {
-      node.children[i] = Element.evaluate(node.children[i], context);
+      node.children[i] = Element.evaluate(node.children[i]);
     }
 
     return node;

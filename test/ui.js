@@ -19,7 +19,7 @@ test('ui[symbols.observable]()', () => {
   assert.equal(typeof calls[0][symbols.element], 'function');
   assert.deepEqual(calls[0][symbols.element](), {
     tag: '#text',
-    props: { text: 'undefined:test', children: [] },
+    props: { value: 'undefined:test' },
     children: [],
   });
 
@@ -28,7 +28,7 @@ test('ui[symbols.observable]()', () => {
   assert.equal(calls.length, 2);
   assert.deepEqual(calls[1][symbols.element](), {
     tag: '#text',
-    props: { text: '1:test', children: [] },
+    props: { value: '1:test' },
     children: [],
   });
 
@@ -36,27 +36,6 @@ test('ui[symbols.observable]()', () => {
   sub.unsubscribe();
   ui.setState({ x: 2 });
   assert.equal(calls.length, 2);
-});
-
-test('ui.getContext()', () => {
-  let ui = new UI();
-  assert.deepEqual(ui.getContext(), {});
-  ui.setContext({ a: 1, b: 2 });
-  assert.deepEqual(ui.getContext(), { a: 1, b: 2 });
-  ui.setState({ parentContext: { c: 3 } });
-  assert.deepEqual(ui.getContext(), { a: 1, b: 2 });
-  assert.equal(ui.getContext().c, 3);
-  ui.setContext(null);
-  assert.deepEqual(ui.getContext(), {});
-  assert.equal(ui.getContext().c, 3);
-});
-
-test('ui.setContext(context)', () => {
-  let ui = new UI();
-  ui.setContext({ a: 1, b: 2 });
-  assert.deepEqual(ui.getContext(), { a: 1, b: 2 });
-  ui.setContext(null);
-  assert.deepEqual(ui.getContext(), {});
 });
 
 test('ui.getState()', () => {
@@ -98,16 +77,15 @@ test('ui.renderState()', () => {
   let args;
   let nested;
 
-  function nestedRender(props, context) {
-    nested = { props, context };
+  function nestedRender(props, children) {
+    nested = { props, children };
     return new Element('span');
   }
 
   ui.setState({ a: 1, b: 2 });
-  ui.setContext({ c: 3, d: 4 });
 
-  ui.render = function(props, context) {
-    args = { thisValue: this, props, context };
+  ui.render = function(props, children) {
+    args = { thisValue: this, props, children };
     return new Element('div', {}, [
       new Element(nestedRender, { x: 1 }),
       'text',
@@ -116,15 +94,15 @@ test('ui.renderState()', () => {
 
   assert.deepEqual(ui.renderState(), new Element('div', {}, [
     new Element('span'),
-    new Element('#text', { text: 'text' }),
+    new Element('#text', { value: 'text' }),
   ]));
 
   assert.equal(args.thisValue, ui);
-  assert.deepEqual(args.props, { a: 1, b: 2, children: [] });
-  assert.deepEqual(args.context, { c: 3, d: 4 });
+  assert.deepEqual(args.props, { a: 1, b: 2 });
+  assert.deepEqual(args.children, []);
 
-  assert.deepEqual(nested.props, { x: 1, children: [] });
-  assert.deepEqual(nested.context, { c: 3, d: 4 });
+  assert.deepEqual(nested.props, { x: 1 });
+  assert.deepEqual(nested.children, []);
 });
 
 test('ui.start()', () => {
@@ -165,11 +143,11 @@ test('ui.render(props, children, context)', () => {
   assert.throws(() => { new UI().render(); });
 });
 
-test('UI[symbols.render](props, children, context)', () => {
+test('UI[symbols.render](props, children)', () => {
   let mock = {
-    mapPropsToState(props, context) {
+    mapPropsToState(props, children) {
       this._props = Object.assign({}, props);
-      this._context = context;
+      this._children = children;
       return props;
     },
   };
@@ -177,20 +155,13 @@ test('UI[symbols.render](props, children, context)', () => {
   let tree = UI[symbols.render].call(mock,
     { id: 'x', a: 1, b: 2 },
     [],
-    { c: 3, d: 4 }
   );
 
-  assert.deepEqual(tree, new Element('#document-fragment', {
-    id: 'x',
-    ui: mock,
-    uiState: {
-      id: 'x',
-      a: 1,
-      b: 2,
-      parentContext: { c: 3, d: 4 },
-    },
-  }));
+  assert.equal(tree.tag, '#document-fragment');
+  assert.equal(tree.props.type, mock);
+  assert.deepEqual(tree.props.state, { id: 'x', a: 1, b: 2 });
+  assert.deepEqual(tree.children, []);
 
   assert.deepEqual(mock._props, { id: 'x', a: 1, b: 2 });
-  assert.deepEqual(mock._context, { c: 3, d: 4 });
+  assert.deepEqual(mock._children, []);
 });

@@ -6,9 +6,6 @@ import * as symbols from './symbols.js';
 export class UI {
 
   constructor() {
-    this._context = null;
-    this._parentContext = null;
-    this._children = [];
     this._store = new UIStore(this);
     this._updates = Observable.from(this._store).map(() => new UIUpdate(this));
   }
@@ -25,22 +22,8 @@ export class UI {
     this._store.setState(data);
   }
 
-  getContext() {
-    let context = Object.create(this._parentContext);
-    if (this._context) {
-      for (let key in this._context) {
-        context[key] = this._context[key];
-      }
-    }
-    return context;
-  }
-
-  setContext(data) {
-    this._context = data;
-  }
-
-  [symbols.render](state, children, context) {
-    return this.render(state, children, context);
+  [symbols.render](props, children) {
+    return this.render(props, children);
   }
 
   render() {
@@ -56,16 +39,16 @@ export class UI {
   }
 
   renderState() {
-    let root = new Element(this, this.getState(), this._children);
-    return Element.evaluate(root, this.getContext());
+    let state = this.getState();
+    return Element.evaluate(new Element(this, state, state.children));
   }
 
   static mapPropsToState(props) {
     return props;
   }
 
-  static [symbols.render](props, children, context) {
-    return new Element('#document-fragment', new UIProps(this, props, children, context));
+  static [symbols.render](props, children) {
+    return new Element('#document-fragment', new UIProps(this, props, children));
   }
 
 }
@@ -106,11 +89,9 @@ class UIUpdate {
 
 class UIProps {
 
-  constructor(type, props, children, context) {
+  constructor(type, props, children) {
     this.type = type;
-    this.children = children;
-    this.context = context;
-    this.state = type.mapPropsToState(props, children, context);
+    this.state = type.mapPropsToState(props, children);
   }
 
   createComponent() {
@@ -120,8 +101,6 @@ class UIProps {
   }
 
   updateComponent(ui) {
-    ui._parentContext = this.context;
-    ui._children = this.children;
     ui.setState(this.state);
   }
 

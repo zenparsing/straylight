@@ -5,7 +5,7 @@
 ```ts
 
 interface RenderFunction {
-  (props: object, children: Element[], context: any): ElementSource;
+  (props: object, children: Element[]): ElementSource;
 }
 
 interface Renderable {
@@ -45,7 +45,7 @@ type ElementSource =
 interface ElementConstructor {
   new(tag: ElementTag, props?: object, children?: any[]): Element;
   from(source: ElementSource): Element;
-  evaluate(source: ElementSource, context?: any) : Element;
+  evaluate(source: ElementSource) : Element;
 }
 
 ```
@@ -67,13 +67,10 @@ interface Store extends ObservableLike<object> {
 
 interface UIConstructor extends Renderable {
   new(): UI;
-  mapPropsToState(props: object, children: Element[], context: any): any;
+  mapPropsToState(props: object, children: Element[]): any;
 }
 
 interface UI extends Renderable, ObservableLike<ElementSource> {
-  getContext(): object;
-  setContext(context): void;
-
   getState(fn?: object => any): object;
   setState(data: object): void;
   setState(fn: object => object): void;

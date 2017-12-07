@@ -77,42 +77,37 @@ test('Element.from(invalid)', () => {
 });
 
 test('Element.evaluate: Render function tag', () => {
-  function render(props, children, context) {
-    return new Element('div', { props, children, context });
+  function render(props, children) {
+    return new Element('div', { props, children });
   }
 
-  let c = { x: 1, y: 2 };
   let p = { a: 1, b: 2 };
-  let e = Element.evaluate(new Element(render, p), c);
+  let e = Element.evaluate(new Element(render, p));
 
   assert.deepEqual(e, new Element('div', {
     props: { a: 1, b: 2 },
     children: [],
-    context: c,
   }));
 });
 
 test('Element.evaluate: Renderable tag', () => {
   let renderable = {
-    [symbols.render](props, children, context) {
+    [symbols.render](props, children) {
       return new Element('div', {
         receiver: this,
         props,
         children,
-        context,
       });
     },
   };
 
-  let c = { x: 1, y: 2 };
   let p = { a: 1, b: 2 };
-  let e = Element.evaluate(new Element(renderable, p), c);
+  let e = Element.evaluate(new Element(renderable, p));
 
   assert.deepEqual(e, new Element('div', {
     props: { a: 1, b: 2 },
     receiver: renderable,
     children: [],
-    context: c,
   }));
 });
 
@@ -123,19 +118,17 @@ test('Element.evaluate: invalid tag', () => {
 });
 
 test('Element.evaluate: children are evaluated', () => {
-  function render(props, children, context) {
-    return new Element('div', { props, children, context });
+  function render(props, children) {
+    return new Element('div', { props, children });
   }
 
   let e = Element.evaluate(
-    new Element('div', {}, [new Element(render, { a: 1, b: 2 })]),
-    { x: 'a', y: 'b' }
+    new Element('div', {}, [new Element(render, { a: 1, b: 2 })])
   );
 
   assert.deepEqual(e.children[0], new Element('div', {
     props: { a: 1, b: 2 },
     children: [],
-    context: { x: 'a', y: 'b' },
   }));
 });
 
@@ -144,16 +137,15 @@ test('Element.evaluate: recursive rendering', () => {
     return new Element(renderB, { a: 1, b: 2 });
   }
 
-  function renderB(props, children, context) {
-    return new Element('div', { props, children, context });
+  function renderB(props, children) {
+    return new Element('div', { props, children });
   }
 
-  let e = Element.evaluate(new Element(renderA), { x: 'a', y: 'b' });
+  let e = Element.evaluate(new Element(renderA));
 
   assert.deepEqual(e, new Element('div', {
     props: { a: 1, b: 2 },
     children: [],
-    context: { x: 'a', y: 'b' },
   }));
 });
 

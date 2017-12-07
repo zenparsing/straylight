@@ -24,11 +24,10 @@ const HTML_ESCAPES = {
   '`': '&#x60;',
 };
 
-const SELF_CLOSING = new RegExp('^(?:' + [
-  'area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command',
-  'embed', 'frame', 'hr', 'img', 'input', 'isindex', 'keygen',
-  'link', 'meta', 'param', 'source', 'track', 'wbr',
-].join('|') + ')$', 'i');
+const SELF_CLOSING = new RegExp(`^(?:
+  area|base|basefont|bgsound|br|col|command|embed|frame|hr|
+  img|input|isindex|keygen|link|meta|param|source|track|wbr
+)$`.replace(/\s/g, ''), 'i');
 
 function esc(s) {
   s = '' + (s || '');
@@ -42,11 +41,11 @@ function toAttributes(props) {
     let value = props[name];
 
     if (
+      name[0] === '.' ||
       value === null ||
       value === undefined ||
       value === false ||
-      typeof value === 'function' ||
-      name[0] === '.'
+      typeof value === 'function'
     ) {
       continue;
     }

@@ -47,10 +47,8 @@ const DOMActions = {
         setProp(element, key, element.props[key]);
       }
     }
-  },
 
-  afterCreate(element) {
-    if (!isFragment(element) && element.props.createdCallback) {
+    if (element.props.createdCallback) {
       scheduler.enqueue(() => element.props.createdCallback(dom(element)));
     }
   },
@@ -77,11 +75,9 @@ const DOMActions = {
         setProp(next, key, undefined);
       }
     }
-  },
 
-  afterUpdate(element) {
-    if (!isFragment(element) && element.props.updatedCallback) {
-      scheduler.enqueue(() => element.props.updatedCallback(dom(element)));
+    if (next.props.updatedCallback) {
+      scheduler.enqueue(() => next.props.updatedCallback(dom(next)));
     }
   },
 

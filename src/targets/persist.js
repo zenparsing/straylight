@@ -92,7 +92,6 @@ class PersistenceObserver {
       }
     }
     this.actions.onInsert(element, parent, pos);
-    this.actions.afterCreate(element);
   }
 
   removeNode(element, parent) {
@@ -104,13 +103,12 @@ class PersistenceObserver {
 
   visitNode(current, next) {
     next.data = current.data;
-    this.actions.onUpdate(current, next);
     if (isComponentElement(next)) {
       this.updateComponent(current, next);
     } else {
       this.visitChildren(current, next);
     }
-    this.actions.afterUpdate(next);
+    this.actions.onUpdate(current, next);
   }
 
   visitChildren(current, next) {
@@ -187,9 +185,7 @@ class ComponentObserver {
 
 const nullActions = {
   onCreate() {},
-  afterCreate() {},
   onUpdate() {},
-  afterUpdate() {},
   onInsert() {},
   onMove() {},
   onRemove() {},

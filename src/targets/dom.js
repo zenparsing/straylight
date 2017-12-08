@@ -1,5 +1,5 @@
 import { Element } from '../Element.js';
-import { Scheduler } from './Scheduler.js';
+import { Scheduler } from '../Scheduler.js';
 import { persist } from './persist.js';
 
 const htmlNS = 'http://www.w3.org/1999/xhtml';

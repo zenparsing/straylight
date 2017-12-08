@@ -1,6 +1,6 @@
 import Observable from 'zen-observable';
-import { immediate } from './Scheduler.js';
 import { Element } from '../Element.js';
+import { immediate } from '../Scheduler.js';
 import * as symbols from '../symbols.js';
 
 export function persist(updates, options) {

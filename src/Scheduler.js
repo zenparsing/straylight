@@ -1,7 +1,3 @@
-export const immediate = {
-  enqueue(fn) { fn(); },
-};
-
 export class Scheduler {
 
   constructor(queueTask) {
@@ -35,3 +31,5 @@ export class Scheduler {
   }
 
 }
+
+export const immediate = new Scheduler(fn => fn());

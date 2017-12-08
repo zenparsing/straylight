@@ -12,7 +12,10 @@ export function renderToDOM(mount, updates) {
   if (!mount || !mount.nodeName) {
     throw new TypeError(`${mount} is not a DOM element`);
   }
-  let root = new Element('#root');
+  if (mount.firstChild) {
+    mount.textContent = '';
+  }
+  let root = new Element('#mount-root');
   root.data = { target: mount };
   return persist(updates, { actions: DOMActions, root, scheduler }).subscribe(() => {});
 }

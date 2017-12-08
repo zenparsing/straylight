@@ -29,7 +29,7 @@ class PersistenceObserver {
   }
 
   run() {
-    if (this.subscription.closed) {
+    if (this.sink.closed) {
       return;
     }
     let tree = Element.from(this.pending);
@@ -41,10 +41,6 @@ class PersistenceObserver {
     this.current = tree;
     this.queued = false;
     this.notify();
-  }
-
-  start(subscription) {
-    this.subscription = subscription;
   }
 
   next(tree) {
@@ -60,7 +56,7 @@ class PersistenceObserver {
   }
 
   complete() {
-    this.sink.complete();
+    this.scheduler.enqueue(() => this.sink.complete());
   }
 
   notify() {

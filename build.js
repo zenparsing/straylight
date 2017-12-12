@@ -1,5 +1,4 @@
 const { execSync } = require('child_process');
-const gzipSize = require('gzip-size');
 const $ = cmd => execSync(cmd, { stdio: 'inherit', env: process.env });
 
 $('esdown - src/index.js dist/index.js -b');

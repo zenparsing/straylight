@@ -43,6 +43,10 @@ class PersistenceObserver {
     this.notify();
   }
 
+  start() {
+    this.current = this.actions.onStart(this.root) || null;
+  }
+
   next(tree) {
     this.pending = tree;
     if (!this.queued) {
@@ -56,7 +60,10 @@ class PersistenceObserver {
   }
 
   complete() {
-    this.scheduler.enqueue(() => this.sink.complete());
+    this.scheduler.enqueue(() => {
+      this.sink.complete();
+      this.actions.onComplete(this.root);
+    });
   }
 
   notify() {
@@ -180,6 +187,8 @@ class ComponentObserver {
 }
 
 const nullActions = {
+  onStart() {},
+  onComplete() {},
   onCreate() {},
   onUpdate() {},
   onInsert() {},

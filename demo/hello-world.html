@@ -1,12 +1,12 @@
-<main></main>
+<div id='mount'></div>
 <script src='../dist/straylight.js'></script>
 <script>
 
 window.onload = () => {
-  const { renderToDOM, html } = Straylight;
+  const { html, updateDOM } = Straylight;
   const world = 'Earth';
 
-  renderToDOM('main', html`
+  updateDOM('#mount', html`
     <h1>Hello ${world}</h1>
     <p>How are you?</p>
   `);

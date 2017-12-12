@@ -7,7 +7,7 @@ export { Element };
 
 export { UI } from './UI.js';
 export { Store } from './Store.js';
-export { renderToDOM } from './targets/dom.js';
+export { renderToDOM, renderToDOM as updateDOM } from './targets/dom.js';
 export { renderToString } from './targets/string.js';
 
 export function createElement(tag, props, children) {

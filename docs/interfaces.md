@@ -24,7 +24,7 @@ type ElementTag =
   Renderable;
 
 interface ElementLike {
-  [symbols.element]() : Element;
+  [symbols.element](): Element;
 }
 
 interface Element extends ElementLike {
@@ -45,7 +45,7 @@ type ElementSource =
 interface ElementConstructor {
   new(tag: ElementTag, props?: object, children?: any[]): Element;
   from(source: ElementSource): Element;
-  evaluate(source: ElementSource) : Element;
+  evaluate(source: ElementSource): Element;
 }
 
 ```

@@ -92,7 +92,7 @@
     }
   }
 
-  Straylight.renderToDOM('#mount', new SineWave());
+  Straylight.updateDOM('#mount', new SineWave());
 
   Straylight.renderToString(new SineWave()).then(html => {
     console.log(html);

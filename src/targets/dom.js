@@ -4,6 +4,7 @@ import { persist } from './persist.js';
 
 const htmlNS = 'http://www.w3.org/1999/xhtml';
 const scheduler = new Scheduler(fn => window.requestAnimationFrame(fn));
+const treeMap = new WeakMap();
 
 export function renderToDOM(mount, updates) {
   if (typeof mount === 'string') {
@@ -12,15 +13,26 @@ export function renderToDOM(mount, updates) {
   if (!mount || !mount.nodeName) {
     throw new TypeError(`${mount} is not a DOM element`);
   }
-  if (mount.firstChild) {
-    mount.textContent = '';
-  }
+
   let root = new Element('#mount-root');
   root.data = { target: mount };
-  return persist(updates, { actions: DOMActions, root, scheduler }).subscribe(() => {});
+
+  return persist(updates, {
+    actions: DOMActions,
+    root,
+    scheduler,
+  }).subscribe({});
 }
 
 const DOMActions = {
+
+  onStart(root) {
+    return treeMap.get(dom(root));
+  },
+
+  onComplete(root) {
+    treeMap.set(dom(root), root.children[0]);
+  },
 
   onCreate(element, parent, pos) {
     element.data.previous = getPrevious(parent, pos);

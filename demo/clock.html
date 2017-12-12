@@ -1,0 +1,36 @@
+<div id='mount'></div>
+<script src='../dist/straylight.js'></script>
+<script>
+
+const { html, UI, updateDOM } = Straylight;
+
+class Clock extends UI {
+
+  constructor() {
+    super();
+    this.setState({ now: Date.now() });
+  }
+
+  start() {
+    this._interval = setInterval(() => {
+      this.setState({ now: Date.now() });
+    }, 1000);
+  }
+
+  pause() {
+    clearInterval(this._interval);
+  }
+
+  render({ now }) {
+    return html`
+      <div class='clock'>
+        ${new Date(now).toLocaleString()}
+      </div>
+    `;
+  }
+
+}
+
+updateDOM('#mount', new Clock());
+
+</script>

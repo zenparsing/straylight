@@ -15,16 +15,14 @@
     "zen-push": "^0.2.0"
   },
   "devDependencies": {
-    "esdown": "^1.2.6",
+    "esdown": "^1.2.8",
     "eslint": "^4.2.0",
+    "gzip-size-cli": "^2.1.0",
     "uglify-js": "^3.2.2"
   },
   "scripts": {
     "test": "eslint src/*.js src/*/*.js test/*.js && esdown test/index.js",
     "test-js": "esdown test/index.js",
-    "pack": "esdown - src/index.js dist/index.js -b",
-    "pack-global": "esdown - src/index.js dist/straylight.js -b --deep -g Straylight",
-    "minify": "uglifyjs -o dist/straylight.min.js dist/straylight.js",
-    "prepublishOnly": "npm run pack && npm run pack-global && npm run minify"
+    "prepublishOnly": "node ./build.js"
   }
 }

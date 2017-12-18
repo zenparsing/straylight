@@ -8,16 +8,14 @@
     "url": "https://github.com/zenparsing/straylight.git"
   },
   "homepage": "https://github.com/zenparsing/straylight",
-  "dependencies": {
-    "htmltag": "^0.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
-    "esdown": "^1.2.8",
     "eslint": "^4.2.0",
     "gzip-size-cli": "^2.1.0",
+    "htmltag": "^0.3.0",
     "rollup": "^0.52.2",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-commonjs": "^8.2.6",
@@ -25,8 +23,8 @@
     "uglify-js": "^3.2.2"
   },
   "scripts": {
-    "test": "eslint src/*.js src/*/*.js test/*.js && esdown test/index.js",
-    "test-js": "esdown test/index.js",
+    "test": "eslint src/*.js src/*/*.js test/*.js",
+    "build": "node ./build.js",
     "prepublishOnly": "node ./build.js"
   }
 }

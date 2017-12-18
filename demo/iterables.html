@@ -4,11 +4,16 @@
 
 window.onload = () => {
   const { html, applyTemplate } = Straylight;
-  const world = 'Earth';
+  const planets = new Set([
+    'Mercury',
+    'Venus',
+    'Earth',
+  ]);
 
   applyTemplate('#mount', html`
-    <h1>Hello ${world}</h1>
-    <p>How are you?</p>
+    <p>
+      ${ planets.values() }
+    </p>
   `);
 };
 

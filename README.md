@@ -8,8 +8,8 @@ As a web developer, how can I dynamically update an HTML document in a way that 
 
 Straylight solves this problem by providing:
 
-- **A Javascript template tag** for rendering lightweight document fragments
-- **An update engine** for applying a series of fragments to the HTML document over time
+- **A Javascript template tag** for rendering document fragments
+- **An update engine** for applying a series of template results to the HTML document over time
 
 ## Examples
 
@@ -21,7 +21,7 @@ Straylight solves this problem by providing:
 <script>
 
 window.onload = () => {
-  const { html, updateDOM } = Straylight;
+  const { html, applyTemplate } = Straylight;
   const world = 'Earth';
 
   updateDOM('#mount', html`

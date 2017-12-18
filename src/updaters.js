@@ -1,4 +1,4 @@
-import { symbols } from './symbols.js';
+import { symbols, hasSymbolMethod } from './symbols.js';
 import { Actions } from './actions.js';
 import { TemplateSlot, createSlot } from './slots.js';
 import * as dom from './dom.js';
@@ -130,9 +130,9 @@ export class TemplateUpdater {
       let value = i < values.length ? values[i] : null;
       if (value && typeof value.then === 'function') {
         this.awaitPromise(value, i);
-      } else if (value && typeof value[symbols.observable] === 'function') {
+      } else if (hasSymbolMethod(value, 'observable')) {
         this.awaitObservable(value, i);
-      } else if (value && typeof value[symbols.asyncIterator] === 'function') {
+      } else if (hasSymbolMethod(value, 'asyncIterator')) {
         this.awaitAsyncIterator(value, i);
       } else {
         this.cancelPending(i);
@@ -158,10 +158,14 @@ export class AttributeUpdater {
   constructor(node, name) {
     this.node = node;
     this.name = name;
+    this.last = undefined;
   }
 
   update(value) {
-    dom.setAttr(this.node, this.name, value);
+    if (value !== this.last) {
+      this.last = value;
+      dom.setAttr(this.node, this.name, value);
+    }
   }
 }
 
@@ -204,10 +208,15 @@ export class ChildUpdater {
   }
 
   update(value) {
-    if (Array.isArray(value)) { // TODO: iterables
-      this.toVector();
-      this.updateVector(value);
-    } else if (this.slots) {
+    if (typeof value === 'object') {
+      if (Array.isArray(value)) {
+        return this.updateVector(value);
+      }
+      if (hasSymbolMethod(value, 'iterator')) {
+        return this.updateVector(value, true);
+      }
+    }
+    if (this.slots) {
       this.updateVector([value]);
       this.toScalar();
     } else {
@@ -249,6 +258,7 @@ export class ChildUpdater {
   // Scalar operations
 
   updateScalar(value) {
+    this.toScalar();
     if (!this.slot) {
       this.slot = createSlot(value, this.marker);
     } else if (this.slot.matches(value)) {
@@ -261,21 +271,33 @@ export class ChildUpdater {
 
   // Vector operations
 
-  updateVector(list) {
+  updateVector(list, iterable) {
+    this.toVector();
     let i = 0;
-    for (; i < list.length; ++i) {
-      let input = list[i];
-      let pos = this.search(input, i);
-      if (pos === -1) {
-        this.insertSlot(input, i);
-      } else {
-        if (pos !== i) {
-          this.moveSlot(pos, i);
-        }
-        this.slots[i].update(input);
+    if (iterable) {
+      for (let item of list) {
+        this.updateVectorItem(item, i++);
+      }
+    } else {
+      while (i < list.length) {
+        this.updateVectorItem(list[i], i++);
       }
     }
-    this.removeSlots(i);
+    if (i < this.slots.length) {
+      this.removeSlots(i);
+    }
+  }
+
+  updateVectorItem(value, i) {
+    let pos = this.search(value, i);
+    if (pos === -1) {
+      this.insertSlot(value, i);
+    } else {
+      if (pos !== i) {
+        this.moveSlot(pos, i);
+      }
+      this.slots[i].update(value);
+    }
   }
 
   search(input, i) {
@@ -303,5 +325,6 @@ export class ChildUpdater {
     for (let i = from; i < this.slots.length; ++i) {
       this.slots[i].remove();
     }
+    this.slots.length = from;
   }
 }

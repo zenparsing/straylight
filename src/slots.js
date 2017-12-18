@@ -1,4 +1,4 @@
-import htmltag from '../../htmltag';
+import htmltag from 'htmltag';
 import { TemplateUpdater } from './updaters.js';
 import * as dom from './dom.js';
 
@@ -30,13 +30,15 @@ function removeSlot(slot) {
 
 class TextSlot {
   constructor(value, next) {
-    let node = dom.createText(this.convertValue(value), next);
+    value = this.convert(value);
+    let node = dom.createText(value, next);
     this.start = node;
     this.end = node;
+    this.last = value;
     dom.insertBefore(node, next);
   }
 
-  convertValue(value) {
+  convert(value) {
     return value === null || value === undefined ? '' : String(value);
   }
 
@@ -45,7 +47,11 @@ class TextSlot {
   }
 
   update(value) {
-    this.start.textContent = this.convertValue(value);
+    value = this.convert(value);
+    if (value !== this.last) {
+      this.last = value;
+      this.start.nodeValue = value;
+    }
   }
 }
 

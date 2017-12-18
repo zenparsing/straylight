@@ -1,4 +1,4 @@
-import htmltag from '../../htmltag';
+import htmltag from 'htmltag';
 import { TemplateUpdater } from './updaters.js';
 
 export const html = htmltag({ cache: new WeakMap() });

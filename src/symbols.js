@@ -1,9 +1,17 @@
-const S = typeof Symbol === 'function' ? Symbol : {};
+let S = {};
+
+if (typeof Symbol === 'function') {
+  S = Symbol;
+  // Ponyfill Symbol.observable for interoperability with other libraries
+  if (!S.observable) {
+    S.observable = S('observable');
+  }
+}
 
 export const symbols = {
-  get observable() { return S.observable || '@@observable'; },
-  get iterator() { return S.iterator || '@@iterator'; },
-  get asyncIterator() { return S.asyncIterator || '@@asyncIterator'; },
+  observable: S.observable || '@@observable',
+  iterator: S.iterator || '@@iterator',
+  asyncIterator: S.asyncIterator || '@@asyncIterator',
 };
 
 export function hasSymbolMethod(obj, name) {

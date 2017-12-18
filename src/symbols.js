@@ -1,7 +1,7 @@
-import observableSymbol from 'symbol-observable';
+const S = typeof Symbol === 'function' ? Symbol : {};
 
-const sym = typeof Symbol === 'function' ? Symbol : name => `@@${name}`;
-
-export const observable = observableSymbol;
-export const render = sym('render');
-export const element = sym('element');
+export const symbols = {
+  get observable() { return S.observable || '@@observable'; },
+  get iterator() { return S.iterator || '@@iterator'; },
+  get asyncIterator() { return S.asyncIterator || '@@asyncIterator'; },
+};

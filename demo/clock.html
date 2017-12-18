@@ -1,36 +1,20 @@
 <div id='mount'></div>
 <script src='../dist/straylight.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/zen-observable/zen-observable.js'></script>
 <script>
 
-const { html, UI, updateDOM } = Straylight;
+const { html, applyTemplate } = Straylight;
 
-class Clock extends UI {
-
-  constructor() {
-    super();
-    this.setState({ now: Date.now() });
-  }
-
-  start() {
-    this._interval = setInterval(() => {
-      this.setState({ now: Date.now() });
-    }, 1000);
-  }
-
-  pause() {
-    clearInterval(this._interval);
-  }
-
-  render({ now }) {
-    return html`
-      <div class='clock'>
-        ${new Date(now).toLocaleString()}
-      </div>
-    `;
-  }
-
-}
-
-updateDOM('#mount', new Clock());
+applyTemplate('#mount', html`
+  <div class='clock'>
+    ${
+      new Observable(sink => {
+        sink.next(new Date().toLocaleString());
+        let interval = setInterval(() => sink.next(new Date().toLocaleString()), 1000);
+        return () => clearInterval(interval);
+      })
+    }
+  </div>
+`);
 
 </script>

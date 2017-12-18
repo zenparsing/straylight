@@ -1,0 +1,20 @@
+<div id='mount'></div>
+<script src='../dist/straylight.js'></script>
+<script>
+
+const { html, applyTemplate } = Straylight;
+
+async function* generateTime() {
+  while (true) {
+    yield new Date().toLocaleString();
+    await new Promise(r => setTimeout(r, 1000));
+  }
+}
+
+applyTemplate('#mount', html`
+  <div class='clock'>
+    ${ generateTime() }
+  </div>
+`);
+
+</script>

@@ -1,27 +1,21 @@
-import htmltag from 'htmltag';
-import { Element } from './Element.js';
-import * as symbols from './symbols.js';
+import htmltag from '../../htmltag';
+import { TemplateUpdater } from './updaters.js';
 
-export { symbols };
-export { Element };
+export const html = htmltag({ cache: new WeakMap() });
 
-export { UI } from './UI.js';
-export { Store } from './Store.js';
-export { renderToDOM, renderToDOM as updateDOM } from './targets/dom.js';
-export { renderToString } from './targets/string.js';
+const updaterMap = new WeakMap();
 
-const registry = new Map();
-
-export function createElement(tag, props, children) {
-  if (typeof tag === 'string') {
-    tag = registry.get(tag) || tag;
+export function applyTemplate(target, template) {
+  if (typeof target === 'string') {
+    target = window.document.querySelector(target);
   }
-  return new Element(tag, props, children);
+  if (!target || !target.nodeName) {
+    throw new TypeError(`${target} is not a DOM element`);
+  }
+  let updater = updaterMap.get(target);
+  if (!updater) {
+    updater = new TemplateUpdater(target);
+    updaterMap.set(target, updater);
+  }
+  updater.update(template);
 }
-
-export const html = htmltag(createElement, {
-  createFragment: Element.from,
-  cache: new WeakMap(),
-});
-
-html.define = (name, def) => void registry.set(name, def);

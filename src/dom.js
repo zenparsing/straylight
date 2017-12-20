@@ -16,6 +16,10 @@ export function setAttr(node, name, value) {
   }
 }
 
+export function setTextValue(node, text) {
+  node.nodeValue = text;
+}
+
 export function createText(text, context) {
   return doc(context).createTextNode(text);
 }

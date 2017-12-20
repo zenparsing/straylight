@@ -53,7 +53,7 @@ class TextSlot {
     value = this.convert(value);
     if (value !== this.last) {
       this.last = value;
-      this.start.nodeValue = value;
+      dom.setTextValue(this.start, value);
     }
   }
 }

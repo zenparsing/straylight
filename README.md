@@ -24,7 +24,7 @@ window.onload = () => {
   const { html, applyTemplate } = Straylight;
   const world = 'Earth';
 
-  updateDOM('#mount', html`
+  applyTemplate('#mount', html`
     <h1>Hello ${world}</h1>
     <p>How are you?</p>
   `);

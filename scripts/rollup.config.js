@@ -10,8 +10,14 @@ export default {
     format: 'umd',
   },
   plugins: [
-    babel({ exclude: 'node_modules/**' }),
+    babel({
+      exclude: 'node_modules/**',
+      presets: [
+        ['es2015', { modules: false }],
+      ],
+      plugins: ['external-helpers'],
+    }),
     nodeResolve(),
-    commonjs({ include: /node_modules|htmltag/ }),
+    commonjs({ include: /node_modules/ }),
   ],
 };

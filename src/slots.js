@@ -39,11 +39,10 @@ class TextSlot {
   }
 
   convert(value) {
-    return (
-      value == null ? '' : // or undefined
-      typeof value === 'string' ? value :
-      String(value)
-    );
+    if (value == null) { // or undefined
+      return '';
+    }
+    return typeof value === 'string' ? value : String(value);
   }
 
   matches(value) {

@@ -74,13 +74,15 @@ export class TemplateUpdater {
     let subscription = value[symbols.observable]().subscribe(
       val => this.updaters[i].update(val),
       err => { this.updaters[i] = null; throw err; },
-      () => this.updater.updaters[i] = null,
+      () => this.updaters[i] = null,
     );
 
-    this.setPending({
-      source: value,
-      cancel() { subscription.unsubscribe(); },
-    }, i);
+    if (!subscription.closed) {
+      this.setPending({
+        source: value,
+        cancel() { subscription.unsubscribe(); },
+      }, i);
+    }
   }
 
   awaitAsyncIterator(value, i) {

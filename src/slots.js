@@ -13,12 +13,12 @@ export function createSlot(value, next) {
     return new TextSlot(value, next);
   }
 
-  if (value instanceof Element) {
-    return new ElementSlot(value, next);
-  }
-
   if (htmltag.isTemplateResult(value)) {
     return new TemplateSlot(value, next);
+  }
+
+  if (dom.isElement(value)) {
+    return new ElementSlot(value, next);
   }
 
   throw new TypeError('Invalid child slot value');
@@ -83,8 +83,8 @@ export class TemplateSlot {
     let fragment = dom.createFragment(next);
     this.updater = new TemplateUpdater(fragment);
     this.updater.update(template);
-    this.start = fragment.firstChild;
-    this.end = fragment.lastChild;
+    this.start = dom.firstChild(fragment);
+    this.end = dom.lastChild(fragment);
     dom.insertBefore(fragment, next);
   }
 

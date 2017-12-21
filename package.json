@@ -21,11 +21,13 @@
     "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-commonjs": "^8.2.6",
     "rollup-plugin-node-resolve": "^3.0.0",
-    "uglify-js": "^3.2.2"
+    "uglify-js": "^3.2.2",
+    "zen-observable": "^0.7.0"
   },
   "scripts": {
     "test": "node ./scripts/test.js",
     "build": "node ./scripts/build.js",
+    "test-only": "mocha",
     "prepublishOnly": "node ./scripts/build.js"
   }
 }

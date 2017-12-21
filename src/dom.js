@@ -4,6 +4,18 @@ function doc(node) {
   return node.ownerDocument;
 }
 
+export function isElement(x) {
+  return x && x.nodeType === 1;
+}
+
+export function firstChild(node) {
+  return node.firstChild;
+}
+
+export function lastChild(node) {
+  return node.lastChild;
+}
+
 export function setAttr(node, name, value) {
   if (name[0] === '.') {
     node[name.slice(1)] = value;
@@ -36,18 +48,19 @@ export function createFragment(context) {
 }
 
 export function appendNode(child, parent) {
-  parent.appendChild(child);
+  parent.insertBefore(child, null);
 }
 
 export function insertBefore(node, next) {
   next.parentNode.insertBefore(node, next);
 }
 
-export function insertSiblings(first, last, next) {
-  let parent = next.parentNode;
-  for (let node = first; node; node = node.nextSibling) {
-    parent.insertBefore(node, next);
-    if (node === last) {
+export function insertSiblings(first, last, nextNode) {
+  let parent = nextNode.parentNode;
+  for (let next; first; first = next) {
+    next = first.nextSibling;
+    parent.insertBefore(first, nextNode);
+    if (first === last) {
       break;
     }
   }
@@ -55,20 +68,10 @@ export function insertSiblings(first, last, next) {
 
 export function removeSiblings(first, last) {
   let parent = first.parentNode;
-  for (let node = first; node; node = node.nextSibling) {
-    parent.removeChild(node);
-    if (node === last) {
-      break;
-    }
-  }
-}
-
-export function replaceSiblings(first, last, node) {
-  let parent = first.parentNode;
-  parent.replaceChild(node, first);
-  for (let node = first.nextSibling; node; node = node.nextSibling) {
-    parent.removeChild(node);
-    if (node === last) {
+  for (let next; first; first = next) {
+    next = first.nextSibling;
+    parent.removeChild(first);
+    if (first === last) {
       break;
     }
   }

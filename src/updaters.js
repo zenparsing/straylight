@@ -177,14 +177,23 @@ export class AttributePartUpdater {
     this.name = name;
     this.parts = parts;
     this.pos = pos;
+    if (!parts.pending) {
+      parts.pending = new Set();
+    }
+    parts.pending.add(pos);
   }
 
   update(value) {
     this.parts[this.pos] = value;
-    if (this.pos === this.parts.length - 1) {
-      this.parts.complete = true;
+    let pending = this.parts.pending;
+    if (pending) {
+      pending.delete(this.pos);
+      if (pending.size === 0) {
+        this.parts.pending = null;
+        pending = null;
+      }
     }
-    if (this.parts.complete) {
+    if (!pending) {
       dom.setAttr(this.node, this.name, this.parts.join(''));
     }
   }

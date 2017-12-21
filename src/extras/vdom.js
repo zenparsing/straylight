@@ -178,6 +178,6 @@ class TextNode extends Node {
   }
 
   toHTML() {
-    return rawTags.test(this.parentNode) ? this.nodeValue : esc(this.nodeValue);
+    return rawTags.test(this.parentNode.nodeName) ? this.nodeValue : esc(this.nodeValue);
   }
 }

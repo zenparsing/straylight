@@ -144,18 +144,6 @@ export class TemplateUpdater {
   }
 }
 
-export class TagUpdater {
-  constructor(tag) {
-    this.tag = tag;
-  }
-
-  update(value) {
-    if (value !== this.tag) {
-      throw new Error('Cannot modify tag definition');
-    }
-  }
-}
-
 export class CommentUpdater {
   update() {
     // Empty

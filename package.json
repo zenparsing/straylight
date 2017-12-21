@@ -17,6 +17,7 @@
     "gzip-size-cli": "^2.1.0",
     "htmltag": "^0.3.3",
     "mocha": "^4.0.1",
+    "nyc": "^11.4.1",
     "rollup": "^0.52.2",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-commonjs": "^8.2.6",

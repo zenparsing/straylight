@@ -1,7 +1,6 @@
 import * as dom from './dom.js';
 
 import {
-  TagUpdater,
   CommentUpdater,
   AttributeUpdater,
   AttributeMapUpdater,
@@ -34,10 +33,7 @@ export class Actions {
   }
 
   createNode(tag, parent) {
-    if (isDynamic(tag)) {
-      this.updaters.push(new TagUpdater(tag));
-      tag = tag.value;
-    }
+    // Dynamic tags throw
     if (typeof tag !== 'string') {
       throw new TypeError('Tag name must be a string');
     }

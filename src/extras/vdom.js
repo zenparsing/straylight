@@ -1,7 +1,28 @@
+const htmlEscapes = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  '\'': '&#x27;',
+  '`': '&#x60;',
+};
+
+const rawTags = /^(?:script|style)$/i;
+
+const voidTags = new RegExp(`^(?:
+  area|base|basefont|bgsound|br|col|command|embed|frame|hr|
+  img|input|isindex|keygen|link|meta|param|source|track|wbr
+)$`.replace(/\s/g, ''), 'i');
+
+function esc(s) {
+  s = '' + (s || '');
+  return /[&<>"'`]/.test(s) ? s.replace(/[&<>"'`]/g, m => htmlEscapes[m]) : s;
+}
+
 function findChild(parent, node) {
   let i = parent.childNodes.indexOf(node);
   if (i < 0) {
-    throw new Error('Node is not a child');
+    throw new Error('Node is not a child of the specified parent');
   }
   return i;
 }
@@ -10,7 +31,7 @@ function isFragment(x) {
   return x.nodeType === 11;
 }
 
-class Document {
+export class Document {
   createTextNode(text) {
     return new TextNode(this, text);
   }
@@ -127,6 +148,23 @@ class Element extends ParentNode {
       childNodes: this.childNodes.map(child => child.toDataObject()),
     };
   }
+
+  toHTML() {
+    let html = `<${this.nodeName}`;
+    this.attributes.forEach((value, key) => {
+      if (value !== null && value !== undefined && value !== false) {
+        html += ` ${esc(key)}="${esc(value === true ? key : value)}"`;
+      }
+    });
+    if (this.childNodes.length === 0 && voidTags.test(this.nodeName)) {
+      html += ' />';
+    } else {
+      html += '>';
+      this.childNodes.forEach(child => html += child.toHTML());
+      html += `</${this.nodeName}>`;
+    }
+    return html;
+  }
 }
 
 class TextNode extends Node {
@@ -138,6 +176,8 @@ class TextNode extends Node {
   toDataObject() {
     return this.nodeValue;
   }
-}
 
-exports.Document = Document;
+  toHTML() {
+    return rawTags.test(this.parentNode) ? this.nodeValue : esc(this.nodeValue);
+  }
+}

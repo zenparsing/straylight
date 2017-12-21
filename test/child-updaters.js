@@ -1,12 +1,12 @@
 const { html, applyTemplate } = require('../');
+const { vdom } = require('../extras');
 const assert = require('assert');
 const Observable = require('zen-observable');
-const { Document } = require('./mocks');
 
 Observable.extensions.setHostReportError(err => { throw err; });
 
 describe('Child updaters', () => {
-  let document = new Document();
+  let document = new vdom.Document();
 
   function assertResult(content, data) {
     let target = document.createElement('div');

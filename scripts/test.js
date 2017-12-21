@@ -1,4 +1,4 @@
 const $ = require('./exec.js');
 
 $('eslint -c scripts/.eslintrc.js src/*.js src/*/*.js test/*.js test/*/*.js');
-$('mocha');
+require('./test-only.js');

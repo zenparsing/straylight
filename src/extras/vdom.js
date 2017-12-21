@@ -33,7 +33,7 @@ function isFragment(x) {
 
 export class Document {
   createTextNode(text) {
-    return new TextNode(this, text);
+    return new Text(this, text);
   }
 
   createDocumentFragment() {
@@ -167,7 +167,7 @@ class Element extends ParentNode {
   }
 }
 
-class TextNode extends Node {
+class Text extends Node {
   constructor(doc, text) {
     super(doc, 3, '#text');
     this.nodeValue = text;

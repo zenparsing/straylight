@@ -156,6 +156,12 @@ export class TagUpdater {
   }
 }
 
+export class CommentUpdater {
+  update() {
+    // Empty
+  }
+}
+
 export class AttributeUpdater {
   constructor(node, name) {
     this.node = node;

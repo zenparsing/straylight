@@ -40,6 +40,13 @@ describe('HTML stringification', () => {
   });
 
   it('should stringify attribute parts', () => {
-    //assert.equal(stringify(html`<x a="foo ${ 'bar' } baz" />`), '<x a="foo bar baz"></x>');
+    assert.equal(stringify(html`<x a="foo ${ 'bar' } baz" />`), '<x a="foo bar baz"></x>');
+  });
+
+  it('should not stringify comments', () => {
+    assert.equal(
+      stringify(html`<div><!-- before ${1} after -->${2}</div>`),
+      '<div>2</div>'
+    );
   });
 });

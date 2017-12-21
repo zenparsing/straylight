@@ -2,6 +2,7 @@ import * as dom from './dom.js';
 
 import {
   TagUpdater,
+  CommentUpdater,
   AttributeUpdater,
   AttributeMapUpdater,
   AttributePartUpdater,
@@ -57,6 +58,12 @@ export class Actions {
         child = dom.createText(child, node);
       }
       dom.appendNode(child, node);
+    }
+  }
+
+  addComment(node, value) {
+    if (isDynamic(value)) {
+      this.updaters.push(new CommentUpdater());
     }
   }
 

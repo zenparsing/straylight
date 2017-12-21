@@ -1,6 +1,6 @@
 import { symbols, hasSymbolMethod } from './symbols.js';
 import { Actions } from './actions.js';
-import { TemplateSlot, createSlot } from './slots.js';
+import { createSlot } from './slots.js';
 import * as dom from './dom.js';
 
 export class TemplateUpdater {
@@ -237,7 +237,7 @@ export class ChildUpdater {
   }
 
   cancelSlotUpdates(slot) {
-    if (slot instanceof TemplateSlot) {
+    if (slot.cancelUpdates) {
       slot.cancelUpdates();
     }
   }
@@ -260,12 +260,12 @@ export class ChildUpdater {
   // Scalar operations
 
   updateScalar(value) {
-    this.toScalar();
     if (!this.slot) {
       this.slot = createSlot(value, this.marker);
     } else if (this.slot.matches(value)) {
       this.slot.update(value);
     } else {
+      this.slot.cancelUpdates();
       dom.removeSiblings(this.slot.start, this.slot.end);
       this.slot = createSlot(value, this.marker);
     }
@@ -324,9 +324,15 @@ export class ChildUpdater {
   }
 
   removeSlots(from) {
-    for (let i = from; i < this.slots.length; ++i) {
-      this.slots[i].remove();
+    if (from >= this.slots.length) {
+      return;
     }
+    for (let i = from; i < this.slots.length; ++i) {
+      this.slots[i].cancelUpdates();
+    }
+    let first = this.slots[from].start;
+    let last = this.slots[this.slots.length - 1].end;
+    dom.removeSiblings(first, last);
     this.slots.length = from;
   }
 }

@@ -17,20 +17,19 @@ export function createSlot(value, next) {
     return new TemplateSlot(value, next);
   }
 
-  if (dom.isElement(value)) {
-    return new ElementSlot(value, next);
-  }
-
   throw new TypeError('Invalid child slot value');
 }
 
-function removeSlot(slot) {
-  dom.removeSiblings(slot.start, slot.end);
+function convertToString(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return typeof value === 'string' ? value : String(value);
 }
 
 class TextSlot {
   constructor(value, next) {
-    value = this.convert(value);
+    value = convertToString(value);
     let node = dom.createText(value, next);
     this.start = node;
     this.end = node;
@@ -38,11 +37,8 @@ class TextSlot {
     dom.insertBefore(node, next);
   }
 
-  convert(value) {
-    if (value == null) { // or undefined
-      return '';
-    }
-    return typeof value === 'string' ? value : String(value);
+  cancelUpdates() {
+    // Empty
   }
 
   matches(value) {
@@ -50,31 +46,11 @@ class TextSlot {
   }
 
   update(value) {
-    value = this.convert(value);
+    value = convertToString(value);
     if (value !== this.last) {
       this.last = value;
       dom.setTextValue(this.start, value);
     }
-  }
-}
-
-class ElementSlot {
-  constructor(element, next) {
-    this.start = element;
-    this.end = element;
-    dom.insertBefore(element, next);
-  }
-
-  matches(value) {
-    return this.start === value;
-  }
-
-  remove() {
-    removeSlot(this);
-  }
-
-  update() {
-    // Empty
   }
 }
 
@@ -97,11 +73,6 @@ export class TemplateSlot {
       htmltag.isTemplateResult(value) &&
       value.source === this.updater.source
     );
-  }
-
-  remove() {
-    removeSlot(this);
-    this.cancelUpdates();
   }
 
   update(template) {

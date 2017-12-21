@@ -22,12 +22,12 @@
     "rollup-plugin-commonjs": "^8.2.6",
     "rollup-plugin-node-resolve": "^3.0.0",
     "uglify-js": "^3.2.2",
-    "zen-observable": "^0.7.0"
+    "zen-observable": "^0.7.1"
   },
   "scripts": {
-    "test": "node ./scripts/test.js",
-    "build": "node ./scripts/build.js",
-    "test-only": "mocha",
+    "test": "node scripts/test.js",
+    "build": "node scripts/build.js",
+    "test-only": "node scripts/test-only.js",
     "prepublishOnly": "node ./scripts/build.js"
   }
 }

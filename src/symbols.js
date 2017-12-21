@@ -13,7 +13,3 @@ export const symbols = {
   iterator: S.iterator || '@@iterator',
   asyncIterator: S.asyncIterator || '@@asyncIterator',
 };
-
-export function hasSymbolMethod(obj, name) {
-  return obj && typeof obj[symbols[name]] === 'function';
-}

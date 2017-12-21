@@ -1,4 +1,4 @@
-import { symbols, hasSymbolMethod } from './symbols.js';
+import { symbols } from './symbols.js';
 import { Actions } from './actions.js';
 import { createSlot } from './slots.js';
 import * as dom from './dom.js';
@@ -132,9 +132,9 @@ export class TemplateUpdater {
       let value = i < values.length ? values[i] : null;
       if (value && typeof value.then === 'function') {
         this.awaitPromise(value, i);
-      } else if (hasSymbolMethod(value, 'observable')) {
+      } else if (value && value[symbols.observable]) {
         this.awaitObservable(value, i);
-      } else if (hasSymbolMethod(value, 'asyncIterator')) {
+      } else if (value && value[symbols.asyncIterator]) {
         this.awaitAsyncIterator(value, i);
       } else {
         this.cancelPending(i);
@@ -217,7 +217,7 @@ export class ChildUpdater {
       if (Array.isArray(value)) {
         return this.updateVector(value);
       }
-      if (hasSymbolMethod(value, 'iterator')) {
+      if (value && value[symbols.iterator]) {
         return this.updateVector(value, true);
       }
     }

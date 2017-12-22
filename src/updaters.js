@@ -171,24 +171,21 @@ export class AttributePartUpdater {
     this.name = name;
     this.parts = parts;
     this.pos = pos;
-    if (!parts.pending) {
-      parts.pending = new Set();
-    }
-    parts.pending.add(pos);
+    parts.lastPending = Math.max(parts.lastPending || 0, pos);
   }
 
   update(value) {
-    this.parts[this.pos] = value;
-    let pending = this.parts.pending;
-    if (pending) {
-      pending.delete(this.pos);
-      if (pending.size === 0) {
-        this.parts.pending = null;
-        pending = null;
-      }
+    let parts = this.parts;
+    let ready = false;
+    if (parts.lastPending < 0) {
+      ready = true;
+    } else if (parts.lastPending === this.pos) {
+      parts.lastPending = -1;
+      ready = true;
     }
-    if (!pending) {
-      dom.setAttr(this.node, this.name, this.parts.join(''));
+    parts[this.pos] = value;
+    if (ready) {
+      dom.setAttr(this.node, this.name, parts.join(''));
     }
   }
 }

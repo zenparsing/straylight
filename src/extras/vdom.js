@@ -110,18 +110,18 @@ class ParentNode extends Node {
       newNode.nextSibling = next;
     }
   }
-}
-
-class DocumentFragment extends ParentNode {
-  constructor(doc) {
-    super(doc, 11, '#document-fragment');
-  }
 
   toDataObject() {
     return {
       nodeName: this.nodeName,
       childNodes: this.childNodes.map(child => child.toDataObject()),
     };
+  }
+}
+
+class DocumentFragment extends ParentNode {
+  constructor(doc) {
+    super(doc, 11, '#document-fragment');
   }
 }
 
@@ -140,13 +140,10 @@ class Element extends ParentNode {
   }
 
   toDataObject() {
-    let attributes = {};
-    this.attributes.forEach((value, key) => attributes[key] = value);
-    return {
-      nodeName: this.nodeName,
-      attributes,
-      childNodes: this.childNodes.map(child => child.toDataObject()),
-    };
+    let data = super.toDataObject();
+    data.attributes = {};
+    this.attributes.forEach((value, key) => data.attributes[key] = value);
+    return data;
   }
 
   toHTML() {

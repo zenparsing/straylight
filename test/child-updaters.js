@@ -1,7 +1,7 @@
-const { html, applyTemplate } = require('../');
-const { vdom } = require('../extras');
-const assert = require('assert');
-const Observable = require('zen-observable');
+import { html, applyTemplate } from '../src';
+import { vdom } from '../src/extras';
+import assert from 'assert';
+import Observable from 'zen-observable';
 
 Observable.extensions.setHostReportError(err => { throw err; });
 

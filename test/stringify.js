@@ -1,6 +1,6 @@
-const { html } = require('../');
-const { stringify } = require('../extras');
-const assert = require('assert');
+import { html } from '../src';
+import { stringify } from '../src/extras';
+import assert from 'assert';
 
 describe('HTML stringification', () => {
   it('should serialize to HTML', () => {

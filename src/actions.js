@@ -82,6 +82,7 @@ export class Actions {
 
   setAttributeParts(node, name, parts) {
     // Assert: some part is Dynamic
+    parts.pending = [];
     for (let i = 0; i < parts.length; ++i) {
       if (isDynamic(parts[i])) {
         this.updaters.push(new AttributePartUpdater(node, name, parts, i));

@@ -171,21 +171,26 @@ export class AttributePartUpdater {
     this.name = name;
     this.parts = parts;
     this.pos = pos;
-    parts.lastPending = Math.max(parts.lastPending || 0, pos);
+    parts.pending[pos] = true;
+  }
+
+  isReady() {
+    let pending = this.parts.pending;
+    if (!pending) {
+      return true;
+    }
+    pending[this.pos] = false;
+    if (pending.every(p => !p)) {
+      this.parts.pending = null;
+      return true;
+    }
+    return false;
   }
 
   update(value) {
-    let parts = this.parts;
-    let ready = false;
-    if (parts.lastPending < 0) {
-      ready = true;
-    } else if (parts.lastPending === this.pos) {
-      parts.lastPending = -1;
-      ready = true;
-    }
-    parts[this.pos] = value;
-    if (ready) {
-      dom.setAttr(this.node, this.name, parts.join(''));
+    this.parts[this.pos] = value;
+    if (this.isReady()) {
+      dom.setAttr(this.node, this.name, this.parts.join(''));
     }
   }
 }
@@ -266,6 +271,7 @@ export class ChildUpdater {
       this.slot.update(value);
     } else {
       this.slot.cancelUpdates();
+      // FIXME: this.slot.start and this.slot.end could be null
       dom.removeSiblings(this.slot.start, this.slot.end);
       this.slot = createSlot(value, this.marker);
     }
@@ -304,13 +310,16 @@ export class ChildUpdater {
 
   search(input, i) {
     // TODO: O(1) key searching
-    if (i < this.slots.length && this.slots[i].matches(input)) {
-      return i;
+    for (; i < this.slots.length; ++i) {
+      if (this.slots[i].matches(input)) {
+        return i;
+      }
     }
     return -1;
   }
 
   getSlotNode(pos) {
+    // FIXME: this.slots[pos].start could be null
     return pos >= this.slots.length ? this.marker : this.slots[pos].start;
   }
 
@@ -319,8 +328,12 @@ export class ChildUpdater {
   }
 
   moveSlot(from, to) {
+    // Assert: from > to
     let slot = this.slots[from];
-    dom.insertSiblings(slot.start, slot.end, this.getSlotNode(to));
+    let next = this.getSlotNode(to);
+    this.slots.splice(from, 1);
+    this.slots.splice(to, 0, slot);
+    dom.insertSiblings(slot.start, slot.end, next);
   }
 
   removeSlots(from) {
@@ -330,6 +343,7 @@ export class ChildUpdater {
     for (let i = from; i < this.slots.length; ++i) {
       this.slots[i].cancelUpdates();
     }
+    // FIXME: first and last could be null
     let first = this.slots[from].start;
     let last = this.slots[this.slots.length - 1].end;
     dom.removeSiblings(first, last);

@@ -7,7 +7,7 @@ export const html = htmltag({ cache: new WeakMap() });
 const updaterMap = new WeakMap();
 
 export function applyTemplate(target, template) {
-  if (typeof target === 'string') {
+  if (typeof target === 'string' && typeof window === 'object') {
     target = window.document.querySelector(target);
   }
   if (!dom.isElement(target)) {

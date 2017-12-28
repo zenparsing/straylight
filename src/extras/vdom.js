@@ -88,6 +88,12 @@ class ParentNode extends Node {
   }
 
   insertBefore(newNode, next) {
+    if (newNode === next) {
+      return;
+    }
+    if (newNode.parentNode) {
+      newNode.parentNode.removeChild(newNode);
+    }
     let pos = next ? findChild(this, next) : this.childNodes.length;
     if (isFragment(newNode)) {
       if (newNode.childNodes.length > 0) {

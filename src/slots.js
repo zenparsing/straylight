@@ -54,13 +54,15 @@ class TextSlot {
   }
 }
 
-export class TemplateSlot {
+class TemplateSlot {
   constructor(template, next) {
     let fragment = dom.createFragment(next);
     this.updater = new TemplateUpdater(fragment);
     this.updater.update(template);
     this.start = dom.firstChild(fragment);
     this.end = dom.lastChild(fragment);
+    // FIXME: fragment could be empty
+    // FIXME: firstChild or lastChild could be dynamic
     dom.insertBefore(fragment, next);
   }
 

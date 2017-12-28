@@ -1,12 +1,26 @@
 import { html, applyTemplate } from '../src';
 import { vdom } from '../src/extras';
 import assert from 'assert';
-import Observable from 'zen-observable';
-
-Observable.extensions.setHostReportError(err => { throw err; });
+import { Observable, createPushStream } from './observable.js';
 
 describe('Child updaters', () => {
   let document = new vdom.Document();
+
+  function withDelay(...args) {
+    return new Observable(sink => {
+      function next() {
+        if (args.length === 0) {
+          sink.complete();
+          return;
+        }
+        setTimeout(() => {
+          sink.next(args.unshift());
+          next();
+        });
+      }
+      next();
+    });
+  }
 
   function assertResult(content, data) {
     let target = document.createElement('div');
@@ -14,24 +28,24 @@ describe('Child updaters', () => {
     assert.deepEqual(target.toDataObject().childNodes, data);
   }
 
-  describe('single updates', () => {
-    it('null values', () => {
+  describe('Single updates', () => {
+    it('accepts null values', () => {
       assertResult(null, ['', '']);
     });
 
-    it('string values', () => {
+    it('accepts string values', () => {
       assertResult('text', ['text', '']);
     });
 
-    it('number values', () => {
+    it('accepts number values', () => {
       assertResult(1, ['1', '']);
     });
 
-    it('boolean values', () => {
+    it('accepts boolean values', () => {
       assertResult(true, ['true', '']);
     });
 
-    it('template values', () => {
+    it('accepts template values', () => {
       assertResult(html`<span>text</span>`, [
         {
           nodeName: 'span',
@@ -42,7 +56,7 @@ describe('Child updaters', () => {
       ]);
     });
 
-    it('array values', () => {
+    it('accepts array values', () => {
       assertResult([null, 'foo', html`<span>text</span>`], [
         '',
         'foo',
@@ -55,32 +69,29 @@ describe('Child updaters', () => {
       ]);
     });
 
-    it('iterables', () => {
+    it('accepts iterables', () => {
       assertResult(new Set(['a', 'b', 'c']), ['a', 'b', 'c', '']);
     });
   });
 
-  describe('multiple updates', () => {
-    it('template with multiple children to text', () => {
+  describe('Multiple updates', () => {
+    it('updates a template with multiple children to text', () => {
       assertResult(
         Observable.of(html`<span>a</span><span>b</span>`, ''),
         ['', '']
       );
     });
 
-    it('vector to scalar', () => {
+    it('updates from vector to scalar', () => {
       assertResult(
         Observable.of(
           ['a', html`<span>x</span>`, 'b'],
           'c'
-        ), [
-          'c',
-          '',
-        ]
+        ), ['c', '']
       );
     });
 
-    it('scalar to vector', () => {
+    it('updates from scalar to vector', () => {
       assertResult(
         Observable.of(
           'a',
@@ -95,6 +106,43 @@ describe('Child updaters', () => {
           'c',
           '',
         ]
+      );
+    });
+
+    it.skip('updates from empty template to text', () => {
+      assertResult(
+        Observable.of(html``, 'text'),
+        ['text', ''],
+      )
+    });
+
+    it('updates from template with dynamic first child to text', () => {
+      assertResult(
+        Observable.of(html`${'a'}${'b'}`, 'text'),
+        ['text', ''],
+      );
+    });
+
+    it('updates from template with changed content to text', () => {
+      let render = val => html`${val}`;
+      let target = document.createElement('div');
+      let stream = createPushStream();
+      applyTemplate(target, html`${stream}`);
+      stream.next(render(html`<div>1</div>`));
+      stream.next(render(html`<div>2</div>`));
+      stream.next('text');
+      assert.deepEqual(target.toDataObject().childNodes, [
+        'text',
+        '',
+      ]);
+    });
+
+    it('swaps children', () => {
+      let a = html`first`;
+      let b = html`second`;
+      assertResult(
+        Observable.of([a, b], [b, a]),
+        ['second', 'first', '']
       );
     });
   });

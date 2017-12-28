@@ -6,22 +6,6 @@ import { Observable, createPushStream } from './observable.js';
 describe('Child updaters', () => {
   let document = new vdom.Document();
 
-  function withDelay(...args) {
-    return new Observable(sink => {
-      function next() {
-        if (args.length === 0) {
-          sink.complete();
-          return;
-        }
-        setTimeout(() => {
-          sink.next(args.unshift());
-          next();
-        });
-      }
-      next();
-    });
-  }
-
   function assertResult(content, data) {
     let target = document.createElement('div');
     applyTemplate(target, html`${content}`);
@@ -30,23 +14,24 @@ describe('Child updaters', () => {
 
   describe('Single updates', () => {
     it('accepts null values', () => {
-      assertResult(null, ['', '']);
+      assertResult(null, ['', '', '']);
     });
 
     it('accepts string values', () => {
-      assertResult('text', ['text', '']);
+      assertResult('text', ['', 'text', '']);
     });
 
     it('accepts number values', () => {
-      assertResult(1, ['1', '']);
+      assertResult(1, ['', '1', '']);
     });
 
     it('accepts boolean values', () => {
-      assertResult(true, ['true', '']);
+      assertResult(true, ['', 'true', '']);
     });
 
     it('accepts template values', () => {
       assertResult(html`<span>text</span>`, [
+        '',
         {
           nodeName: 'span',
           attributes: {},
@@ -59,6 +44,7 @@ describe('Child updaters', () => {
     it('accepts array values', () => {
       assertResult([null, 'foo', html`<span>text</span>`], [
         '',
+        '',
         'foo',
         {
           nodeName: 'span',
@@ -70,7 +56,7 @@ describe('Child updaters', () => {
     });
 
     it('accepts iterables', () => {
-      assertResult(new Set(['a', 'b', 'c']), ['a', 'b', 'c', '']);
+      assertResult(new Set(['a', 'b', 'c']), ['', 'a', 'b', 'c', '']);
     });
   });
 
@@ -78,7 +64,7 @@ describe('Child updaters', () => {
     it('updates a template with multiple children to text', () => {
       assertResult(
         Observable.of(html`<span>a</span><span>b</span>`, ''),
-        ['', '']
+        ['', '', '']
       );
     });
 
@@ -87,7 +73,7 @@ describe('Child updaters', () => {
         Observable.of(
           ['a', html`<span>x</span>`, 'b'],
           'c'
-        ), ['c', '']
+        ), ['', 'c', '']
       );
     });
 
@@ -97,6 +83,7 @@ describe('Child updaters', () => {
           'a',
           ['b', html`<span>x</span>`, 'c']
         ), [
+          '',
           'b',
           {
             nodeName: 'span',
@@ -109,17 +96,17 @@ describe('Child updaters', () => {
       );
     });
 
-    it.skip('updates from empty template to text', () => {
+    it('updates from empty template to text', () => {
       assertResult(
         Observable.of(html``, 'text'),
-        ['text', ''],
-      )
+        ['', 'text', ''],
+      );
     });
 
     it('updates from template with dynamic first child to text', () => {
       assertResult(
         Observable.of(html`${'a'}${'b'}`, 'text'),
-        ['text', ''],
+        ['', 'text', ''],
       );
     });
 
@@ -132,6 +119,7 @@ describe('Child updaters', () => {
       stream.next(render(html`<div>2</div>`));
       stream.next('text');
       assert.deepEqual(target.toDataObject().childNodes, [
+        '',
         'text',
         '',
       ]);
@@ -142,7 +130,7 @@ describe('Child updaters', () => {
       let b = html`second`;
       assertResult(
         Observable.of([a, b], [b, a]),
-        ['second', 'first', '']
+        ['', 'second', 'first', '']
       );
     });
   });

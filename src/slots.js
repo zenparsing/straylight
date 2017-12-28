@@ -61,8 +61,10 @@ class TemplateSlot {
     this.updater.update(template);
     this.start = dom.firstChild(fragment);
     this.end = dom.lastChild(fragment);
-    // FIXME: fragment could be empty
-    // FIXME: firstChild or lastChild could be dynamic
+    if (!this.start) {
+      this.start = this.end = dom.createText('', next);
+      dom.appendNode(this.start, fragment);
+    }
     dom.insertBefore(fragment, next);
   }
 

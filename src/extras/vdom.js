@@ -49,6 +49,10 @@ export class Document {
     e.namespaceURI = namespace;
     return e;
   }
+
+  createComment(text) {
+    return new Comment(text);
+  }
 }
 
 class Node {
@@ -120,7 +124,9 @@ class ParentNode extends Node {
   toDataObject() {
     return {
       nodeName: this.nodeName,
-      childNodes: this.childNodes.map(child => child.toDataObject()),
+      childNodes: this.childNodes
+        .map(child => child.toDataObject())
+        .filter(data => data !== null),
     };
   }
 }
@@ -182,5 +188,20 @@ class Text extends Node {
 
   toHTML() {
     return rawTags.test(this.parentNode.nodeName) ? this.nodeValue : esc(this.nodeValue);
+  }
+}
+
+class Comment extends Node {
+  constructor(doc, text) {
+    super(doc, 8, '#comment');
+    this.nodeValue = text;
+  }
+
+  toDataObject() {
+    return null;
+  }
+
+  toHTML() {
+    return '';
   }
 }

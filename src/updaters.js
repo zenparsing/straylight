@@ -208,8 +208,9 @@ export class AttributeMapUpdater {
 }
 
 export class ChildUpdater {
-  constructor(marker) {
-    this.marker = marker;
+  constructor(start, end) {
+    this.start = start;
+    this.end = end;
     this.slot = null;
     this.slots = null;
   }
@@ -266,14 +267,13 @@ export class ChildUpdater {
 
   updateScalar(value) {
     if (!this.slot) {
-      this.slot = createSlot(value, this.marker);
+      this.slot = createSlot(value, this.end);
     } else if (this.slot.matches(value)) {
       this.slot.update(value);
     } else {
       this.slot.cancelUpdates();
-      // FIXME: this.slot.start and this.slot.end could be null
       dom.removeSiblings(this.slot.start, this.slot.end);
-      this.slot = createSlot(value, this.marker);
+      this.slot = createSlot(value, this.end);
     }
   }
 
@@ -319,8 +319,7 @@ export class ChildUpdater {
   }
 
   getSlotNode(pos) {
-    // FIXME: this.slots[pos].start could be null
-    return pos >= this.slots.length ? this.marker : this.slots[pos].start;
+    return pos >= this.slots.length ? this.end : this.slots[pos].start;
   }
 
   insertSlot(value, pos) {
@@ -343,7 +342,6 @@ export class ChildUpdater {
     for (let i = from; i < this.slots.length; ++i) {
       this.slots[i].cancelUpdates();
     }
-    // FIXME: first and last could be null
     let first = this.slots[from].start;
     let last = this.slots[this.slots.length - 1].end;
     dom.removeSiblings(first, last);

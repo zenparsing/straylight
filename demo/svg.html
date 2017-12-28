@@ -2,21 +2,79 @@
 <script src='../dist/straylight.js'></script>
 <script>
 
-window.onload = () => {
-  const { html, applyTemplate } = Straylight;
+const { html, applyTemplate } = Straylight;
 
-  applyTemplate('#mount', html`
-    <svg width='24' height='24' viewBox='0 0 24 24' fill='#4285f4'>
-      <path d='
-        M12,0C5.376,0 0,5.376 0,12C0,18.624 5.376,24 12,24C18.624,24 24,18.624
-        24,12C24,5.376 18.624,0 12,0ZM12,20.64C9,20.64 6.348,19.104
-        4.8,16.776C4.836,14.388 9.6,13.08 12,13.08C14.388,13.08 19.164,14.388
-        19.2,16.776C17.652,19.104 15,20.64 12,20.64ZM12,3.6C13.992,3.6 15.6,5.208
-        15.6,7.2C15.6,9.192 13.992,10.8 12,10.8C10.008,10.8 8.4,9.192
-        8.4,7.2C8.4,5.208 10.008,3.6 12,3.6Z' />
-      <path d='M0 0h24v24H0z' fill='none' />
+function render() {
+  return html`
+    <svg version='1.1' width='320' height='320' viewBox='0 0 320 320' fill='none' stroke='#000' stroke-linecap='round'>
+      <defs>
+        <path id='r1'>
+          <animate id='p1' attributeName='d' values='m160,160l0,0 0,0;m130,110l30,-17 30,17;m130,60l30,-17 30,17;m160,20l0,0 0,0' dur='6s' repeatCount='indefinite' />
+          <animate attributeName='stroke-width' values='0;4;4;4;0' dur='6s' repeatCount='indefinite' begin='p1.begin' />
+        </path>
+        <path id='r2'>
+          <animate attributeName='d' values='m160,160l0,0 0,0;m130,110l30,-17 30,17;m130,60l30,-17 30,17;m160,20l0,0 0,0' dur='6s' repeatCount='indefinite' begin='p1.begin+1s' />
+          <animate attributeName='stroke-width' values='0;4;4;4;0' dur='6s' repeatCount='indefinite' begin='p1.begin+1s' />
+        </path>
+        <path id='r3'>
+          <animate attributeName='d' values='m160,160l0,0 0,0;m130,110l30,-17 30,17;m130,60l30,-17 30,17;m160,20l0,0 0,0' dur='6s' repeatCount='indefinite' begin='p1.begin+2s' />
+          <animate attributeName='stroke-width' values='0;4;4;4;0' dur='6s' repeatCount='indefinite' begin='p1.begin+2s' />
+        </path>
+        <path id='r4'>
+          <animate id='p1' attributeName='d' values='m160,160l0,0 0,0;m130,110l30,-17 30,17;m130,60l30,-17 30,17;m160,20l0,0 0,0' dur='6s' repeatCount='indefinite' begin='p1.begin+3s' />
+          <animate attributeName='stroke-width' values='0;4;4;4;0' dur='6s' repeatCount='indefinite' begin='p1.begin+3s' />
+        </path>
+        <path id='r5'>
+          <animate attributeName='d' values='m160,160l0,0 0,0;m130,110l30,-17 30,17;m130,60l30,-17 30,17;m160,20l0,0 0,0' dur='6s' repeatCount='indefinite' begin='p1.begin+4s' />
+          <animate attributeName='stroke-width' values='0;4;4;4;0' dur='6s' repeatCount='indefinite' begin='p1.begin+4s' />
+        </path>
+        <path id='r6'>
+          <animate attributeName='d' values='m160,160l0,0 0,0;m130,110l30,-17 30,17;m130,60l30,-17 30,17;m160,20l0,0 0,0' dur='6s' repeatCount='indefinite' begin='p1.begin+5s' />
+          <animate attributeName='stroke-width' values='0;4;4;4;0' dur='6s' repeatCount='indefinite' begin='p1.begin+5s' />
+        </path>
+      </defs>
+      <use href='#r1' />
+      <use href='#r1' transform='rotate(60 160 160)' />
+      <use href='#r1' transform='rotate(120 160 160)' />
+      <use href='#r1' transform='rotate(180 160 160)' />
+      <use href='#r1' transform='rotate(240 160 160)' />
+      <use href='#r1' transform='rotate(300 160 160)' />
+      <use href='#r2' transform='rotate(30 160 160)' />
+      <use href='#r2' transform='rotate(90 160 160)' />
+      <use href='#r2' transform='rotate(150 160 160)' />
+      <use href='#r2' transform='rotate(210 160 160)' />
+      <use href='#r2' transform='rotate(270 160 160)' />
+      <use href='#r2' transform='rotate(330 160 160)' />
+      <use href='#r3' />
+      <use href='#r3' transform='rotate(60 160 160)' />
+      <use href='#r3' transform='rotate(120 160 160)' />
+      <use href='#r3' transform='rotate(180 160 160)' />
+      <use href='#r3' transform='rotate(240 160 160)' />
+      <use href='#r3' transform='rotate(300 160 160)' />
+      <use href='#r4' transform='rotate(30 160 160)' />
+      <use href='#r4' transform='rotate(90 160 160)' />
+      <use href='#r4' transform='rotate(150 160 160)' />
+      <use href='#r4' transform='rotate(210 160 160)' />
+      <use href='#r4' transform='rotate(270 160 160)' />
+      <use href='#r4' transform='rotate(330 160 160)' />
+      <use href='#r5' />
+      <use href='#r5' transform='rotate(60 160 160)' />
+      <use href='#r5' transform='rotate(120 160 160)' />
+      <use href='#r5' transform='rotate(180 160 160)' />
+      <use href='#r5' transform='rotate(240 160 160)' />
+      <use href='#r5' transform='rotate(300 160 160)' />
+      <use href='#r6' transform='rotate(30 160 160)' />
+      <use href='#r6' transform='rotate(90 160 160)' />
+      <use href='#r6' transform='rotate(150 160 160)' />
+      <use href='#r6' transform='rotate(210 160 160)' />
+      <use href='#r6' transform='rotate(270 160 160)' />
+      <use href='#r6' transform='rotate(330 160 160)' />
     </svg>
-  `);
+  `;
+}
+
+window.onload = () => {
+  applyTemplate('#mount', render());
 };
 
 </script>

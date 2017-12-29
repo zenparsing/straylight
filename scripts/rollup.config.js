@@ -19,6 +19,11 @@ export default {
       plugins: ['external-helpers'],
     }),
     nodeResolve(),
-    commonjs({ include: /node_modules/ }),
+    commonjs({
+      include: /node_modules/,
+      namedExports: {
+        htmltag: ['html', 'TemplateResult']
+      },
+    }),
   ],
 };

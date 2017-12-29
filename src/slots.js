@@ -1,4 +1,4 @@
-import htmltag from 'htmltag';
+import { TemplateResult } from 'htmltag';
 import { TemplateUpdater } from './updaters.js';
 import * as dom from './dom.js';
 
@@ -13,7 +13,7 @@ export function createSlot(value, next) {
     return new TextSlot(value, next);
   }
 
-  if (htmltag.isTemplateResult(value)) {
+  if (value instanceof TemplateResult) {
     return new TemplateSlot(value, next);
   }
 
@@ -74,7 +74,7 @@ class TemplateSlot {
 
   matches(value) {
     return (
-      htmltag.isTemplateResult(value) &&
+      value instanceof TemplateResult &&
       value.source === this.updater.source
     );
   }

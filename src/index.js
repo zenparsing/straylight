@@ -1,8 +1,7 @@
-import htmltag from 'htmltag';
 import { TemplateUpdater } from './updaters.js';
 import * as dom from './dom.js';
 
-export const html = htmltag({ cache: new WeakMap() });
+export { html } from 'htmltag';
 
 const updaterMap = new WeakMap();
 

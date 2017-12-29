@@ -32,7 +32,7 @@ export class Actions {
     return this.updaters;
   }
 
-  createNode(tag, parent) {
+  createElement(tag, parent) {
     // Dynamic tags throw
     if (typeof tag !== 'string') {
       throw new TypeError('Tag name must be a string');
@@ -40,28 +40,29 @@ export class Actions {
     return dom.createElement(tag, parent);
   }
 
-  finishNode(node) {
+  createComment(value) {
+    if (isDynamic(value)) {
+      this.updaters.push(new CommentUpdater());
+    }
+    return null;
+  }
+
+  finishElement(node) {
     return node;
   }
 
-  addChild(node, child) {
+  appendChild(node, child) {
     if (isDynamic(child)) {
       let start = dom.createText('', node);
       let end = dom.createText('', node);
       dom.appendNode(start, node);
       dom.appendNode(end, node);
       this.updaters.push(new ChildUpdater(start, end));
-    } else {
+    } else if (child !== null) {
       if (typeof child === 'string') {
         child = dom.createText(child, node);
       }
       dom.appendNode(child, node);
-    }
-  }
-
-  addComment(node, value) {
-    if (isDynamic(value)) {
-      this.updaters.push(new CommentUpdater());
     }
   }
 

@@ -58,6 +58,12 @@ describe('Child updaters', () => {
     it('accepts iterables', () => {
       assertResult(new Set(['a', 'b', 'c']), ['', 'a', 'b', 'c', '']);
     });
+
+    it('throws if child is not valid', () => {
+      assert.throws(() => {
+        applyTemplate(document.createElement('div'), html`${{}}`);
+      });
+    });
   });
 
   describe('Multiple updates', () => {
@@ -65,6 +71,13 @@ describe('Child updaters', () => {
       assertResult(
         Observable.of(html`<span>a</span><span>b</span>`, ''),
         ['', '', '']
+      );
+    });
+
+    it('updates from text to null', () => {
+      assertResult(
+        Observable.of('a', null),
+        ['', '', ''],
       );
     });
 
@@ -132,6 +145,47 @@ describe('Child updaters', () => {
         Observable.of([a, b], [b, a]),
         ['', 'second', 'first', '']
       );
+    });
+
+    it('swaps several children', () => {
+      let a = html`first`;
+      let b = html`second`;
+      let c = html`third`;
+      assertResult(
+        Observable.of([a, b, c], [c, b, a]),
+        ['', 'third', 'second', 'first', '']
+      );
+    });
+
+    it('swaps children with multiple nodes', () => {
+      let a = html`<div>a</div><div>b</div>`;
+      let b = html`<div>c</div><div>d</div>`;
+      assertResult(
+        Observable.of([a, b], [b, a]),
+        [
+          '',
+          { nodeName: 'div', attributes: {}, childNodes: ['c'] },
+          { nodeName: 'div', attributes: {}, childNodes: ['d'] },
+          { nodeName: 'div', attributes: {}, childNodes: ['a'] },
+          { nodeName: 'div', attributes: {}, childNodes: ['b'] },
+          '',
+        ]
+      );
+    });
+
+    it('does not set text value for repeated identical values', () => {
+      let stream = createPushStream();
+      let target = document.createElement('div');
+      applyTemplate(target, html`${stream}`);
+      stream.next('');
+      let textNode = target.childNodes[1];
+      let assignedValues = [];
+      Object.defineProperty(textNode, 'nodeValue', {
+        set(value) { assignedValues.push(value); },
+      });
+      stream.next('a');
+      stream.next('a');
+      assert.deepEqual(assignedValues, ['a']);
     });
   });
 

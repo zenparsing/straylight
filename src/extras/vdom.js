@@ -49,10 +49,6 @@ export class Document {
     e.namespaceURI = namespace;
     return e;
   }
-
-  createComment(text) {
-    return new Comment(text);
-  }
 }
 
 class Node {
@@ -188,20 +184,5 @@ class Text extends Node {
 
   toHTML() {
     return rawTags.test(this.parentNode.nodeName) ? this.nodeValue : esc(this.nodeValue);
-  }
-}
-
-class Comment extends Node {
-  constructor(doc, text) {
-    super(doc, 8, '#comment');
-    this.nodeValue = text;
-  }
-
-  toDataObject() {
-    return null;
-  }
-
-  toHTML() {
-    return '';
   }
 }

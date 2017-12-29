@@ -46,4 +46,10 @@ describe('Attribute updaters', () => {
     assert.ok(!elem.attributes.has('x'));
   });
 
+  it('uses the attribute name for boolean attribute values', () => {
+    assertResult(html`<div x=${true} />`, {
+      x: 'x',
+    });
+  });
+
 });

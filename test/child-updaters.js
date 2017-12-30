@@ -6,44 +6,50 @@ import { Observable, createPushStream } from './observable.js';
 describe('Child updaters', () => {
   let document = new vdom.Document();
 
+  function getChildren(node) {
+    let { childNodes } = node.toDataObject();
+    // Remove marker nodes
+    if (childNodes[0] === '' && childNodes[childNodes.length - 1] === '') {
+      childNodes = childNodes.slice(1, -1);
+    }
+    return childNodes;
+  }
+
   function assertResult(content, data) {
     let target = document.createElement('div');
     applyTemplate(target, html`${content}`);
-    assert.deepEqual(target.toDataObject().childNodes, data);
+    assert.deepEqual(getChildren(target), data);
   }
 
   describe('Single updates', () => {
     it('accepts null values', () => {
-      assertResult(null, ['', '', '']);
+      assertResult(null, ['']);
     });
 
     it('accepts string values', () => {
-      assertResult('text', ['', 'text', '']);
+      assertResult('text', ['text']);
     });
 
     it('accepts number values', () => {
-      assertResult(1, ['', '1', '']);
+      assertResult(1, ['1']);
     });
 
     it('accepts boolean values', () => {
-      assertResult(true, ['', 'true', '']);
+      assertResult(true, ['true']);
     });
 
     it('accepts template values', () => {
       assertResult(html`<span>text</span>`, [
-        '',
         {
           nodeName: 'span',
           attributes: {},
           childNodes: ['text'],
         },
-        '',
       ]);
     });
 
     it('accepts array values', () => {
       assertResult([null, 'foo', html`<span>text</span>`], [
-        '',
         '',
         'foo',
         {
@@ -51,12 +57,11 @@ describe('Child updaters', () => {
           attributes: {},
           childNodes: ['text'],
         },
-        '',
       ]);
     });
 
     it('accepts iterables', () => {
-      assertResult(new Set(['a', 'b', 'c']), ['', 'a', 'b', 'c', '']);
+      assertResult(new Set(['a', 'b', 'c']), ['a', 'b', 'c']);
     });
 
     it('throws if child is not valid', () => {
@@ -70,14 +75,14 @@ describe('Child updaters', () => {
     it('updates a template with multiple children to text', () => {
       assertResult(
         Observable.of(html`<span>a</span><span>b</span>`, ''),
-        ['', '', '']
+        ['']
       );
     });
 
     it('updates from text to null', () => {
       assertResult(
         Observable.of('a', null),
-        ['', '', ''],
+        [''],
       );
     });
 
@@ -86,7 +91,7 @@ describe('Child updaters', () => {
         Observable.of(
           ['a', html`<span>x</span>`, 'b'],
           'c'
-        ), ['', 'c', '']
+        ), ['c']
       );
     });
 
@@ -96,7 +101,6 @@ describe('Child updaters', () => {
           'a',
           ['b', html`<span>x</span>`, 'c']
         ), [
-          '',
           'b',
           {
             nodeName: 'span',
@@ -104,7 +108,6 @@ describe('Child updaters', () => {
             childNodes: ['x'],
           },
           'c',
-          '',
         ]
       );
     });
@@ -112,14 +115,14 @@ describe('Child updaters', () => {
     it('updates from empty template to text', () => {
       assertResult(
         Observable.of(html``, 'text'),
-        ['', 'text', ''],
+        ['text'],
       );
     });
 
     it('updates from template with dynamic first child to text', () => {
       assertResult(
         Observable.of(html`${'a'}${'b'}`, 'text'),
-        ['', 'text', ''],
+        ['text'],
       );
     });
 
@@ -131,11 +134,7 @@ describe('Child updaters', () => {
       stream.next(render(html`<div>1</div>`));
       stream.next(render(html`<div>2</div>`));
       stream.next('text');
-      assert.deepEqual(target.toDataObject().childNodes, [
-        '',
-        'text',
-        '',
-      ]);
+      assert.deepEqual(getChildren(target), ['text']);
     });
 
     it('swaps children', () => {
@@ -143,7 +142,7 @@ describe('Child updaters', () => {
       let b = html`second`;
       assertResult(
         Observable.of([a, b], [b, a]),
-        ['', 'second', 'first', '']
+        ['second', 'first']
       );
     });
 
@@ -153,7 +152,7 @@ describe('Child updaters', () => {
       let c = html`third`;
       assertResult(
         Observable.of([a, b, c], [c, b, a]),
-        ['', 'third', 'second', 'first', '']
+        ['third', 'second', 'first']
       );
     });
 
@@ -163,12 +162,10 @@ describe('Child updaters', () => {
       assertResult(
         Observable.of([a, b], [b, a]),
         [
-          '',
           { nodeName: 'div', attributes: {}, childNodes: ['c'] },
           { nodeName: 'div', attributes: {}, childNodes: ['d'] },
           { nodeName: 'div', attributes: {}, childNodes: ['a'] },
           { nodeName: 'div', attributes: {}, childNodes: ['b'] },
-          '',
         ]
       );
     });

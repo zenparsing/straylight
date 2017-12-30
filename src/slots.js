@@ -80,7 +80,7 @@ class TemplateSlot {
   }
 
   update(template) {
-    // Assert: template.source === this.updates.source
+    // Assert: template.source === this.updater.source
     this.updater.update(template);
   }
 }

@@ -9,6 +9,7 @@ export class TemplateUpdater {
     this.updaters = null;
     this.pending = [];
     this.source = null;
+    this.key = '';
   }
 
   cancelUpdates() {

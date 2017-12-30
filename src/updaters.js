@@ -74,8 +74,8 @@ export class TemplateUpdater {
 
     let subscription = value[symbols.observable]().subscribe(
       val => this.updaters[i].update(val),
-      err => { this.updaters[i] = null; throw err; },
-      () => this.updaters[i] = null,
+      err => { this.pending[i] = null; throw err; },
+      () => this.pending[i] = null,
     );
 
     if (!subscription.closed) {
@@ -97,7 +97,7 @@ export class TemplateUpdater {
       iter.next().then(result => {
         if (!pending.cancelled) {
           if (result.done) {
-            this.updaters[i] = null;
+            this.pending[i] = null;
           } else {
             this.updaters[i].update(result.value);
             next();
@@ -114,7 +114,12 @@ export class TemplateUpdater {
     let pending = {
       source: value,
       cancelled: false,
-      cancel() { this.cancelled = true; iter.return(); },
+      cancel() {
+        this.cancelled = true;
+        if (typeof iter.return === 'function') {
+          iter.return();
+        }
+      },
     };
 
     next();
@@ -130,7 +135,7 @@ export class TemplateUpdater {
     }
     let values = template.values;
     for (let i = 0; i < this.updaters.length; ++i) {
-      let value = i < values.length ? values[i] : null;
+      let value = values[i];
       if (value && typeof value.then === 'function') {
         this.awaitPromise(value, i);
       } else if (value && value[symbols.observable]) {
@@ -227,7 +232,10 @@ export class ChildUpdater {
     }
     if (this.slots) {
       this.updateVector([value]);
-      this.toScalar();
+      // Convert to scalar
+      this.slot = this.slots[0];
+      this.removeSlots(1);
+      this.slots = null;
     } else {
       this.updateScalar(value);
     }
@@ -236,31 +244,10 @@ export class ChildUpdater {
   cancelUpdates() {
     if (this.slots) {
       for (let i = 0; i < this.slots.length; ++i) {
-        this.cancelSlotUpdates(this.slots[i]);
+        this.slots[i].cancelUpdates();
       }
     } else if (this.slot) {
-      this.cancelSlotUpdates(this.slot);
-    }
-  }
-
-  cancelSlotUpdates(slot) {
-    if (slot.cancelUpdates) {
-      slot.cancelUpdates();
-    }
-  }
-
-  toScalar() {
-    if (this.slots) {
-      this.slot = this.slots.length > 0 ? this.slots[0] : null;
-      this.removeSlots(1);
-      this.slots = null;
-    }
-  }
-
-  toVector() {
-    if (!this.slots) {
-      this.slots = this.slot ? [this.slot] : [];
-      this.slot = null;
+      this.slot.cancelUpdates();
     }
   }
 
@@ -281,7 +268,11 @@ export class ChildUpdater {
   // Vector operations
 
   updateVector(list, iterable) {
-    this.toVector();
+    if (!this.slots) {
+      // Convert from scalar to vector
+      this.slots = this.slot ? [this.slot] : [];
+      this.slot = null;
+    }
     let i = 0;
     if (iterable) {
       for (let item of list) {

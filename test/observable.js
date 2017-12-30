@@ -1,8 +1,12 @@
 import Observable from 'zen-observable';
 
-Observable.extensions.setHostReportError(err => { throw err; });
-
 export { Observable };
+
+export function setObservableErrorHandler(fn) {
+  Observable.extensions.setHostReportError(fn || (err => { throw err; }));
+}
+
+setObservableErrorHandler();
 
 export function createPushStream() {
   let set = new Set();
@@ -11,6 +15,8 @@ export function createPushStream() {
     return () => set.delete(sink);
   });
   observable.next = value => set.forEach(sink => sink.next(value));
+  observable.error = error => set.forEach(sink => sink.error(error));
   observable.complete = () => set.forEach(sink => sink.complete());
+  observable.observers = set;
   return observable;
 }

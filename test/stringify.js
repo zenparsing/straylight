@@ -43,6 +43,13 @@ describe('HTML stringification', () => {
     assert.equal(stringify(html`<x a="foo ${ 'bar' } baz" />`), '<x a="foo bar baz"></x>');
   });
 
+  it('stringifies flag attributes', () => {
+    assert.equal(
+      stringify(html`<x a b=${true} c=${null} d=${undefined} e=${false} />`),
+      '<x a="a" b="b"></x>'
+    );
+  });
+
   it('does not stringify comments', () => {
     assert.equal(
       stringify(html`<div><!-- before ${1} after -->${2}</div>`),

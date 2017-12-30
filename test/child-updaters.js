@@ -60,6 +60,10 @@ describe('Child updaters', () => {
       ]);
     });
 
+    it('accepts an empty array', () => {
+      assertResult([], []);
+    });
+
     it('accepts iterables', () => {
       assertResult(new Set(['a', 'b', 'c']), ['a', 'b', 'c']);
     });
@@ -92,6 +96,13 @@ describe('Child updaters', () => {
           ['a', html`<span>x</span>`, 'b'],
           'c'
         ), ['c']
+      );
+    });
+
+    it('updates from empty vector to scalar', () => {
+      assertResult(
+        Observable.of([], 'a'),
+        ['a']
       );
     });
 
@@ -183,6 +194,26 @@ describe('Child updaters', () => {
       stream.next('a');
       stream.next('a');
       assert.deepEqual(assignedValues, ['a']);
+    });
+  });
+
+  describe('Cancellation', () => {
+    it('cancels slot updates for single values', () => {
+      let stream = createPushStream();
+      let target = document.createElement('div');
+      applyTemplate(target, html`${stream}`);
+      assert.equal(stream.observers.size, 1);
+      applyTemplate(target, html``);
+      assert.equal(stream.observers.size, 0);
+    });
+
+    it('cancels slot updates for multiple values', () => {
+      let stream = createPushStream();
+      let target = document.createElement('div');
+      applyTemplate(target, html`${['a', html`${stream}`, 'b']}`);
+      assert.equal(stream.observers.size, 1);
+      applyTemplate(target, html``);
+      assert.equal(stream.observers.size, 0);
     });
   });
 

@@ -4,52 +4,52 @@ import assert from 'assert';
 
 describe('Attribute updaters', () => {
   let document = new vdom.Document();
+  let render = val => html`<div x=${val} />`;
 
   function assertResult(template, expected) {
     let target = document.createElement('div');
     applyTemplate(target, template);
-    let actual = target.childNodes[0].toDataObject().attributes;
+    let actual = target.firstChild.toDataObject().attributes;
     assert.deepEqual(actual, expected);
   }
 
-  it('assigns object keys', () => {
-    assertResult(html`<div x=${1} />`, { x: '1' });
+  it('assigns attribute values', () => {
+    assertResult(render(1), { x: '1' });
+  });
+
+  it('assigns consecutive identical values', () => {
+    let target = document.createElement('div');
+    applyTemplate(target, render('a'));
+    applyTemplate(target, render('a'));
+    assert.equal(target.firstChild.attributes.get('x'), 'a');
   });
 
   it('set properties when name starts with dot', () => {
     let target = document.createElement('div');
     applyTemplate(target, html`<div .testName=${'value'} />`);
-    assert.equal(target.childNodes[0].testName, 'value');
+    assert.equal(target.firstChild.testName, 'value');
   });
 
   it('removes attributes whose value is undefined', () => {
-    function render(value) {
-      return html`<div x=${value} />`;
-    }
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
-    let elem = target.childNodes[0];
-    assert.equal(elem.attributes.get('x'), 'a');
+    let { firstChild } = target;
+    assert.equal(firstChild.attributes.get('x'), 'a');
     applyTemplate(target, render(undefined));
-    assert.ok(!elem.attributes.has('x'));
+    assert.ok(!firstChild.attributes.has('x'));
   });
 
   it('removes attributes whose value is false', () => {
-    function render(value) {
-      return html`<div x=${value} />`;
-    }
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
-    let elem = target.childNodes[0];
-    assert.equal(elem.attributes.get('x'), 'a');
+    let { firstChild } = target;
+    assert.equal(firstChild.attributes.get('x'), 'a');
     applyTemplate(target, render(false));
-    assert.ok(!elem.attributes.has('x'));
+    assert.ok(!firstChild.attributes.has('x'));
   });
 
   it('uses the attribute name for boolean attribute values', () => {
-    assertResult(html`<div x=${true} />`, {
-      x: 'x',
-    });
+    assertResult(render(true), { x: 'x' });
   });
 
 });

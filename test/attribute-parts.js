@@ -27,6 +27,8 @@ describe('Attribute part updaters', () => {
     assert.deepEqual(div.toDataObject().attributes, {});
     stream.next('c');
     assert.deepEqual(div.toDataObject().attributes, { x: 'abcd' });
+    stream.next('C');
+    assert.deepEqual(div.toDataObject().attributes, { x: 'abCd' });
   });
 
 });

@@ -215,7 +215,7 @@ export class AttributeMapUpdater {
 
 export class ChildUpdater {
   constructor(marker) {
-    dom.insertBefore(dom.createText('', marker), marker);
+    dom.insertBefore(dom.createMarker(marker), marker);
     this.marker = marker;
     this.slot = null;
   }

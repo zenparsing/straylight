@@ -168,7 +168,7 @@ class TemplateSlot {
     this.start = dom.firstChild(fragment);
     this.end = dom.lastChild(fragment);
     if (!this.start) {
-      this.start = this.end = dom.createText('', next);
+      this.start = this.end = dom.createMarker(next);
       dom.insertBefore(this.start, next);
     } else {
       dom.insertBefore(fragment, next);

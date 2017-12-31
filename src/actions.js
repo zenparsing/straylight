@@ -8,15 +8,8 @@ import {
   ChildUpdater,
 } from './updaters.js';
 
-class Dynamic {
-  constructor(value) {
-    this.value = value;
-  }
-}
-
-function isDynamic(x) {
-  return x instanceof Dynamic;
-}
+function Dynamic(value) { this.value = value; }
+function isDynamic(x) { return x instanceof Dynamic; }
 
 export class Actions {
   constructor(target) {
@@ -53,7 +46,7 @@ export class Actions {
 
   appendChild(node, child) {
     if (isDynamic(child)) {
-      let marker = dom.createText('', node);
+      let marker = dom.createMarker(node);
       dom.appendNode(marker, node);
       this.updaters.push(new ChildUpdater(marker));
     } else if (child !== null) {

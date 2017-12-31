@@ -36,6 +36,10 @@ export function createText(text, context) {
   return doc(context).createTextNode(text);
 }
 
+export function createMarker(context) {
+  return doc(context).createTextNode('');
+}
+
 export function createElement(tag, context) {
   let namespace = getNamespace(tag, context);
   return namespace === HTML_NS ?

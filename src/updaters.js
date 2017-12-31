@@ -234,7 +234,6 @@ export class ChildUpdater {
       this.updateVector([value]);
       // Convert to scalar
       this.slot = this.slots[0];
-      this.removeSlots(1);
       this.slots = null;
     } else {
       this.updateScalar(value);
@@ -270,8 +269,12 @@ export class ChildUpdater {
   updateVector(list, iterable) {
     if (!this.slots) {
       // Convert from scalar to vector
-      this.slots = this.slot ? [this.slot] : [];
-      this.slot = null;
+      if (this.slot) {
+        this.slots = [this.slot];
+        this.slot = null;
+      } else {
+        this.slots = [];
+      }
     }
     let i = 0;
     if (iterable) {
@@ -283,9 +286,7 @@ export class ChildUpdater {
         this.updateVectorItem(list[i], i++);
       }
     }
-    if (i < this.slots.length) {
-      this.removeSlots(i);
-    }
+    this.removeSlots(i);
   }
 
   updateVectorItem(value, i) {

@@ -53,11 +53,9 @@ export class Actions {
 
   appendChild(node, child) {
     if (isDynamic(child)) {
-      let start = dom.createText('', node);
-      let end = dom.createText('', node);
-      dom.appendNode(start, node);
-      dom.appendNode(end, node);
-      this.updaters.push(new ChildUpdater(start, end));
+      let marker = dom.createText('', node);
+      dom.appendNode(marker, node);
+      this.updaters.push(new ChildUpdater(marker));
     } else if (child !== null) {
       if (typeof child === 'string') {
         child = dom.createText(child, node);

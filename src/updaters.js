@@ -214,130 +214,27 @@ export class AttributeMapUpdater {
 }
 
 export class ChildUpdater {
-  constructor(start, end) {
-    this.start = start;
-    this.end = end;
+  constructor(marker) {
+    dom.insertBefore(dom.createText('', marker), marker);
+    this.marker = marker;
     this.slot = null;
-    this.slots = null;
   }
 
   update(value) {
-    if (typeof value === 'object') {
-      if (Array.isArray(value)) {
-        return this.updateVector(value);
-      }
-      if (value && value[symbols.iterator]) {
-        return this.updateVector(value, true);
-      }
-    }
-    if (this.slots) {
-      this.updateVector([value]);
-      // Convert to scalar
-      this.slot = this.slots[0];
-      this.slots = null;
-    } else {
-      this.updateScalar(value);
-    }
-  }
-
-  cancelUpdates() {
-    if (this.slots) {
-      for (let i = 0; i < this.slots.length; ++i) {
-        this.slots[i].cancelUpdates();
-      }
-    } else if (this.slot) {
-      this.slot.cancelUpdates();
-    }
-  }
-
-  // Scalar operations
-
-  updateScalar(value) {
     if (!this.slot) {
-      this.slot = createSlot(value, this.end);
+      this.slot = createSlot(value, this.marker);
     } else if (this.slot.matches(value)) {
       this.slot.update(value);
     } else {
       this.slot.cancelUpdates();
       dom.removeSiblings(this.slot.start, this.slot.end);
-      this.slot = createSlot(value, this.end);
+      this.slot = createSlot(value, this.marker);
     }
   }
 
-  // Vector operations
-
-  updateVector(list, iterable) {
-    if (!this.slots) {
-      // Convert from scalar to vector
-      if (this.slot) {
-        this.slots = [this.slot];
-        this.slot = null;
-      } else {
-        this.slots = [];
-      }
+  cancelUpdates() {
+    if (this.slot) {
+      this.slot.cancelUpdates();
     }
-    let i = 0;
-    if (iterable) {
-      for (let item of list) {
-        this.updateVectorItem(item, i++);
-      }
-    } else {
-      while (i < list.length) {
-        this.updateVectorItem(list[i], i++);
-      }
-    }
-    this.removeSlots(i);
-  }
-
-  updateVectorItem(value, i) {
-    let pos = this.search(value, i);
-    if (pos === -1) {
-      this.insertSlot(value, i);
-    } else {
-      if (pos !== i) {
-        this.moveSlot(pos, i);
-      }
-      this.slots[i].update(value);
-    }
-  }
-
-  search(input, i) {
-    // TODO: O(1) key searching
-    for (; i < this.slots.length; ++i) {
-      if (this.slots[i].matches(input)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  getSlotNode(pos) {
-    return pos >= this.slots.length ? this.end : this.slots[pos].start;
-  }
-
-  insertSlot(value, pos) {
-    this.slots.splice(pos, 0, createSlot(value, this.getSlotNode(pos)));
-  }
-
-  moveSlot(from, to) {
-    // Assert: from > to
-    let slot = this.slots[from];
-    let next = this.getSlotNode(to);
-    this.slots.splice(from, 1);
-    this.slots.splice(to, 0, slot);
-    dom.insertSiblings(slot.start, slot.end, next);
-  }
-
-  removeSlots(from) {
-    if (from >= this.slots.length) {
-      return;
-    }
-    for (let i = from; i < this.slots.length; ++i) {
-      this.slots[i].cancelUpdates();
-    }
-    let first = this.slots[from].start;
-    let last = this.slots[this.slots.length - 1].end;
-    dom.removeSiblings(first, last);
-    this.slots.length = from;
   }
 }

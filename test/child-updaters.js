@@ -61,7 +61,7 @@ describe('Child updaters', () => {
     });
 
     it('accepts an empty array', () => {
-      assertResult([], []);
+      assertResult([], ['']);
     });
 
     it('accepts iterables', () => {
@@ -101,8 +101,22 @@ describe('Child updaters', () => {
 
     it('updates from empty vector to scalar', () => {
       assertResult(
-        Observable.of([], 'a'),
-        ['a']
+        Observable.of([], 'text'),
+        ['text']
+      );
+    });
+
+    it('updates from a larger array to a smaller array', () => {
+      assertResult(
+        Observable.of(['a', 'b', 'c'], ['d', 'e']),
+        ['d', 'e']
+      );
+    });
+
+    it('updates from a smaller array to a larger array', () => {
+      assertResult(
+        Observable.of(['a', 'b'], ['c', 'd', 'e']),
+        ['c', 'd', 'e']
       );
     });
 

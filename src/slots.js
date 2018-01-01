@@ -14,6 +14,10 @@ export function createSlot(value, parent, next) {
     return new TextSlot(value, parent, next);
   }
 
+  if (value[symbols.createSlot]) {
+    return value[symbols.createSlot](parent, next);
+  }
+
   if (isIterable(value)) {
     return new ArraySlot(value, parent, next);
   }

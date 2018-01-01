@@ -1,4 +1,5 @@
 import { html, applyTemplate } from '../src';
+import { symbols } from '../src/symbols.js';
 import { vdom } from '../src/extras';
 import assert from 'assert';
 import { Observable, createPushStream } from './observable.js';
@@ -241,6 +242,44 @@ describe('Child updaters', () => {
       assert.equal(stream.observers.size, 1);
       applyTemplate(target, html``);
       assert.equal(stream.observers.size, 0);
+    });
+  });
+
+  describe('Custom slot types', () => {
+    it('creates a slot using symbols.createSlot', () => {
+      class CustomSlotValue {
+        constructor(value) {
+          this.value = value;
+        }
+
+        [symbols.createSlot](parent, next) {
+          return new CustomSlot(this, parent, next);
+        }
+      }
+
+      class CustomSlot {
+        constructor(wrapped, parent, next) {
+          this.start = document.createTextNode('start');
+          this.end = document.createTextNode('end');
+          parent.insertBefore(this.start, next);
+          parent.insertBefore(document.createTextNode(wrapped.value), next);
+          parent.insertBefore(this.end, next);
+        }
+
+        cancelUpdates() {
+          // Empty
+        }
+
+        match(value) {
+          return value instanceof CustomSlotValue;
+        }
+
+        update(wrapped) {
+          this.start.nextSibling.nodeValue = wrapped.value;
+        }
+      }
+
+      assertResult(new CustomSlotValue('test'), ['start', 'test', 'end']);
     });
   });
 

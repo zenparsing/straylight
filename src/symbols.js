@@ -1,15 +1,16 @@
-let S = {};
+const S = typeof Symbol === 'function' ? Symbol : (name => `@@${name}`);
 
-if (typeof Symbol === 'function') {
-  S = Symbol;
-  // Ponyfill Symbol.observable for interoperability with other libraries
-  if (!S.observable) {
-    S.observable = S('observable');
+function getSymbol(name, ponyfill) {
+  let sym = S[name] || S(name);
+  if (ponyfill) {
+    S[name] = sym;
   }
+  return sym;
 }
 
 export const symbols = {
-  observable: S.observable || '@@observable',
-  iterator: S.iterator || '@@iterator',
-  asyncIterator: S.asyncIterator || '@@asyncIterator',
+  observable: getSymbol('observable', true),
+  iterator: getSymbol('iterator'),
+  asyncIterator: getSymbol('asyncIterator'),
+  createSlot: getSymbol('createSlot'),
 };

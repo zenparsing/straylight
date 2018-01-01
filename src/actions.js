@@ -12,13 +12,14 @@ function Dynamic(value) { this.value = value; }
 function isDynamic(x) { return x instanceof Dynamic; }
 
 export class Actions {
-  constructor(target) {
-    this.target = target;
+  constructor(parent, next) {
+    this.parent = parent;
+    this.next = next;
     this.updaters = [];
   }
 
   createRoot() {
-    return this.target;
+    return this.parent;
   }
 
   finishRoot() {
@@ -45,15 +46,14 @@ export class Actions {
   }
 
   appendChild(node, child) {
+    let next = node === this.parent ? this.next : null;
     if (isDynamic(child)) {
-      let marker = dom.createMarker(node);
-      dom.appendNode(marker, node);
-      this.updaters.push(new ChildUpdater(marker));
+      this.updaters.push(new ChildUpdater(node, next));
     } else if (child !== null) {
       if (typeof child === 'string') {
         child = dom.createText(child, node);
       }
-      dom.appendNode(child, node);
+      dom.insertChild(child, node, next);
     }
   }
 

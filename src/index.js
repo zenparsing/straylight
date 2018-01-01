@@ -1,21 +1,25 @@
-import { TemplateUpdater } from './updaters.js';
+import { createSlot, removeSlot } from './slots.js';
 import * as dom from './dom.js';
+
+const slotMap = new WeakMap();
 
 export { html } from 'htmltag';
 
-const updaterMap = new WeakMap();
-
-export function applyTemplate(target, template) {
+export function applyTemplate(target, value) {
   if (typeof target === 'string' && typeof window === 'object') {
     target = window.document.querySelector(target);
   }
   if (!dom.isElement(target)) {
     throw new TypeError(`${target} is not a DOM element`);
   }
-  let updater = updaterMap.get(target);
-  if (!updater) {
-    updater = new TemplateUpdater(target);
-    updaterMap.set(target, updater);
+  let slot = slotMap.get(target);
+  if (slot && slot.matches(value)) {
+    slot.update(value);
+  } else {
+    if (slot) {
+      removeSlot(slot);
+    }
+    slot = createSlot(value, target, null);
+    slotMap.set(target, slot);
   }
-  updater.update(template);
 }

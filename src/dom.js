@@ -8,14 +8,6 @@ export function isElement(x) {
   return x && x.nodeType === 1;
 }
 
-export function firstChild(node) {
-  return node.firstChild;
-}
-
-export function lastChild(node) {
-  return node.lastChild;
-}
-
 export function setAttr(node, name, value) {
   if (name[0] === '.') {
     node[name.slice(1)] = value;
@@ -36,8 +28,10 @@ export function createText(text, context) {
   return doc(context).createTextNode(text);
 }
 
-export function createMarker(context) {
-  return doc(context).createTextNode('');
+export function insertMarker(parent, next) {
+  let marker = doc(parent).createTextNode('');
+  parent.insertBefore(marker, next);
+  return marker;
 }
 
 export function createElement(tag, context) {
@@ -47,16 +41,8 @@ export function createElement(tag, context) {
     doc(context).createElementNS(namespace, tag);
 }
 
-export function createFragment(context) {
-  return doc(context).createDocumentFragment();
-}
-
-export function appendNode(child, parent) {
-  parent.insertBefore(child, null);
-}
-
-export function insertBefore(node, next) {
-  next.parentNode.insertBefore(node, next);
+export function insertChild(node, parent, next) {
+  parent.insertBefore(node, next || null);
 }
 
 export function insertSiblings(first, last, nextNode) {

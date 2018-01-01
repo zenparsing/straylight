@@ -122,7 +122,7 @@ class ParentNode extends Node {
       nodeName: this.nodeName,
       childNodes: this.childNodes
         .map(child => child.toDataObject())
-        .filter(data => data !== null),
+        .filter(data => Boolean(data)),
     };
   }
 }

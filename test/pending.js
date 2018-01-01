@@ -73,16 +73,16 @@ describe('Pending updates', () => {
       let stream = createPushStream();
       let target = document.createElement('div');
       applyTemplate(target, render(stream));
-      let { firstChild } = target;
-      assert.equal(firstChild.attributes.get('x'), undefined);
+      let elem = target.childNodes[1];
+      assert.equal(elem.attributes.get('x'), undefined);
       stream.next('a');
-      assert.equal(firstChild.attributes.get('x'), 'a');
+      assert.equal(elem.attributes.get('x'), 'a');
       stream.next('b');
-      assert.equal(firstChild.attributes.get('x'), 'b');
+      assert.equal(elem.attributes.get('x'), 'b');
       stream.complete();
-      assert.equal(firstChild.attributes.get('x'), 'b');
+      assert.equal(elem.attributes.get('x'), 'b');
       applyTemplate(target, render('c'));
-      assert.equal(firstChild.attributes.get('x'), 'c');
+      assert.equal(elem.attributes.get('x'), 'c');
     });
 
     it('cancels when updated with a new value', () => {
@@ -90,13 +90,13 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       applyTemplate(target, render(stream));
       assert.equal(stream.observers.size, 1);
-      let { firstChild } = target;
-      assert.equal(firstChild.attributes.get('x'), undefined);
+      let elem = target.childNodes[1];
+      assert.equal(elem.attributes.get('x'), undefined);
       applyTemplate(target, render('a'));
       assert.equal(stream.observers.size, 0);
-      assert.equal(firstChild.attributes.get('x'), 'a');
+      assert.equal(elem.attributes.get('x'), 'a');
       stream.next('b');
-      assert.equal(firstChild.attributes.get('x'), 'a');
+      assert.equal(elem.attributes.get('x'), 'a');
     });
 
     it('cancels when a new template is applied', () => {
@@ -112,21 +112,21 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       applyTemplate(target, render(stream));
       applyTemplate(target, render(stream));
-      let { firstChild } = target;
-      assert.equal(firstChild.attributes.get('x'), undefined);
+      let elem = target.childNodes[1];
+      assert.equal(elem.attributes.get('x'), undefined);
       stream.next('a');
-      assert.equal(firstChild.attributes.get('x'), 'a');
+      assert.equal(elem.attributes.get('x'), 'a');
     });
 
     it('handles errors', () => {
       let stream = createPushStream();
       let target = document.createElement('div');
       applyTemplate(target, render(stream));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       stream.error(new Error('test'));
       assert.equal(errors.length, 1);
       applyTemplate(target, render('a'));
-      assert.equal(firstChild.attributes.get('x'), 'a');
+      assert.equal(elem.attributes.get('x'), 'a');
     });
   });
 
@@ -135,12 +135,12 @@ describe('Pending updates', () => {
       let promise = Promise.resolve('a');
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
-      let { firstChild } = target;
-      assert.equal(firstChild.attributes.get('x'), undefined);
+      let elem = target.childNodes[1];
+      assert.equal(elem.attributes.get('x'), undefined);
       return promise.then(() => {
-        assert.equal(firstChild.attributes.get('x'), 'a');
+        assert.equal(elem.attributes.get('x'), 'a');
         applyTemplate(target, render('b'));
-        assert.equal(firstChild.attributes.get('x'), 'b');
+        assert.equal(elem.attributes.get('x'), 'b');
       });
     });
 
@@ -148,12 +148,12 @@ describe('Pending updates', () => {
       let promise = Promise.resolve('a');
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
-      let { firstChild } = target;
-      assert.equal(firstChild.attributes.get('x'), undefined);
+      let elem = target.childNodes[1];
+      assert.equal(elem.attributes.get('x'), undefined);
       applyTemplate(target, render('b'));
-      assert.equal(firstChild.attributes.get('x'), 'b');
+      assert.equal(elem.attributes.get('x'), 'b');
       return promise.then(() => {
-        assert.equal(firstChild.attributes.get('x'), 'b');
+        assert.equal(elem.attributes.get('x'), 'b');
       });
     });
 
@@ -171,11 +171,11 @@ describe('Pending updates', () => {
       let promise = Promise.reject(new Error('test'));
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       applyTemplate(target, render('b'));
-      assert.equal(firstChild.attributes.get('x'), 'b');
+      assert.equal(elem.attributes.get('x'), 'b');
       return promise.catch(() => {
-        assert.equal(firstChild.attributes.get('x'), 'b');
+        assert.equal(elem.attributes.get('x'), 'b');
       });
     });
 
@@ -184,9 +184,9 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
       applyTemplate(target, render(promise));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       return promise.then(() => {
-        assert.equal(firstChild.attributes.get('x'), 'a');
+        assert.equal(elem.attributes.get('x'), 'a');
       });
     });
 
@@ -194,11 +194,11 @@ describe('Pending updates', () => {
       let promise = Promise.reject(new Error('test'));
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       return new Promise(resolve => setTimeout(resolve)).then(() => {
         assert.equal(errors.length, 1);
         applyTemplate(target, render('a'));
-        assert.equal(firstChild.attributes.get('x'), 'a');
+        assert.equal(elem.attributes.get('x'), 'a');
       });
     });
   });
@@ -208,19 +208,19 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
-      let { firstChild } = target;
-      assert.equal(firstChild.attributes.get('x'), undefined);
+      let elem = target.childNodes[1];
+      assert.equal(elem.attributes.get('x'), undefined);
       iterator.yield({ value: 'a' });
       return Promise.resolve().then(() => {
-        assert.equal(firstChild.attributes.get('x'), 'a');
+        assert.equal(elem.attributes.get('x'), 'a');
         iterator.yield({ value: 'b' });
       }).then(() => {
-        assert.equal(firstChild.attributes.get('x'), 'b');
+        assert.equal(elem.attributes.get('x'), 'b');
         iterator.yield({ done: true });
       }).then(() => {
-        assert.equal(firstChild.attributes.get('x'), 'b');
+        assert.equal(elem.attributes.get('x'), 'b');
         applyTemplate(target, render('c'));
-        assert.equal(firstChild.attributes.get('x'), 'c');
+        assert.equal(elem.attributes.get('x'), 'c');
       });
     });
 
@@ -228,12 +228,12 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       iterator.yield({ value: 'a' });
       applyTemplate(target, render('b'));
       assert.equal(iterator.returnCalled, true);
       return Promise.resolve(() => {
-        assert.equal(firstChild.attributes.get('x'), 'b');
+        assert.equal(elem.attributes.get('x'), 'b');
       });
     });
 
@@ -249,11 +249,11 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       iterator.yield(new Error('test'));
       applyTemplate(target, render('b'));
       return Promise.resolve(() => {
-        assert.equal(firstChild.attributes.get('x'), 'b');
+        assert.equal(elem.attributes.get('x'), 'b');
       });
     });
 
@@ -262,13 +262,13 @@ describe('Pending updates', () => {
       let iterator = createAsyncIterator();
       iterator.return = undefined;
       applyTemplate(target, render(iterator));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       iterator.yield({ value: 'a' });
       applyTemplate(target, render('b'));
       assert.equal(iterator.returnCalled, false);
       return Promise.resolve(() => {
         applyTemplate(target, render('a'));
-        assert.equal(firstChild.attributes.get('x'), 'a');
+        assert.equal(elem.attributes.get('x'), 'a');
       });
     });
 
@@ -277,10 +277,10 @@ describe('Pending updates', () => {
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
       applyTemplate(target, render(iterator));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       iterator.yield({ value: 'a' });
       return Promise.resolve(() => {
-        assert.equal(firstChild.attributes.get('x'), 'a');
+        assert.equal(elem.attributes.get('x'), 'a');
       });
     });
 
@@ -288,12 +288,12 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
-      let { firstChild } = target;
+      let elem = target.childNodes[1];
       iterator.yield(new Error('test'));
       return new Promise(resolve => setTimeout(resolve)).then(() => {
         assert.equal(errors.length, 1);
         applyTemplate(target, render('a'));
-        assert.equal(firstChild.attributes.get('x'), 'a');
+        assert.equal(elem.attributes.get('x'), 'a');
       });
     });
   });

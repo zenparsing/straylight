@@ -1,9 +1,9 @@
 import { TemplateResult } from 'htmltag';
-import { TemplateUpdater } from './updaters.js';
+import { Actions } from './actions.js';
 import { symbols } from './symbols.js';
 import * as dom from './dom.js';
 
-export function createSlot(value, next) {
+export function createSlot(value, parent, next) {
   if (
     value === null ||
     value === undefined ||
@@ -11,18 +11,23 @@ export function createSlot(value, next) {
     typeof value === 'boolean' ||
     typeof value === 'number'
   ) {
-    return new TextSlot(value, next);
+    return new TextSlot(value, parent, next);
   }
 
   if (isIterable(value)) {
-    return new ArraySlot(value, next);
+    return new ArraySlot(value, parent, next);
   }
 
   if (value instanceof TemplateResult) {
-    return new TemplateSlot(value, next);
+    return new TemplateSlot(value, parent, next);
   }
 
   throw new TypeError('Invalid child slot value');
+}
+
+export function removeSlot(slot) {
+  slot.cancelUpdates();
+  dom.removeSiblings(slot.start, slot.end);
 }
 
 function isIterable(value) {
@@ -33,18 +38,15 @@ function isIterable(value) {
 }
 
 class ArraySlot {
-  constructor(value, next) {
+  constructor(value, parent, next) {
+    this.parent = parent;
+    this.end = dom.insertMarker(parent, next);
     this.slots = [];
-    this.next = next;
     this.update(value);
   }
 
   get start() {
-    return this.slots[0].start;
-  }
-
-  get end() {
-    return this.slots[this.slots.length - 1].end;
+    return this.slots.length > 0 ? this.slots[0].start : this.end;
   }
 
   cancelUpdates() {
@@ -68,10 +70,11 @@ class ArraySlot {
         this.updateItem(item, i++);
       }
     }
-    if (i === 0) {
-      this.updateItem('', i++);
+    let length = i;
+    while (i < this.slots.length) {
+      removeSlot(this.slots[i++]);
     }
-    this.removeSlots(i);
+    this.slots.length = length;
   }
 
   updateItem(value, i) {
@@ -95,34 +98,19 @@ class ArraySlot {
     return -1;
   }
 
-  getSlotNode(pos) {
-    return pos >= this.slots.length ? this.next : this.slots[pos].start;
-  }
-
   insertSlot(value, pos) {
-    this.slots.splice(pos, 0, createSlot(value, this.getSlotNode(pos)));
+    let next = pos >= this.slots.length ? this.end : this.slots[pos].start;
+    let slot = createSlot(value, this.parent, next);
+    this.slots.splice(pos, 0, slot);
   }
 
   moveSlot(from, to) {
     // Assert: from > to
     let slot = this.slots[from];
-    let next = this.getSlotNode(to);
+    let next = this.slots[to].start;
     this.slots.splice(from, 1);
     this.slots.splice(to, 0, slot);
     dom.insertSiblings(slot.start, slot.end, next);
-  }
-
-  removeSlots(from) {
-    if (from >= this.slots.length) {
-      return;
-    }
-    for (let i = from; i < this.slots.length; ++i) {
-      this.slots[i].cancelUpdates();
-    }
-    let first = this.slots[from].start;
-    let last = this.slots[this.slots.length - 1].end;
-    dom.removeSiblings(first, last);
-    this.slots.length = from;
   }
 }
 
@@ -134,13 +122,13 @@ function convertToString(value) {
 }
 
 class TextSlot {
-  constructor(value, next) {
+  constructor(value, parent, next) {
     value = convertToString(value);
-    let node = dom.createText(value, next);
+    let node = dom.createText(value, parent);
+    dom.insertChild(node, parent, next);
     this.start = node;
     this.end = node;
     this.last = value;
-    dom.insertBefore(node, next);
   }
 
   cancelUpdates() {
@@ -161,33 +149,151 @@ class TextSlot {
 }
 
 class TemplateSlot {
-  constructor(template, next) {
-    let fragment = dom.createFragment(next);
-    this.updater = new TemplateUpdater(fragment);
-    this.updater.update(template);
-    this.start = dom.firstChild(fragment);
-    this.end = dom.lastChild(fragment);
-    if (!this.start) {
-      this.start = this.end = dom.createMarker(next);
-      dom.insertBefore(this.start, next);
-    } else {
-      dom.insertBefore(fragment, next);
-    }
+  constructor(template, parent, next) {
+    // The first and last nodes of the template could be dynamic,
+    // so create stable marker nodes before and after the content
+    this.start = dom.insertMarker(parent, next);
+    this.end = dom.insertMarker(parent, next);
+    this.source = template.source;
+    this.updaters = template.evaluate(new Actions(parent, this.end));
+    this.pending = Array(this.updaters.length);
+    this.update(template);
   }
 
   cancelUpdates() {
-    this.updater.cancelUpdates();
+    for (let i = 0; i < this.updaters.length; ++i) {
+      this.cancelPending(i);
+      let updater = this.updaters[i];
+      if (updater.slot) {
+        updater.slot.cancelUpdates();
+      }
+    }
   }
 
   matches(value) {
     return (
       value instanceof TemplateResult &&
-      value.source === this.updater.source
+      value.source === this.source
     );
   }
 
   update(template) {
     // Assert: template.source === this.updater.source
-    this.updater.update(template);
+    let values = template.values;
+    for (let i = 0; i < this.updaters.length; ++i) {
+      let value = values[i];
+      if (value && typeof value.then === 'function') {
+        this.awaitPromise(value, i);
+      } else if (value && value[symbols.observable]) {
+        this.awaitObservable(value, i);
+      } else if (value && value[symbols.asyncIterator]) {
+        this.awaitAsyncIterator(value, i);
+      } else {
+        this.cancelPending(i);
+        this.updaters[i].update(value);
+      }
+    }
+  }
+
+  pendingSource(i) {
+    return this.pending[i] && this.pending[i].source;
+  }
+
+  cancelPending(i) {
+    let pending = this.pending[i];
+    if (pending) {
+      this.pending[i] = null;
+      pending.cancel();
+    }
+  }
+
+  setPending(pending, i) {
+    this.cancelPending(i);
+    this.pending[i] = pending;
+  }
+
+  awaitPromise(value, i) {
+    if (this.pendingSource(i) === value) {
+      return;
+    }
+
+    let pending = {
+      source: value,
+      cancelled: false,
+      cancel() { this.cancelled = true; },
+    };
+
+    value.then(val => {
+      if (!pending.cancelled) {
+        this.pending[i] = null;
+        this.updaters[i].update(val);
+      }
+    }, err => {
+      if (!pending.cancelled) {
+        this.pending[i] = null;
+      }
+      throw err;
+    });
+
+    this.setPending(pending, i);
+  }
+
+  awaitObservable(value, i) {
+    if (this.pendingSource(i) === value) {
+      return;
+    }
+
+    let subscription = value[symbols.observable]().subscribe(
+      val => this.updaters[i].update(val),
+      err => { this.pending[i] = null; throw err; },
+      () => this.pending[i] = null,
+    );
+
+    if (!subscription.closed) {
+      this.setPending({
+        source: value,
+        cancel() { subscription.unsubscribe(); },
+      }, i);
+    }
+  }
+
+  awaitAsyncIterator(value, i) {
+    if (this.pendingSource(i) === value) {
+      return;
+    }
+
+    let iter = value[symbols.asyncIterator]();
+
+    let next = () => {
+      iter.next().then(result => {
+        if (!pending.cancelled) {
+          if (result.done) {
+            this.pending[i] = null;
+          } else {
+            this.updaters[i].update(result.value);
+            next();
+          }
+        }
+      }, err => {
+        if (!pending.cancelled) {
+          this.pending[i] = null;
+        }
+        throw err;
+      });
+    };
+
+    let pending = {
+      source: value,
+      cancelled: false,
+      cancel() {
+        this.cancelled = true;
+        if (typeof iter.return === 'function') {
+          iter.return();
+        }
+      },
+    };
+
+    next();
+    this.setPending(pending, i);
   }
 }

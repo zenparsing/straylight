@@ -46,27 +46,27 @@ describe('Render', () => {
   it('renders svg into an HTML element', () => {
     let target = document.createElement('div');
     applyTemplate(target, html`<svg><path /></svg>`);
-    let { firstChild } = target;
-    assert.deepEqual(firstChild.toDataObject(), {
+    let elem = target.childNodes[1];
+    assert.deepEqual(elem.toDataObject(), {
       nodeName: 'svg',
       attributes: {},
       childNodes: [
         { nodeName: 'path', attributes: {}, childNodes: [] },
       ],
     });
-    assert.equal(firstChild.namespaceURI, svgNamespace);
-    assert.equal(firstChild.firstChild.namespaceURI, svgNamespace);
+    assert.equal(elem.namespaceURI, svgNamespace);
+    assert.equal(elem.firstChild.namespaceURI, svgNamespace);
   });
 
   it('renders svg into an svg element', () => {
     let target = document.createElementNS(svgNamespace, 'svg');
     applyTemplate(target, html`<path />`);
-    let { firstChild } = target;
-    assert.deepEqual(firstChild.toDataObject(), {
+    let elem = target.childNodes[1];
+    assert.deepEqual(elem.toDataObject(), {
       nodeName: 'path',
       attributes: {},
       childNodes: [],
     });
-    assert.equal(firstChild.namespaceURI, 'http://www.w3.org/2000/svg');
+    assert.equal(elem.namespaceURI, 'http://www.w3.org/2000/svg');
   });
 });

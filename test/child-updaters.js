@@ -6,24 +6,15 @@ import { Observable, createPushStream } from './observable.js';
 describe('Child updaters', () => {
   let document = new vdom.Document();
 
-  function getChildren(node) {
-    let { childNodes } = node.toDataObject();
-    // Remove marker nodes
-    if (childNodes[0] === '' && childNodes[childNodes.length - 1] === '') {
-      childNodes = childNodes.slice(1, -1);
-    }
-    return childNodes;
-  }
-
   function assertResult(content, data) {
     let target = document.createElement('div');
     applyTemplate(target, html`${content}`);
-    assert.deepEqual(getChildren(target), data);
+    assert.deepEqual(target.toDataObject().childNodes, data);
   }
 
   describe('Single updates', () => {
     it('accepts null values', () => {
-      assertResult(null, ['']);
+      assertResult(null, []);
     });
 
     it('accepts string values', () => {
@@ -50,7 +41,6 @@ describe('Child updaters', () => {
 
     it('accepts array values', () => {
       assertResult([null, 'foo', html`<span>text</span>`], [
-        '',
         'foo',
         {
           nodeName: 'span',
@@ -61,7 +51,7 @@ describe('Child updaters', () => {
     });
 
     it('accepts an empty array', () => {
-      assertResult([], ['']);
+      assertResult([], []);
     });
 
     it('accepts iterables', () => {
@@ -79,14 +69,14 @@ describe('Child updaters', () => {
     it('updates a template with multiple children to text', () => {
       assertResult(
         Observable.of(html`<span>a</span><span>b</span>`, ''),
-        ['']
+        []
       );
     });
 
     it('updates from text to null', () => {
       assertResult(
         Observable.of('a', null),
-        [''],
+        [],
       );
     });
 
@@ -113,10 +103,24 @@ describe('Child updaters', () => {
       );
     });
 
+    it('updates from a larger array to a smaller array twice', () => {
+      assertResult(
+        Observable.of(['a', 'b', 'c'], ['d', 'e'], ['e', 'd']),
+        ['e', 'd']
+      );
+    });
+
     it('updates from a smaller array to a larger array', () => {
       assertResult(
         Observable.of(['a', 'b'], ['c', 'd', 'e']),
         ['c', 'd', 'e']
+      );
+    });
+
+    it('inserts slots at front of array', () => {
+      assertResult(
+        Observable.of(['a'], [html`b`, 'a']),
+        ['b', 'a']
       );
     });
 
@@ -159,7 +163,7 @@ describe('Child updaters', () => {
       stream.next(render(html`<div>1</div>`));
       stream.next(render(html`<div>2</div>`));
       stream.next('text');
-      assert.deepEqual(getChildren(target), ['text']);
+      assert.deepEqual(target.toDataObject().childNodes, ['text']);
     });
 
     it('swaps children', () => {
@@ -225,6 +229,15 @@ describe('Child updaters', () => {
       let stream = createPushStream();
       let target = document.createElement('div');
       applyTemplate(target, html`${['a', html`${stream}`, 'b']}`);
+      assert.equal(stream.observers.size, 1);
+      applyTemplate(target, html``);
+      assert.equal(stream.observers.size, 0);
+    });
+
+    it('cancels slot updates in nested templates', () => {
+      let stream = createPushStream();
+      let target = document.createElement('div');
+      applyTemplate(target, html`${html`${stream}`}`);
       assert.equal(stream.observers.size, 1);
       applyTemplate(target, html``);
       assert.equal(stream.observers.size, 0);

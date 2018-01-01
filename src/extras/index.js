@@ -1,6 +1,8 @@
 import { applyTemplate } from '../index.js';
 import * as vdom from './vdom.js';
 
+export * from './map-slot.js';
+
 export { vdom };
 
 export function stringify(template) {

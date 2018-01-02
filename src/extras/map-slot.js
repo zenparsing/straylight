@@ -2,17 +2,9 @@ import * as dom from '../dom.js';
 import { createSlot, removeSlot } from '../slots.js';
 import { symbols } from '../symbols.js';
 
-const supportsMapArg = (new Map([[1, 1]]).size > 0);
-
 export function withKeys(map) {
   if (!(map instanceof Map)) {
-    if (supportsMapArg) {
-      map = new Map(map);
-    } else {
-      // IE11
-      map = new Map();
-      map.forEach(pair => map.set(pair[0], pair[1]));
-    }
+    map = new Map(map); // Does not work in IE11
   }
   return new MapSlotValue(map);
 }

@@ -2,12 +2,23 @@ import * as dom from '../dom.js';
 import { createSlot, removeSlot } from '../slots.js';
 import { symbols } from '../symbols.js';
 
+const supportsMapArg = (new Map([[1, 1]]).size > 0);
+
 export function withKeys(map) {
+  if (!(map instanceof Map)) {
+    if (supportsMapArg) {
+      map = new Map(map);
+    } else {
+      // IE11
+      map = new Map();
+      map.forEach(pair => map.set(pair[0], pair[1]));
+    }
+  }
   return new MapSlotValue(map);
 }
 
 class MapSlotValue {
-  constructor(pairs) { this.pairs = pairs; }
+  constructor(map) { this.map = map; }
   [symbols.createSlot](parent, next) { return new MapSlot(this, parent, next); }
 }
 
@@ -20,7 +31,8 @@ class SlotList {
     this.end = true;
   }
 
-  moveBefore(next) {
+  insertBefore(next) {
+    this.remove();
     let previous = next.previous;
     previous.next = this;
     next.previous = this;
@@ -28,13 +40,21 @@ class SlotList {
     this.next = next;
     this.end = false;
   }
+
+  remove() {
+    this.next.previous = this.previous;
+    this.previous.next = this.next;
+    this.next = this;
+    this.previous = this;
+    this.end = true;
+  }
 }
 
 class MapSlot {
   constructor(value, parent, next) {
     this.parent = parent;
-    this.keys = new Map();
-    this.list = new SlotList(null, createSlot('', next));
+    this.map = new Map();
+    this.list = new SlotList(null, createSlot('', parent, next));
     this.update(value);
   }
 
@@ -56,39 +76,43 @@ class MapSlot {
     return value instanceof MapSlotValue;
   }
 
+  update(value) {
+    let valueMap = value.map;
+    let next = this.list.next;
+    valueMap.forEach((value, key) => {
+      while (!next.end && !valueMap.has(next.key)) {
+        next = this.removeItem(next);
+      }
+      next = this.updateItem(key, value, next);
+    });
+    while (!next.end) {
+      next = this.removeItem(next);
+    }
+  }
+
   updateItem(key, value, next) {
     let item = this.map.get(key);
-    if (item && !item.slot.matches(value)) {
-      removeSlot(item.slot);
-      item = null;
-    }
-    if (item) {
-      item.update(value);
+    if (item && item.slot.matches(value)) {
+      item.slot.update(value);
       if (item === next) {
         next = next.next;
       } else {
         dom.insertSiblings(item.slot.start, item.slot.end, next.slot.start);
-        item.moveBefore(next);
+        item.insertBefore(next);
       }
     } else {
       item = new SlotList(key, createSlot(value, this.parent, next.slot.start));
-      item.moveBefore(next);
+      item.insertBefore(next);
       this.map.set(key, item);
     }
     return next;
   }
 
-  update(value) {
-    let next = this.list.next;
-    if (value.map instanceof Map) {
-      value.map.forEach((value, key) => next = this.updateItem(key, value, next));
-    } else {
-      value.map.forEach(pair => next = this.updateItem(pair[0], pair[1], next));
-    }
-    while (!next.end) {
-      removeSlot(next.slot);
-      this.map.delete(next.key);
-      next = next.next;
-    }
+  removeItem(item) {
+    let next = item.next;
+    item.remove();
+    this.map.delete(item.key);
+    removeSlot(item.slot);
+    return next;
   }
 }

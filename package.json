@@ -9,7 +9,7 @@
   },
   "homepage": "https://github.com/zenparsing/straylight",
   "dependencies": {
-    "htmltag": "^0.4.2"
+    "htmltag": "^0.4.3"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

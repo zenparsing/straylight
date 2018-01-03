@@ -2,11 +2,24 @@ import * as dom from '../dom.js';
 import { createSlot, removeSlot } from '../slots.js';
 import { symbols } from '../symbols.js';
 
-export function withKeys(map) {
-  if (!(map instanceof Map)) {
-    map = new Map(map); // Does not work in IE11
+// IE11 does not support argument to Map constructor
+const supportsMapArg = (new Map([[1, 1]]).size > 0);
+
+function toMap(value) {
+  if (value instanceof Map) {
+    return value;
   }
-  return new MapSlotValue(map);
+  if (!supportsMapArg) {
+    // IE11
+    let map = new Map();
+    value.forEach(pair => map.set(pair[0], pair[1]));
+    return map;
+  }
+  return new Map(value);
+}
+
+export function withKeys(map) {
+  return new MapSlotValue(toMap(map));
 }
 
 class MapSlotValue {

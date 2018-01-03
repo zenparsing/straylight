@@ -1,8 +1,8 @@
 const $ = require('./exec.js');
 
-$('rimraf lib/* dist/*');
+$('git clean -dfX ./lib ./dist');
 
-console.log('[Compiling]\n');
+console.log('\n[Compiling]\n');
 $('babel src --out-dir lib');
 
 console.log('\n[Bundling]');
@@ -11,3 +11,4 @@ $('uglifyjs dist/straylight.js -c -m -o dist/straylight.min.js');
 
 process.stdout.write('\nBundle size: ');
 $('gzip-size dist/straylight.min.js');
+process.stdout.write('\n');

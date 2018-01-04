@@ -31,7 +31,7 @@ function getSlotConstructor(value) {
   }
 
   if (isIterable(value)) {
-    return ListSlot;
+    return ArraySlot;
   }
 
   if (value instanceof TemplateResult) {
@@ -48,52 +48,20 @@ function isIterable(value) {
   );
 }
 
-class ListSlotItem {
-  constructor(slot) {
-    this.slot = slot;
-    this.next = this;
-    this.previous = this;
-    this.end = true;
-  }
-
-  insertBefore(next) {
-    if (this !== next) {
-      this.remove();
-      let previous = next.previous;
-      previous.next = this;
-      next.previous = this;
-      this.previous = previous;
-      this.next = next;
-      this.end = false;
-    }
-  }
-
-  remove() {
-    this.next.previous = this.previous;
-    this.previous.next = this.next;
-    this.next = this;
-    this.previous = this;
-    this.end = true;
-  }
-}
-
-export class ListSlot {
+class ArraySlot {
   constructor(parent, next) {
     this.parent = parent;
-    this.list = new ListSlotItem(createSlot(parent, next));
+    this.end = dom.insertMarker(parent, next);
+    this.slots = [];
   }
 
   get start() {
-    return this.list.next.slot.start;
-  }
-
-  get end() {
-    return this.list.slot.end;
+    return this.slots.length > 0 ? this.slots[0].start : this.end;
   }
 
   cancelUpdates() {
-    for (let item = this.list.next; !item.end; item = item.next) {
-      item.slot.cancelUpdates();
+    for (let i = 0; i < this.slots.length; ++i) {
+      this.slots[i].cancelUpdates();
     }
   }
 
@@ -102,58 +70,57 @@ export class ListSlot {
   }
 
   update(list) {
-    let next = this.list.next;
+    let i = 0;
     if (Array.isArray(list)) {
-      // IE11
-      for (let i = 0; i < list.length; ++i) {
-        next = this.updateItem(list[i], next);
+      while (i < list.length) {
+        this.updateItem(list[i], i++);
       }
     } else {
       for (let item of list) {
-        next = this.updateItem(item, next);
+        this.updateItem(item, i++);
       }
     }
-    while (!next.end) {
-      next = this.removeItem(next);
+    let length = i;
+    while (i < this.slots.length) {
+      removeSlot(this.slots[i++]);
     }
+    this.slots.length = length;
   }
 
-  updateItem(value, next) {
-    let item = next;
-    for (; !item.end; item = item.next) {
-      if (item.slot.matches(value)) {
-        break;
-      }
-    }
-    if (!item.end) {
-      item.slot.update(value);
-      next = this.moveItem(item, next);
+  updateItem(value, i) {
+    let pos = this.findMatch(value, i);
+    if (pos === -1) {
+      this.insertSlot(value, i);
     } else {
-      this.createItem(value, next);
+      if (pos !== i) {
+        this.moveSlot(pos, i);
+      }
+      this.slots[i].update(value);
     }
-    return next;
   }
 
-  createItem(value, next) {
-    let item = new ListSlotItem(createSlot(this.parent, next.slot.start, value));
-    item.insertBefore(next);
-    return item;
-  }
-
-  moveItem(item, next) {
-    item.insertBefore(next);
-    if (item === next) {
-      return item.next;
+  findMatch(input, i) {
+    for (; i < this.slots.length; ++i) {
+      if (this.slots[i].matches(input)) {
+        return i;
+      }
     }
-    dom.insertSiblings(item.slot.start, item.slot.end, next.slot.start);
-    return next;
+    return -1;
   }
 
-  removeItem(item) {
-    let next = item.next;
-    item.remove();
-    removeSlot(item.slot);
-    return next;
+  insertSlot(value, pos) {
+    let next = pos >= this.slots.length ? this.end : this.slots[pos].start;
+    let slot = createSlot(this.parent, next, value);
+    this.slots.splice(pos, 0, slot);
+  }
+
+  moveSlot(from, to) {
+    // Assert: from > to
+    let slot = this.slots[from];
+    let next = this.slots[to].start;
+    this.slots.splice(from, 1);
+    this.slots.splice(to, 0, slot);
+    dom.insertSiblings(slot.start, slot.end, next);
   }
 }
 

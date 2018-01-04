@@ -1,30 +1,61 @@
-import { ListSlot } from '../slots.js';
+import * as dom from '../dom.js';
+import { createSlot, removeSlot } from '../slots.js';
 import { symbols } from '../symbols.js';
 
 // IE11 does not support argument to Map constructor
 const supportsMapArg = (new Map([[1, 1]]).size > 0);
 
-function toMap(value) {
-  if (value instanceof Map) {
-    return value;
-  }
-  if (!supportsMapArg) {
-    // IE11
-    let map = new Map();
-    value.forEach(pair => map.set(pair[0], pair[1]));
-    return map;
-  }
-  return new Map(value);
-}
-
 export function withKeys(map) {
   return MapSlot.value(map);
 }
 
-class MapSlot extends ListSlot {
+class MapSlotList {
+  constructor(slot, key) {
+    this.key = key;
+    this.slot = slot;
+    this.next = this;
+    this.previous = this;
+    this.end = true;
+  }
+
+  insertBefore(next) {
+    this.remove();
+    let previous = next.previous;
+    previous.next = this;
+    next.previous = this;
+    this.previous = previous;
+    this.next = next;
+    this.end = false;
+  }
+
+  remove() {
+    this.next.previous = this.previous;
+    this.previous.next = this.next;
+    this.next = this;
+    this.previous = this;
+    this.end = true;
+  }
+}
+
+class MapSlot {
   constructor(parent, next) {
-    super(parent, next);
+    this.parent = parent;
     this.map = new Map();
+    this.list = new MapSlotList(createSlot(parent, next), null);
+  }
+
+  get start() {
+    return this.list.next.slot.start;
+  }
+
+  get end() {
+    return this.list.slot.end;
+  }
+
+  cancelUpdates() {
+    for (let item = this.list.next; !item.end; item = item.next) {
+      item.slot.cancelUpdates();
+    }
   }
 
   matches(value) {
@@ -36,13 +67,11 @@ class MapSlot extends ListSlot {
     let next = this.list.next;
     valueMap.forEach((value, key) => {
       while (!next.end && !valueMap.has(next.key)) {
-        this.map.delete(next.key);
         next = this.removeItem(next);
       }
       next = this.updateItem(key, value, next);
     });
     while (!next.end) {
-      this.map.delete(next.key);
       next = this.removeItem(next);
     }
   }
@@ -54,17 +83,37 @@ class MapSlot extends ListSlot {
       if (item === next) {
         next = next.next;
       } else {
-        this.moveItem(item, next);
+        dom.insertSiblings(item.slot.start, item.slot.end, next.slot.start);
+        item.insertBefore(next);
       }
     } else {
-      item = this.createItem(value, next);
-      item.key = key;
+      let slot = createSlot(this.parent, next.slot.start, value);
+      item = new MapSlotList(slot, key);
+      item.insertBefore(next);
       this.map.set(key, item);
     }
     return next;
   }
 
+  removeItem(item) {
+    let next = item.next;
+    item.remove();
+    this.map.delete(item.key);
+    removeSlot(item.slot);
+    return next;
+  }
+
   static value(map) {
-    return { map: toMap(map), [symbols.slotConstructor]: this };
+    if (!(map instanceof Map)) {
+      if (supportsMapArg) {
+        map = new Map(map);
+      } else {
+        // IE11
+        let list = map;
+        map = new Map();
+        list.forEach(pair => map.set(pair[0], pair[1]));
+      }
+    }
+    return { map, [symbols.slotConstructor]: this };
   }
 }

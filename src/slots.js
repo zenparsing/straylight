@@ -3,7 +3,19 @@ import { Actions } from './actions.js';
 import { symbols } from './symbols.js';
 import * as dom from './dom.js';
 
-export function createSlot(value, parent, next) {
+export function createSlot(parent, next, value) {
+  let ctor = getSlotConstructor(value);
+  let slot = new ctor(parent, next, value);
+  slot.update(value);
+  return slot;
+}
+
+export function removeSlot(slot) {
+  slot.cancelUpdates();
+  dom.removeSiblings(slot.start, slot.end);
+}
+
+function getSlotConstructor(value) {
   if (
     value === null ||
     value === undefined ||
@@ -11,27 +23,22 @@ export function createSlot(value, parent, next) {
     typeof value === 'boolean' ||
     typeof value === 'number'
   ) {
-    return new TextSlot(value, parent, next);
+    return TextSlot;
   }
 
-  if (value[symbols.createSlot]) {
-    return value[symbols.createSlot](parent, next);
+  if (value[symbols.slotConstructor]) {
+    return value[symbols.slotConstructor];
   }
 
   if (isIterable(value)) {
-    return new ArraySlot(value, parent, next);
+    return ListSlot;
   }
 
   if (value instanceof TemplateResult) {
-    return new TemplateSlot(value, parent, next);
+    return TemplateSlot;
   }
 
   throw new TypeError('Invalid child slot value');
-}
-
-export function removeSlot(slot) {
-  slot.cancelUpdates();
-  dom.removeSiblings(slot.start, slot.end);
 }
 
 function isIterable(value) {
@@ -41,21 +48,52 @@ function isIterable(value) {
   );
 }
 
-class ArraySlot {
-  constructor(value, parent, next) {
+class ListSlotItem {
+  constructor(slot) {
+    this.slot = slot;
+    this.next = this;
+    this.previous = this;
+    this.end = true;
+  }
+
+  insertBefore(next) {
+    if (this !== next) {
+      this.remove();
+      let previous = next.previous;
+      previous.next = this;
+      next.previous = this;
+      this.previous = previous;
+      this.next = next;
+      this.end = false;
+    }
+  }
+
+  remove() {
+    this.next.previous = this.previous;
+    this.previous.next = this.next;
+    this.next = this;
+    this.previous = this;
+    this.end = true;
+  }
+}
+
+export class ListSlot {
+  constructor(parent, next) {
     this.parent = parent;
-    this.end = dom.insertMarker(parent, next);
-    this.slots = [];
-    this.update(value);
+    this.list = new ListSlotItem(createSlot(parent, next));
   }
 
   get start() {
-    return this.slots.length > 0 ? this.slots[0].start : this.end;
+    return this.list.next.slot.start;
+  }
+
+  get end() {
+    return this.list.slot.end;
   }
 
   cancelUpdates() {
-    for (let i = 0; i < this.slots.length; ++i) {
-      this.slots[i].cancelUpdates();
+    for (let item = this.list.next; !item.end; item = item.next) {
+      item.slot.cancelUpdates();
     }
   }
 
@@ -64,70 +102,63 @@ class ArraySlot {
   }
 
   update(list) {
-    let i = 0;
+    let next = this.list.next;
     if (Array.isArray(list)) {
-      while (i < list.length) {
-        this.updateItem(list[i], i++);
+      // IE11
+      for (let i = 0; i < list.length; ++i) {
+        next = this.updateItem(list[i], next);
       }
     } else {
       for (let item of list) {
-        this.updateItem(item, i++);
+        next = this.updateItem(item, next);
       }
     }
-    let length = i;
-    while (i < this.slots.length) {
-      removeSlot(this.slots[i++]);
+    while (!next.end) {
+      next = this.removeItem(next);
     }
-    this.slots.length = length;
   }
 
-  updateItem(value, i) {
-    let pos = this.findMatch(value, i);
-    if (pos === -1) {
-      this.insertSlot(value, i);
+  updateItem(value, next) {
+    let item = next;
+    for (; !item.end; item = item.next) {
+      if (item.slot.matches(value)) {
+        break;
+      }
+    }
+    if (!item.end) {
+      item.slot.update(value);
+      next = this.moveItem(item, next);
     } else {
-      if (pos !== i) {
-        this.moveSlot(pos, i);
-      }
-      this.slots[i].update(value);
+      this.createItem(value, next);
     }
+    return next;
   }
 
-  findMatch(input, i) {
-    for (; i < this.slots.length; ++i) {
-      if (this.slots[i].matches(input)) {
-        return i;
-      }
+  createItem(value, next) {
+    let item = new ListSlotItem(createSlot(this.parent, next.slot.start, value));
+    item.insertBefore(next);
+    return item;
+  }
+
+  moveItem(item, next) {
+    item.insertBefore(next);
+    if (item === next) {
+      return item.next;
     }
-    return -1;
+    dom.insertSiblings(item.slot.start, item.slot.end, next.slot.start);
+    return next;
   }
 
-  insertSlot(value, pos) {
-    let next = pos >= this.slots.length ? this.end : this.slots[pos].start;
-    let slot = createSlot(value, this.parent, next);
-    this.slots.splice(pos, 0, slot);
+  removeItem(item) {
+    let next = item.next;
+    item.remove();
+    removeSlot(item.slot);
+    return next;
   }
-
-  moveSlot(from, to) {
-    // Assert: from > to
-    let slot = this.slots[from];
-    let next = this.slots[to].start;
-    this.slots.splice(from, 1);
-    this.slots.splice(to, 0, slot);
-    dom.insertSiblings(slot.start, slot.end, next);
-  }
-}
-
-function convertToString(value) {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  return typeof value === 'string' ? value : String(value);
 }
 
 class TextSlot {
-  constructor(value, parent, next) {
-    value = convertToString(value);
+  constructor(parent, next, value) {
     let node = dom.createText(value, parent);
     dom.insertChild(node, parent, next);
     this.start = node;
@@ -144,7 +175,6 @@ class TextSlot {
   }
 
   update(value) {
-    value = convertToString(value);
     if (value !== this.last) {
       this.last = value;
       dom.setTextValue(this.start, value);
@@ -153,7 +183,7 @@ class TextSlot {
 }
 
 class TemplateSlot {
-  constructor(template, parent, next) {
+  constructor(parent, next, template) {
     // The first and last nodes of the template could be dynamic,
     // so create stable marker nodes before and after the content
     this.start = dom.insertMarker(parent, next);
@@ -161,7 +191,6 @@ class TemplateSlot {
     this.source = template.source;
     this.updaters = template.evaluate(new Actions(parent, this.end));
     this.pending = Array(this.updaters.length);
-    this.update(template);
   }
 
   cancelUpdates() {

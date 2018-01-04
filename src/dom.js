@@ -20,12 +20,19 @@ export function setAttr(node, name, value) {
   }
 }
 
+function convertToString(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return typeof value === 'string' ? value : String(value);
+}
+
 export function setTextValue(node, text) {
-  node.nodeValue = text;
+  node.nodeValue = convertToString(text);
 }
 
 export function createText(text, context) {
-  return doc(context).createTextNode(text);
+  return doc(context).createTextNode(convertToString(text));
 }
 
 export function insertMarker(parent, next) {

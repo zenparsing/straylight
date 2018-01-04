@@ -67,7 +67,7 @@ export class AttributeMapUpdater {
 export class ChildUpdater {
   constructor(parent, next) {
     this.parent = parent;
-    this.slot = createSlot('', parent, next);
+    this.slot = createSlot(parent, next);
   }
 
   update(value) {
@@ -75,7 +75,7 @@ export class ChildUpdater {
       this.slot.update(value);
     } else {
       let slot = this.slot;
-      this.slot = createSlot(value, this.parent, slot.start);
+      this.slot = createSlot(this.parent, slot.start, value);
       removeSlot(slot);
     }
   }

@@ -19,7 +19,7 @@ export function applyTemplate(target, value) {
     if (slot) {
       removeSlot(slot);
     }
-    slot = createSlot(value, target, null);
+    slot = createSlot(target, null, value);
     slotMap.set(target, slot);
   }
 }

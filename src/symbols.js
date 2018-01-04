@@ -12,5 +12,5 @@ export const symbols = {
   observable: getSymbol('observable', true),
   iterator: getSymbol('iterator'),
   asyncIterator: getSymbol('asyncIterator'),
-  createSlot: getSymbol('createSlot'),
+  slotConstructor: getSymbol('slotConstructor'),
 };

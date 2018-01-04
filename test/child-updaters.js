@@ -247,18 +247,8 @@ describe('Child updaters', () => {
 
   describe('Custom slot types', () => {
     it('creates a slot using symbols.createSlot', () => {
-      class CustomSlotValue {
-        constructor(value) {
-          this.value = value;
-        }
-
-        [symbols.createSlot](parent, next) {
-          return new CustomSlot(this, parent, next);
-        }
-      }
-
       class CustomSlot {
-        constructor(wrapped, parent, next) {
+        constructor(parent, next, wrapped) {
           this.start = document.createTextNode('start');
           this.end = document.createTextNode('end');
           parent.insertBefore(this.start, next);
@@ -271,15 +261,19 @@ describe('Child updaters', () => {
         }
 
         match(value) {
-          return value instanceof CustomSlotValue;
+          return value && value[symbols.slotConstructor] === this.constructor;
         }
 
         update(wrapped) {
           this.start.nextSibling.nodeValue = wrapped.value;
         }
+
+        static value(value) {
+          return { value, [symbols.slotConstructor]: this };
+        }
       }
 
-      assertResult(new CustomSlotValue('test'), ['start', 'test', 'end']);
+      assertResult(CustomSlot.value('test'), ['start', 'test', 'end']);
     });
   });
 

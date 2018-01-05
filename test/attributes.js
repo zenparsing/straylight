@@ -21,7 +21,7 @@ describe('Attribute updaters', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
     applyTemplate(target, render('a'));
-    assert.equal(target.firstElementChild.attributes.get('x'), 'a');
+    assert.equal(target.firstElementChild.getAttribute('x'), 'a');
   });
 
   it('set properties when name starts with dot', () => {
@@ -34,18 +34,18 @@ describe('Attribute updaters', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
     let elem = target.firstElementChild;
-    assert.equal(elem.attributes.get('x'), 'a');
+    assert.equal(elem.getAttribute('x'), 'a');
     applyTemplate(target, render(undefined));
-    assert.ok(!elem.attributes.has('x'));
+    assert.ok(!elem.hasAttribute('x'));
   });
 
   it('removes attributes whose value is false', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
     let elem = target.firstElementChild;
-    assert.equal(elem.attributes.get('x'), 'a');
+    assert.equal(elem.getAttribute('x'), 'a');
     applyTemplate(target, render(false));
-    assert.ok(!elem.attributes.has('x'));
+    assert.ok(!elem.hasAttribute('x'));
   });
 
   it('uses the attribute name for boolean attribute values', () => {

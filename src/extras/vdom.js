@@ -122,6 +122,10 @@ class ParentNode extends Node {
     node.nextSibling = null;
   }
 
+  appendChild(node) {
+    this.insertBefore(node, null);
+  }
+
   insertBefore(newNode, next) {
     if (next && next.parentNode !== this) {
       throw new Error('Node is not a child of the parent node');
@@ -155,25 +159,29 @@ class ParentNode extends Node {
 class Element extends ParentNode {
   constructor(doc, tag) {
     super(doc, 1, tag);
-    this.attributes = new Map();
+    this._attributes = new Map();
   }
 
   getAttribute(name) {
-    return this.attributes.get(name);
+    return this._attributes.get(String(name));
   }
 
   setAttribute(name, value) {
-    this.attributes.set(name, value);
+    this._attributes.set(String(name), String(value));
+  }
+
+  hasAttribute(name) {
+    return this._attributes.has(String(name));
   }
 
   removeAttribute(name) {
-    this.attributes.delete(name);
+    this._attributes.delete(String(name));
   }
 
   toDataObject() {
     let data = super.toDataObject();
     data.attributes = {};
-    this.attributes.forEach((value, key) => data.attributes[key] = value);
+    this._attributes.forEach((value, key) => data.attributes[key] = value);
     return data;
   }
 
@@ -187,7 +195,7 @@ class Element extends ParentNode {
 
   get outerHTML() {
     let html = `<${this.nodeName}`;
-    this.attributes.forEach((value, key) => {
+    this._attributes.forEach((value, key) => {
       if (value !== null && value !== undefined && value !== false) {
         html += ` ${esc(key)}="${esc(value === true ? key : value)}"`;
       }

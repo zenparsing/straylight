@@ -13,7 +13,7 @@ export function setAttr(node, name, value) {
     node[name.slice(1)] = value;
     return;
   }
-  if (value === undefined || value === false) {
+  if (value === undefined || value === null || value === false) {
     node.removeAttribute(name);
   } else {
     node.setAttribute(name, value === true ? name : value);

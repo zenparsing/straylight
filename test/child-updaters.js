@@ -246,7 +246,7 @@ describe('Child updaters', () => {
   });
 
   describe('Custom slot types', () => {
-    it('creates a slot using symbols.createSlot', () => {
+    it('creates a slot using symbols.slotConstructor', () => {
       class CustomSlot {
         constructor(parent, next, wrapped) {
           this.start = document.createTextNode('start');

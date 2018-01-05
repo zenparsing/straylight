@@ -30,6 +30,7 @@
     "test": "node scripts/test.js",
     "build": "node scripts/build.js",
     "test-only": "node scripts/test-only.js",
+    "coverage-report": "node scripts/coverage-report.js",
     "prepublishOnly": "node ./scripts/build.js"
   }
 }

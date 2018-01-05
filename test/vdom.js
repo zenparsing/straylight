@@ -1,8 +1,8 @@
-import { vdom } from '../src/extras';
 import assert from 'assert';
+import { Document } from '../src/extras/vdom.js';
 
 describe('vdom', () => {
-  let document = new vdom.Document();
+  let document = new Document();
 
   function create(tag = 'div') {
     return document.createElement(tag);

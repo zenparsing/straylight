@@ -1,7 +1,7 @@
+import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { symbols } from '../src/symbols.js';
-import { vdom } from '../src/extras';
-import assert from 'assert';
+import { Document } from '../src/extras/vdom.js';
 import { createPushStream, setObservableErrorHandler } from './observable.js';
 
 function createAsyncIterator() {
@@ -49,7 +49,7 @@ function createAsyncIterator() {
 }
 
 describe('Pending updates', () => {
-  let document = new vdom.Document();
+  let document = new Document();
   let errors = [];
   let pushError = err => errors.push(err);
   let render = val => html`<div x=${val} />`;

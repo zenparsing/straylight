@@ -1,11 +1,11 @@
-import { html, applyTemplate } from '../src';
-import { vdom } from '../src/extras';
 import assert from 'assert';
+import { html, applyTemplate } from '../src';
+import { Document } from '../src/extras/vdom.js';
 
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
 describe('Render', () => {
-  let document = new vdom.Document();
+  let document = new Document();
 
   it('throws if tagname is a template value', () => {
     assert.throws(() => {

@@ -1,11 +1,11 @@
+import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { symbols } from '../src/symbols.js';
-import { vdom } from '../src/extras';
-import assert from 'assert';
+import { Document } from '../src/extras/vdom.js';
 import { Observable, createPushStream } from './observable.js';
 
 describe('Child updaters', () => {
-  let document = new vdom.Document();
+  let document = new Document();
 
   function assertResult(content, data) {
     let target = document.createElement('div');

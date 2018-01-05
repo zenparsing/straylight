@@ -5,10 +5,6 @@ import { symbols } from '../symbols.js';
 // IE11 does not support argument to Map constructor
 const supportsMapArg = (new Map([[1, 1]]).size > 0);
 
-export function withKeys(map) {
-  return MapSlot.value(map);
-}
-
 class MapSlotList {
   constructor(slot, key) {
     this.slot = slot;
@@ -37,7 +33,7 @@ class MapSlotList {
   }
 }
 
-class MapSlot {
+export class MapSlot {
   constructor(parent, next) {
     this.parent = parent;
     this.map = new Map();

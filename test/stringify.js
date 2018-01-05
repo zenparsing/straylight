@@ -1,6 +1,6 @@
+import assert from 'assert';
 import { html } from '../src';
 import { stringify } from '../src/extras';
-import assert from 'assert';
 
 describe('HTML stringification', () => {
   it('serializes to HTML', () => {

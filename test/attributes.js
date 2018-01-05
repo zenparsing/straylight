@@ -1,9 +1,9 @@
-import { html, applyTemplate } from '../src';
-import { vdom } from '../src/extras';
 import assert from 'assert';
+import { html, applyTemplate } from '../src';
+import { Document } from '../src/extras/vdom.js';
 
 describe('Attribute updaters', () => {
-  let document = new vdom.Document();
+  let document = new Document();
   let render = val => html`<div x=${val} />`;
 
   function assertResult(template, expected) {

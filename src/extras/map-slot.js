@@ -11,8 +11,8 @@ export function withKeys(map) {
 
 class MapSlotList {
   constructor(slot, key) {
-    this.key = key;
     this.slot = slot;
+    this.key = key;
     this.next = this;
     this.previous = this;
     this.end = true;

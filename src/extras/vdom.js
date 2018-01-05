@@ -36,10 +36,6 @@ export class Document {
     return new Text(this, text);
   }
 
-  createDocumentFragment() {
-    return new DocumentFragment(this);
-  }
-
   createElement(tag) {
     return new Element(this, tag);
   }
@@ -124,12 +120,6 @@ class ParentNode extends Node {
         .map(child => child.toDataObject())
         .filter(data => Boolean(data)),
     };
-  }
-}
-
-class DocumentFragment extends ParentNode {
-  constructor(doc) {
-    super(doc, 11, '#document-fragment');
   }
 }
 

@@ -19,18 +19,6 @@ function esc(s) {
   return /[&<>"'`]/.test(s) ? s.replace(/[&<>"'`]/g, m => htmlEscapes[m]) : s;
 }
 
-function findChild(parent, node) {
-  let i = parent.childNodes.indexOf(node);
-  if (i < 0) {
-    throw new Error('Node is not a child of the specified parent');
-  }
-  return i;
-}
-
-function isFragment(x) {
-  return x.nodeType === 11;
-}
-
 export class Document {
   createTextNode(text) {
     return new Text(this, text);
@@ -54,72 +42,113 @@ class Node {
     this.ownerDocument = doc;
     this.parentNode = null;
     this.nextSibling = null;
+    this.previousSibling = null;
     this.namespaceURI = null;
+  }
+
+  get nextElementSibling() {
+    for (let node = this.nextSibling; node; node = node.nextSibling) {
+      if (node.nodeType === 1) {
+        return node;
+      }
+    }
+    return null;
+  }
+
+  get previousElementSibling() {
+    for (let node = this.previousSibling; node; node = node.previousSibling) {
+      if (node.nodeType === 1) {
+        return node;
+      }
+    }
+    return null;
+  }
+}
+
+class Text extends Node {
+  constructor(doc, text) {
+    super(doc, 3, '#text');
+    this.nodeValue = text;
+  }
+
+  toDataObject() {
+    return this.nodeValue;
+  }
+
+  get innerHTML() {
+    return rawTags.test(this.parentNode.nodeName) ? this.nodeValue : esc(this.nodeValue);
+  }
+
+  get outerHTML() {
+    return this.innerHTML;
   }
 }
 
 class ParentNode extends Node {
   constructor(doc, type, name) {
     super(doc, type, name);
-    this.childNodes = [];
+    this.firstChild = null;
+    this.lastChild = null;
   }
 
-  get firstChild() {
-    return this.childNodes.length > 0 ? this.childNodes[0] : null;
+  get firstElementChild() {
+    for (let node = this.firstChild; node; node = node.nextSibling) {
+      if (node.nodeType === 1) {
+        return node;
+      }
+    }
+    return null;
   }
 
-  get lastChild() {
-    let length = this.childNodes.length;
-    return length > 0 ? this.childNodes[length - 1] : null;
+  get lastElementChild() {
+    for (let node = this.lastChild; node; node = node.previousSibling) {
+      if (node.nodeType === 1) {
+        return node;
+      }
+    }
+    return null;
   }
 
   removeChild(node) {
-    let pos = findChild(this, node);
-    if (pos > 0) {
-      this.childNodes[pos - 1].nextSibling = node.nextSibling;
+    if (node.parentNode !== this) {
+      throw new Error('Node is not a child of the parent node');
     }
-    this.childNodes.splice(pos, 1);
+    let prev = node.previousSibling;
+    let next = node.nextSibling;
+    prev ? prev.nextSibling = next : this.firstChild = next;
+    next ? next.previousSibling = prev : this.lastChild = prev;
     node.parentNode = null;
+    node.previousSibling = null;
     node.nextSibling = null;
   }
 
   insertBefore(newNode, next) {
+    if (next && next.parentNode !== this) {
+      throw new Error('Node is not a child of the parent node');
+    }
     if (newNode === next) {
       return;
     }
     if (newNode.parentNode) {
       newNode.parentNode.removeChild(newNode);
     }
-    let pos = next ? findChild(this, next) : this.childNodes.length;
-    if (isFragment(newNode)) {
-      if (newNode.childNodes.length > 0) {
-        newNode.lastChild.nextSibling = next;
-        if (pos > 0) {
-          this.childNodes[pos - 1].nextSibling = newNode.firstChild;
-        }
-        this.childNodes.splice(pos, 0, ...newNode.childNodes);
-        for (let i = 0; i < newNode.childNodes.length; ++i) {
-          newNode.childNodes[i].parentNode = this;
-        }
-        newNode.childNodes.length = 0;
-      }
-    } else {
-      if (pos > 0) {
-        this.childNodes[pos - 1].nextSibling = newNode;
-      }
-      this.childNodes.splice(pos, 0, newNode);
-      newNode.parentNode = this;
-      newNode.nextSibling = next;
-    }
+    let prev = next ? next.previousSibling : this.lastChild;
+    prev ? prev.nextSibling = newNode : this.firstChild = newNode;
+    next ? next.previousSibling = newNode : this.lastChild = newNode;
+    newNode.previousSibling = prev;
+    newNode.nextSibling = next;
+    newNode.parentNode = this;
   }
 
   toDataObject() {
-    return {
-      nodeName: this.nodeName,
-      childNodes: this.childNodes
-        .map(child => child.toDataObject())
-        .filter(data => Boolean(data)),
-    };
+    let childNodes = [];
+    for (let node = this.firstChild; node; node = node.nextSibling) {
+      let data = node.toDataObject();
+      if (data) {
+        childNodes.push(data);
+      }
+    }
+    return { nodeName: this.nodeName, childNodes };
   }
 }
 
@@ -127,6 +156,10 @@ class Element extends ParentNode {
   constructor(doc, tag) {
     super(doc, 1, tag);
     this.attributes = new Map();
+  }
+
+  getAttribute(name) {
+    return this.attributes.get(name);
   }
 
   setAttribute(name, value) {
@@ -144,35 +177,26 @@ class Element extends ParentNode {
     return data;
   }
 
-  toHTML() {
+  get innerHTML() {
+    let html = '';
+    for (let node = this.firstChild; node; node = node.nextSibling) {
+      html += node.outerHTML;
+    }
+    return html;
+  }
+
+  get outerHTML() {
     let html = `<${this.nodeName}`;
     this.attributes.forEach((value, key) => {
       if (value !== null && value !== undefined && value !== false) {
         html += ` ${esc(key)}="${esc(value === true ? key : value)}"`;
       }
     });
-    if (this.childNodes.length === 0 && voidTags.test(this.nodeName)) {
+    if (!this.firstChild && voidTags.test(this.nodeName)) {
       html += ' />';
     } else {
-      html += '>';
-      this.childNodes.forEach(child => html += child.toHTML());
-      html += `</${this.nodeName}>`;
+      html += `>${this.innerHTML}</${this.nodeName}>`;
     }
     return html;
-  }
-}
-
-class Text extends Node {
-  constructor(doc, text) {
-    super(doc, 3, '#text');
-    this.nodeValue = text;
-  }
-
-  toDataObject() {
-    return this.nodeValue;
-  }
-
-  toHTML() {
-    return rawTags.test(this.parentNode.nodeName) ? this.nodeValue : esc(this.nodeValue);
   }
 }

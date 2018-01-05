@@ -205,7 +205,7 @@ describe('Child updaters', () => {
       let target = document.createElement('div');
       applyTemplate(target, html`${stream}`);
       stream.next('');
-      let textNode = target.childNodes[1];
+      let textNode = target.firstChild.nextSibling;
       let assignedValues = [];
       Object.defineProperty(textNode, 'nodeValue', {
         set(value) { assignedValues.push(value); },

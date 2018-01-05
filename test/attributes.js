@@ -9,7 +9,7 @@ describe('Attribute updaters', () => {
   function assertResult(template, expected) {
     let target = document.createElement('div');
     applyTemplate(target, template);
-    let actual = target.childNodes[1].toDataObject().attributes;
+    let actual = target.firstElementChild.toDataObject().attributes;
     assert.deepEqual(actual, expected);
   }
 
@@ -21,19 +21,19 @@ describe('Attribute updaters', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
     applyTemplate(target, render('a'));
-    assert.equal(target.childNodes[1].attributes.get('x'), 'a');
+    assert.equal(target.firstElementChild.attributes.get('x'), 'a');
   });
 
   it('set properties when name starts with dot', () => {
     let target = document.createElement('div');
     applyTemplate(target, html`<div .testName=${'value'} />`);
-    assert.equal(target.childNodes[1].testName, 'value');
+    assert.equal(target.firstElementChild.testName, 'value');
   });
 
   it('removes attributes whose value is undefined', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
-    let elem = target.childNodes[1];
+    let elem = target.firstElementChild;
     assert.equal(elem.attributes.get('x'), 'a');
     applyTemplate(target, render(undefined));
     assert.ok(!elem.attributes.has('x'));
@@ -42,7 +42,7 @@ describe('Attribute updaters', () => {
   it('removes attributes whose value is false', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
-    let elem = target.childNodes[1];
+    let elem = target.firstElementChild;
     assert.equal(elem.attributes.get('x'), 'a');
     applyTemplate(target, render(false));
     assert.ok(!elem.attributes.has('x'));

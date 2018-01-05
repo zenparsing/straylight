@@ -18,7 +18,7 @@ describe('vdom', () => {
       elem.insertBefore(document.createElement('span'), null);
       elem.insertBefore(document.createElement('span'), null);
       elem.insertBefore(document.createElement('span'), null);
-      elem.removeChild(elem.childNodes[1]);
+      elem.removeChild(elem.firstElementChild);
       assert.equal(elem.firstChild.nextSibling, elem.lastChild);
     });
   });

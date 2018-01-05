@@ -73,7 +73,7 @@ describe('Pending updates', () => {
       let stream = createPushStream();
       let target = document.createElement('div');
       applyTemplate(target, render(stream));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       assert.equal(elem.attributes.get('x'), undefined);
       stream.next('a');
       assert.equal(elem.attributes.get('x'), 'a');
@@ -90,7 +90,7 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       applyTemplate(target, render(stream));
       assert.equal(stream.observers.size, 1);
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       assert.equal(elem.attributes.get('x'), undefined);
       applyTemplate(target, render('a'));
       assert.equal(stream.observers.size, 0);
@@ -112,7 +112,7 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       applyTemplate(target, render(stream));
       applyTemplate(target, render(stream));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       assert.equal(elem.attributes.get('x'), undefined);
       stream.next('a');
       assert.equal(elem.attributes.get('x'), 'a');
@@ -122,7 +122,7 @@ describe('Pending updates', () => {
       let stream = createPushStream();
       let target = document.createElement('div');
       applyTemplate(target, render(stream));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       stream.error(new Error('test'));
       assert.equal(errors.length, 1);
       applyTemplate(target, render('a'));
@@ -135,7 +135,7 @@ describe('Pending updates', () => {
       let promise = Promise.resolve('a');
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       assert.equal(elem.attributes.get('x'), undefined);
       return promise.then(() => {
         assert.equal(elem.attributes.get('x'), 'a');
@@ -148,7 +148,7 @@ describe('Pending updates', () => {
       let promise = Promise.resolve('a');
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       assert.equal(elem.attributes.get('x'), undefined);
       applyTemplate(target, render('b'));
       assert.equal(elem.attributes.get('x'), 'b');
@@ -171,7 +171,7 @@ describe('Pending updates', () => {
       let promise = Promise.reject(new Error('test'));
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       applyTemplate(target, render('b'));
       assert.equal(elem.attributes.get('x'), 'b');
       return promise.catch(() => {
@@ -184,7 +184,7 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
       applyTemplate(target, render(promise));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       return promise.then(() => {
         assert.equal(elem.attributes.get('x'), 'a');
       });
@@ -194,7 +194,7 @@ describe('Pending updates', () => {
       let promise = Promise.reject(new Error('test'));
       let target = document.createElement('div');
       applyTemplate(target, render(promise));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       return new Promise(resolve => setTimeout(resolve)).then(() => {
         assert.equal(errors.length, 1);
         applyTemplate(target, render('a'));
@@ -208,7 +208,7 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       assert.equal(elem.attributes.get('x'), undefined);
       iterator.yield({ value: 'a' });
       return Promise.resolve().then(() => {
@@ -228,7 +228,7 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       iterator.yield({ value: 'a' });
       applyTemplate(target, render('b'));
       assert.equal(iterator.returnCalled, true);
@@ -249,7 +249,7 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       iterator.yield(new Error('test'));
       applyTemplate(target, render('b'));
       return Promise.resolve(() => {
@@ -262,7 +262,7 @@ describe('Pending updates', () => {
       let iterator = createAsyncIterator();
       iterator.return = undefined;
       applyTemplate(target, render(iterator));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       iterator.yield({ value: 'a' });
       applyTemplate(target, render('b'));
       assert.equal(iterator.returnCalled, false);
@@ -277,7 +277,7 @@ describe('Pending updates', () => {
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
       applyTemplate(target, render(iterator));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       iterator.yield({ value: 'a' });
       return Promise.resolve(() => {
         assert.equal(elem.attributes.get('x'), 'a');
@@ -288,7 +288,7 @@ describe('Pending updates', () => {
       let target = document.createElement('div');
       let iterator = createAsyncIterator();
       applyTemplate(target, render(iterator));
-      let elem = target.childNodes[1];
+      let elem = target.firstElementChild;
       iterator.yield(new Error('test'));
       return new Promise(resolve => setTimeout(resolve)).then(() => {
         assert.equal(errors.length, 1);

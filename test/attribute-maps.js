@@ -8,7 +8,7 @@ describe('Attribute map updaters', () => {
   function assertResult(template, expected) {
     let target = document.createElement('div');
     applyTemplate(target, template);
-    let actual = target.childNodes[1].toDataObject().attributes;
+    let actual = target.firstElementChild.toDataObject().attributes;
     assert.deepEqual(actual, expected);
   }
 

@@ -8,5 +8,5 @@ export { vdom };
 export function stringify(template) {
   let target = new vdom.Document().createElement('div');
   applyTemplate(target, template);
-  return target.childNodes.map(child => child.toHTML()).join('');
+  return target.innerHTML;
 }

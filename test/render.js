@@ -50,7 +50,7 @@ describe('Render', () => {
   it('renders svg into an HTML element', () => {
     let target = document.createElement('div');
     applyTemplate(target, html`<svg><path /></svg>`);
-    let elem = target.childNodes[1];
+    let elem = target.firstElementChild;
     assert.deepEqual(elem.toDataObject(), {
       nodeName: 'svg',
       attributes: {},
@@ -65,7 +65,7 @@ describe('Render', () => {
   it('renders svg into an svg element', () => {
     let target = document.createElementNS(svgNamespace, 'svg');
     applyTemplate(target, html`<path />`);
-    let elem = target.childNodes[1];
+    let elem = target.firstElementChild;
     assert.deepEqual(elem.toDataObject(), {
       nodeName: 'path',
       attributes: {},

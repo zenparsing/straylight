@@ -25,21 +25,25 @@ describe('Render', () => {
     });
   });
 
+  it('throws if template is not a TemplateResult object', () => {
+    assert.throws(() => {
+      applyTemplate(document.createElement('div', {}));
+    });
+  });
+
   it('uses querySelector if argument is a string and window is available', () => {
     let selector = null;
-    global.window = {
-      document: {
-        querySelector(s) {
-          selector = s;
-          return document.createElement('div');
-        },
+    global.document = {
+      querySelector(s) {
+        selector = s;
+        return document.createElement('div');
       },
     };
     try {
       applyTemplate('#mount', html`x`);
       assert.equal(selector, '#mount');
     } finally {
-      global.window = undefined;
+      global.document = undefined;
     }
   });
 

@@ -1,0 +1,23 @@
+<div id='mount'></div>
+<script src='../dist/straylight.js'></script>
+<script>
+
+window.onload = () => {
+  const { html, applyTemplate } = Straylight;
+  let count = 1;
+  function render() {
+    let hue = count++ % 360;
+    let color = `hsl(${hue},95%,55%)`;
+    return html`
+      <p>Hello</p>
+      <style>
+        p { font: bold 22px Arial; color: ${color}; }
+      </style>
+    `;
+  }
+  setInterval(() => {
+    applyTemplate('#mount', render('red'));
+  }, 30);
+};
+
+</script>

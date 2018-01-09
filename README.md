@@ -52,7 +52,7 @@ Or download from a CDN:
 
 The easiest way to demonstrate Straylight is by looking at some examples.
 
-### 1. Hello World
+### Hello World
 
 First, you might want to review the concept of [tagged template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals). A template literal tag is a function that is called with the provided template and template values.
 
@@ -76,9 +76,9 @@ window.onload = () => {
 </script>
 ```
 
-### 2. Simple Clock
+### A Simple Clock
 
-When you apply the same template to a particular HTML container, the HTML tree is updated, rather than recreated.
+When you apply the same template to a particular HTML container, the HTML tree is updated rather than created from scratch.
 
 In the example below, we render a clock and then update the clock every second:
 
@@ -106,4 +106,130 @@ window.onload = () => {
 };
 
 </script>
+```
+
+### Nested Templates
+
+Templates can be nested within other templates:
+
+```js
+import { html } from 'straylight';
+
+function app() {
+  return html`
+    ${header()}
+    <main></main>
+    ${footer()}
+  `;
+}
+
+function header() {
+  return html`
+    <header>
+      <h1>Application Title</h1>
+      <nav>Lots of links</nav>
+    </header>
+  `;
+}
+
+function footer() {
+  return html`
+    <footer>Links and small grey text</footer>
+  `;
+}
+```
+
+By nesting templates, we can compose larger applications from smaller components.
+
+### Lists
+
+We can supply an array or *iterable* as a child value:
+
+```js
+import { html } from 'straylight';
+
+const planets = [
+  'Mercury',
+  'Venus',
+  'Earth',
+  'Mars',
+  'Jupiter',
+  'Saturn',
+  'Uranus',
+  'Neptune',
+];
+
+function renderPlanets() {
+  return html`
+    <h2>The Planets</h2>
+    <p>Our solar system contains eight planets:</p>
+    <ul>
+      ${planets.map(name => html`<li>${name}</li>`)}
+    </ul>
+  `;
+}
+```
+
+### Attributes
+
+Template values can be used to update element attributes:
+
+```js
+import { html } from 'straylight';
+
+function renderWithClass(className) {
+  return html`
+    <div class=${className}>Content</div>
+  `;
+}
+```
+
+Template values can also be used to update only a part of an attribute value:
+
+```js
+import { html } from 'straylight';
+
+function renderWithAddedClass(className) {
+  return html`
+    <div class='avatar ${className}'>Content</div>
+  `;
+}
+```
+
+### Attribute Maps
+
+A collection of attribute values can be supplied as an object:
+
+```js
+import { html } from 'straylight';
+
+function usernameInput() {
+  const attributes = {
+    id: 'username-input',
+    type: 'text',
+    name: 'username',
+    autocomplete: false,
+  };
+  return html`<input ${attributes} />`;
+}
+```
+
+### Properties
+
+In some situations you might want to assign a value to an element **property** instead of an attribute. For instance, if you want to add a click handler directly to a `<button>` element you can assign a function to its `onclick` property.
+
+To set a property value instead of an attribute, prefix the property name with a period:
+
+```js
+import { html } from 'straylight';
+
+function sayHello() {
+  alert('hello!');
+}
+
+function renderButton() {
+  return html`
+    <button type='button' .onclick=${sayHello}>Say Hello</button>
+  `;
+}
 ```

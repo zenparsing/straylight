@@ -2,6 +2,13 @@
 
 A templating and rendering library for HTML.
 
+## Table of Contents
+
+- [About](#about)
+- [Installing](#installing)
+- [Guide](#guide)
+- [API Reference](#api-reference)
+
 ## About
 
 As a web developer, how can I dynamically update an HTML document in a way that is **safe**, **simple**, **readable**, and **efficient**?
@@ -48,7 +55,7 @@ Or download from a CDN:
 <script src='https://unpkg.com/straylight/dist/straylight.min.js'></script>
 ```
 
-## Examples
+## Guide
 
 The easiest way to learn Straylight is by looking at some examples.
 
@@ -295,7 +302,7 @@ Here is the clock example again, implemented with an async generator function:
 ```js
 import { html } from 'straylight';
 
-async function* generateTime() {
+async function *generateTime() {
   while (true) {
     yield new Date().toLocaleString();
     await new Promise(r => setTimeout(r, 1000));
@@ -334,4 +341,115 @@ function renderClock() {
     </div>
   `;
 }
+```
+
+Did you know, you can build entire front-end applications by combining just Straylight and an observable state store like [Redux](https://github.com/reactjs/redux) or [Storelax](https://github.com/zenparsing/storelax)?
+
+&#x1f4a1;
+
+### SVG
+
+SVG can be included directly within html tags.
+
+```js
+import { html } from 'straylight';
+
+function defaultAvatar() {
+  return html`
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#4285f4">
+      <path d="
+        M12,0C5.376,0 0,5.376 0,12C0,18.624 5.376,24 12,24C18.624,24 24,18.624
+        24,12C24,5.376 18.624,0 12,0ZM12,20.64C9,20.64 6.348,19.104
+        4.8,16.776C4.836,14.388 9.6,13.08 12,13.08C14.388,13.08 19.164,14.388
+        19.2,16.776C17.652,19.104 15,20.64 12,20.64ZM12,3.6C13.992,3.6 15.6,5.208
+        15.6,7.2C15.6,9.192 13.992,10.8 12,10.8C10.008,10.8 8.4,9.192
+        8.4,7.2C8.4,5.208 10.008,3.6 12,3.6Z" />
+      <path d="M0 0h24v24H0z" fill="none" />
+    </svg>
+  `;
+}
+```
+
+### Differences From HTML
+
+There are a couple of differences between normal HTML and the HTML you can write inside of Straylight html tags.
+
+First, you can use self-closing tag syntax for any element to keep your code tidy:
+
+```js
+import { html } from 'straylight';
+
+function useSelfClosing() {
+  return html`
+    <div id='first' />
+    <div id='second' />
+    <div id='third' />
+  `;
+}
+```
+
+Second, you *must* use self-closing tag syntax for all HTML "void" tags, like `<input>` and `<br>`:
+
+```js
+import { html } from 'straylight';
+
+function voidTags() {
+  return html`
+    <!-- Good! -->
+    <input type='text' />
+    <br />
+    <!-- BAD! -->
+    <input type='text'>
+  `;
+}
+```
+
+Third, only the following HTML named character references are supported:
+
+- `&lt;`
+- `&gt;`
+- `&amp;`
+
+Decimal and hexidecimal character references are fully supported.
+
+## API Reference
+
+### `html(literal, ...values)`
+
+A template tag that returns **TemplateResult** objects.
+
+```js
+import { html } from 'straylight';
+
+const result = html`<div>${'hello'}</div>`;
+
+// Prints: ['hello']
+console.log(result.values);
+```
+
+### `applyTemplate(element, templateResult)`
+
+Applies a template result to an HTML container element. The `element` argument can be a DOM Element object or a CSS selector.
+
+```js
+import { html, applyTemplate } from 'straylight';
+
+applyTemplate('#mount', html`
+  <div>Hi!</div>
+`);
+```
+
+### `stringify(templateResult)`
+
+Converts the template result to an HTML string.
+
+```js
+import { stringify } from 'straylight/extras';
+
+const result = html`
+  <div>Hello ${'Earth'}</div>
+`;
+
+// Prints: <div>Hello Earth</div>
+console.log(stringify(result));
 ```

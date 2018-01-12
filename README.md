@@ -57,8 +57,6 @@ Or download from a CDN:
 
 ## Guide
 
-The easiest way to learn Straylight is by looking at some examples.
-
 ### Hello World
 
 First, you might want to review the concept of [tagged template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals). A template literal **tag** is a function that is called with the provided template and template values.
@@ -117,9 +115,11 @@ window.onload = () => {
 </script>
 ```
 
-That should give you an idea of what Straylight is all about. Now let's take a look at what else we can do with these templates.
+That should give you an idea of what Straylight is all about. Now, let's take a look at what else we can do with templates.
 
-*From here on, we'll skip the HTML examples and just show javascript.*
+&#x1f680;
+
+*From here on, we'll skip the HTML examples and just show Javascript.*
 
 ### Nested Templates
 
@@ -409,8 +409,9 @@ Third, only the following HTML named character references are supported:
 - `&lt;`
 - `&gt;`
 - `&amp;`
+- `&quot;`
 
-Decimal and hexidecimal character references are fully supported.
+Decimal and hexidecimal character references (like `&#x1f4a1;`) are fully supported.
 
 ## API Reference
 

@@ -415,7 +415,7 @@ Decimal and hexidecimal character references (like `&#x1f4a1;`) are fully suppor
 
 ## API Reference
 
-### `html(literal, ...values)`
+### html\`template\`
 
 A template tag that returns **TemplateResult** objects.
 
@@ -428,7 +428,7 @@ const result = html`<div>${'hello'}</div>`;
 console.log(result.values);
 ```
 
-### `applyTemplate(element, templateResult)`
+### applyTemplate(element, templateResult)
 
 Applies a template result to an HTML container element. The `element` argument can be a DOM Element object or a CSS selector.
 
@@ -440,7 +440,7 @@ applyTemplate('#mount', html`
 `);
 ```
 
-### `stringify(templateResult)`
+### stringify(templateResult)
 
 Converts the template result to an HTML string.
 

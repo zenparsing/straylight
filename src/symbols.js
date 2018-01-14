@@ -1,9 +1,9 @@
-const S = typeof Symbol === 'function' ? Symbol : (name => `@@${name}`);
+import { Symbol } from './shim.js';
 
 function getSymbol(name, ponyfill) {
-  let sym = S[name] || S(name);
+  let sym = Symbol[name] || Symbol(name);
   if (ponyfill) {
-    S[name] = sym;
+    Symbol[name] = sym;
   }
   return sym;
 }

@@ -1,9 +1,7 @@
 import * as dom from '../dom.js';
 import { createSlot, removeSlot } from '../slots.js';
 import { symbols } from '../symbols.js';
-
-// IE11 does not support argument to Map constructor
-const supportsMapArg = (new Map([[1, 1]]).size > 0);
+import { createMapFrom } from '../shim.js';
 
 class MapSlotList {
   constructor(slot, key) {
@@ -100,16 +98,9 @@ export class MapSlot {
   }
 
   static value(map) {
-    if (!(map instanceof Map)) {
-      if (supportsMapArg) {
-        map = new Map(map);
-      } else {
-        // IE11
-        let list = map;
-        map = new Map();
-        list.forEach(pair => map.set(pair[0], pair[1]));
-      }
-    }
-    return { map, [symbols.slotConstructor]: this };
+    return {
+      map: map instanceof Map ? map : createMapFrom(map),
+      [symbols.slotConstructor]: this,
+    };
   }
 }

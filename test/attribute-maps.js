@@ -19,4 +19,11 @@ describe('Attribute map updaters', () => {
     });
   });
 
+  it('throws if the value is a function', () => {
+    assert.throws(() => {
+      function f() {}
+      applyTemplate(document.createElement('div'), html`<div ${f} />`);
+    });
+  });
+
 });

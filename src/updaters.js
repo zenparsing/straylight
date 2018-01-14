@@ -58,6 +58,10 @@ export class AttributeMapUpdater {
   }
 
   update(map) {
+    // Support future use of functions
+    if (typeof map !== 'object') {
+      throw new TypeError('Expected an attribute map object');
+    }
     for (let key in map) {
       dom.setAttr(this.node, key, map[key]);
     }

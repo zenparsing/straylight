@@ -115,7 +115,7 @@ window.onload = () => {
 </script>
 ```
 
-That should give you an idea of what Straylight is all about. Now, let's take a look at what else we can do with templates.
+That should give you an idea of what Straylight is all about. Now let's take a look at what else we can do with these templates!
 
 &#x1f680;
 

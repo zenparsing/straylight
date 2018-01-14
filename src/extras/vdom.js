@@ -196,9 +196,7 @@ class Element extends ParentNode {
   get outerHTML() {
     let html = `<${this.nodeName}`;
     this._attributes.forEach((value, key) => {
-      if (value !== null && value !== undefined && value !== false) {
-        html += ` ${esc(key)}="${esc(value === true ? key : value)}"`;
-      }
+      html += ` ${esc(key)}="${esc(value)}"`;
     });
     if (!this.firstChild && voidTags.test(this.nodeName)) {
       html += ' />';

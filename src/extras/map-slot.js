@@ -1,7 +1,7 @@
 import * as dom from '../dom.js';
 import { createSlot, removeSlot } from '../slots.js';
 import { symbols } from '../symbols.js';
-import { createMapFrom } from '../shim.js';
+import { convertToMap } from '../shim.js';
 
 class MapSlotList {
   constructor(slot, key) {
@@ -99,7 +99,7 @@ export class MapSlot {
 
   static value(map) {
     return {
-      map: map instanceof Map ? map : createMapFrom(map),
+      map: convertToMap(map),
       [symbols.slotConstructor]: this,
     };
   }

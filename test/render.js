@@ -47,6 +47,22 @@ describe('Render', () => {
     }
   });
 
+  it('removes content on first render', () => {
+    let target = document.createElement('div');
+    target.appendChild(document.createElement('div'));
+    target.appendChild(document.createElement('div'));
+    applyTemplate(target, html`<span></span>`);
+    assert.deepEqual(target.toDataObject(), {
+      nodeName: 'div',
+      attributes: {},
+      childNodes: [{
+        nodeName: 'span',
+        attributes: {},
+        childNodes: [],
+      }],
+    });
+  });
+
   it('renders svg into an HTML element', () => {
     let target = document.createElement('div');
     applyTemplate(target, html`<svg><path /></svg>`);

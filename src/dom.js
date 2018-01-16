@@ -74,6 +74,12 @@ export function removeSiblings(first, last) {
   }
 }
 
+export function clearChildren(parent) {
+  if (parent.firstChild) {
+    removeSiblings(parent.firstChild, parent.lastChild);
+  }
+}
+
 function getNamespace(tag, context) {
   switch (tag) {
     case 'svg':

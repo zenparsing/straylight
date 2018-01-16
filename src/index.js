@@ -22,6 +22,8 @@ export function applyTemplate(target, template) {
   } else {
     if (slot) {
       removeSlot(slot);
+    } else {
+      dom.clearChildren(target);
     }
     slot = createSlot(target, null, template);
     slotMap.set(target, slot);

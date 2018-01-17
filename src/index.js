@@ -22,10 +22,12 @@ export function applyTemplate(target, template) {
   } else {
     if (slot) {
       removeSlot(slot);
-    } else {
-      dom.clearChildren(target);
     }
-    slot = createSlot(target, null, template);
+    let next = dom.firstChild(target);
+    slot = createSlot(target, next, template);
     slotMap.set(target, slot);
+    if (next) {
+      dom.removeSiblings(next, null);
+    }
   }
 }

@@ -48,6 +48,10 @@ export function createElement(tag, context) {
     doc(context).createElementNS(namespace, tag);
 }
 
+export function firstChild(node) {
+  return node.firstChild;
+}
+
 export function insertChild(node, parent, next) {
   parent.insertBefore(node, next || null);
 }
@@ -71,12 +75,6 @@ export function removeSiblings(first, last) {
     if (first === last) {
       break;
     }
-  }
-}
-
-export function clearChildren(parent) {
-  if (parent.firstChild) {
-    removeSiblings(parent.firstChild, parent.lastChild);
   }
 }
 

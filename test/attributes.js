@@ -24,9 +24,9 @@ describe('Attribute updaters', () => {
     assert.equal(target.firstElementChild.getAttribute('x'), 'a');
   });
 
-  it('set properties when name starts with dot', () => {
+  it('sets properties when name starts with this-dot', () => {
     let target = document.createElement('div');
-    applyTemplate(target, html`<div .testName=${'value'} />`);
+    applyTemplate(target, html`<div this.testName=${'value'} />`);
     assert.equal(target.firstElementChild.testName, 'value');
   });
 

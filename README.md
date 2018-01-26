@@ -115,11 +115,11 @@ window.onload = () => {
 </script>
 ```
 
-That should give you an idea of what Straylight is all about. Now let's take a look at what else we can do with these templates!
+That should give you an idea of what Straylight is all about!
 
 &#x1f680;
 
-*From here on, we'll skip the HTML examples and just show Javascript.*
+*From here on, we'll skip the HTML examples and just show Javascript modules.*
 
 ### Nested Templates
 
@@ -252,7 +252,7 @@ function usernameInput() {
 
 In some situations you might want to assign a value to an element **property** instead of an attribute. For instance, if you want to add a click handler directly to a `<button>` element you could assign a function to its `onclick` property.
 
-To set a property value instead of an attribute, prefix the property name with a period:
+To set a property value instead of an attribute, prefix the property name with `this.`:
 
 ```js
 import { html } from 'straylight';
@@ -263,7 +263,7 @@ function sayHello() {
 
 function renderButton() {
   return html`
-    <button type='button' .onclick=${sayHello}>Say Hello</button>
+    <button type='button' this.onclick=${sayHello}>Say Hello</button>
   `;
 }
 ```

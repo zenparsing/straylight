@@ -9,8 +9,8 @@ export function isElement(x) {
 }
 
 export function setAttr(node, name, value) {
-  if (name[0] === '.') {
-    node[name.slice(1)] = value;
+  if (name.length > 5 && name.slice(0, 5) === 'this.') {
+    node[name.slice(5)] = value;
     return;
   }
   if (value === undefined || value === null || value === false) {

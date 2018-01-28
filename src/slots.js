@@ -184,7 +184,7 @@ class TemplateSlot {
       let value = values[i];
       if (value && typeof value.then === 'function') {
         this.awaitPromise(value, i);
-      } else if (value && value[symbols.observable]) {
+      } else if (value && typeof value.subscribe === 'function') {
         this.awaitObservable(value, i);
       } else if (value && value[symbols.asyncIterator]) {
         this.awaitAsyncIterator(value, i);
@@ -243,18 +243,28 @@ class TemplateSlot {
       return;
     }
 
-    let subscription = value[symbols.observable]().subscribe(
+    let done = false;
+
+    let subscription = value.subscribe(
       val => this.updaters[i].update(val),
-      err => { this.pending[i] = null; throw err; },
-      () => this.pending[i] = null,
+      err => { done = true; this.pending[i] = null; throw err; },
+      () => { done = true; this.pending[i] = null; },
     );
 
-    if (!subscription.closed) {
-      this.setPending({
-        source: value,
-        cancel() { subscription.unsubscribe(); },
-      }, i);
+    if (done) {
+      return;
     }
+
+    this.setPending({
+      source: value,
+      cancel() {
+        if (typeof subscription === 'function') {
+          subscription();
+        } else {
+          subscription.unsubscribe();
+        }
+      },
+    }, i);
   }
 
   awaitAsyncIterator(value, i) {

@@ -48,7 +48,7 @@
   }
 
   applyTemplate('#mount', html`
-    <div class='animated-sin-wave' .onclick=${toggle}>
+    <div class='animated-sin-wave' this.onclick=${toggle}>
       ${
         animationFrames.filter(() => state.running).map(() => {
           let { bars, barWidth, count } = state;
@@ -73,12 +73,6 @@
       }
     </div>
   `);
-
-  /*
-  Straylight.renderToString(new SineWave()).then(html => {
-    console.log(html);
-  });
-  */
 
   </script>
 </body>

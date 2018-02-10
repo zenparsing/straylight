@@ -2,12 +2,6 @@ import Observable from 'zen-observable';
 
 export { Observable };
 
-export function setObservableErrorHandler(fn) {
-  Observable.extensions.setHostReportError(fn || (err => { throw err; }));
-}
-
-setObservableErrorHandler();
-
 export function createPushStream() {
   let set = new Set();
   let observable = new Observable(sink => {

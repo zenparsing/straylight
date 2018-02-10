@@ -1,19 +1,20 @@
 <div id='mount'></div>
 <script src='../dist/straylight.js'></script>
-<script src='https://cdn.jsdelivr.net/npm/zen-observable/zen-observable.js'></script>
-<script>
+<script type='module'>
+
+import { Observable } from 'https://cdn.jsdelivr.net/npm/zen-observable/src/Observable.js';
 
 const { html, applyTemplate } = Straylight;
 
+const ticks = new Observable(sink => {
+  sink.next(null);
+  let interval = setInterval(() => sink.next(null), 1000);
+  return () => clearInterval(interval);
+});
+
 applyTemplate('#mount', html`
   <div class='clock'>
-    ${
-      new Observable(sink => {
-        sink.next(new Date().toLocaleString());
-        let interval = setInterval(() => sink.next(new Date().toLocaleString()), 1000);
-        return () => clearInterval(interval);
-      })
-    }
+    ${ ticks.map(() => new Date().toLocaleString()) }
   </div>
 `);
 

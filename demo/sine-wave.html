@@ -2,8 +2,6 @@
 <html>
 <!-- Adapted from the MarkoJS website -->
 <head>
-  <script src='https://cdn.jsdelivr.net/npm/zen-observable/zen-observable.js'></script>
-  <script src='../dist/straylight.js'></script>
   <style>
 
   .animated-sin-wave {
@@ -24,7 +22,10 @@
 </head>
 <body>
   <div id='mount'></div>
-  <script>
+  <script src='../dist/straylight.js'></script>
+  <script type='module'>
+
+  import { Observable } from 'https://cdn.jsdelivr.net/npm/zen-observable/src/Observable.js';
 
   const { html, applyTemplate } = Straylight;
 

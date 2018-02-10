@@ -2,7 +2,7 @@ import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { symbols } from '../src/symbols.js';
 import { Document } from '../src/extras/vdom.js';
-import { createPushStream, setObservableErrorHandler } from './observable.js';
+import { createPushStream } from './observable.js';
 
 function createAsyncIterator() {
   let results = [];
@@ -55,7 +55,6 @@ describe('Pending updates', () => {
   let render = val => html`<div x=${val} />`;
 
   before(() => {
-    setObservableErrorHandler(pushError);
     process.addListener('unhandledRejection', pushError);
   });
 
@@ -64,7 +63,6 @@ describe('Pending updates', () => {
   });
 
   after(() => {
-    setObservableErrorHandler();
     process.removeListener('unhandledRejection', pushError);
   });
 
@@ -124,9 +122,11 @@ describe('Pending updates', () => {
       applyTemplate(target, render(stream));
       let elem = target.firstElementChild;
       stream.error(new Error('test'));
-      assert.equal(errors.length, 1);
-      applyTemplate(target, render('a'));
-      assert.equal(elem.getAttribute('x'), 'a');
+      return new Promise(setTimeout).then(() => {
+        assert.equal(errors.length, 1);
+        applyTemplate(target, render('a'));
+        assert.equal(elem.getAttribute('x'), 'a');
+      });
     });
   });
 

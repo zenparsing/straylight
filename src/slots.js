@@ -247,7 +247,7 @@ class TemplateSlot {
 
     let subscription = value.subscribe(
       val => this.updaters[i].update(val),
-      err => { done = true; this.pending[i] = null; throw err; },
+      err => { done = true; this.pending[i] = null; Promise.reject(err); },
       () => { done = true; this.pending[i] = null; },
     );
 

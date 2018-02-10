@@ -24,7 +24,7 @@
     "rollup-plugin-commonjs": "^8.2.6",
     "rollup-plugin-node-resolve": "^3.0.0",
     "uglify-js": "^3.2.2",
-    "zen-observable": "^0.7.1"
+    "zen-observable": "^0.8.6"
   },
   "scripts": {
     "test": "node scripts/test.js",

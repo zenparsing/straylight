@@ -245,7 +245,7 @@ class TemplateSlot {
 
     let done = false;
 
-    let subscription = value.subscribe(
+    let cancel = value.subscribe(
       val => this.updaters[i].update(val),
       err => { done = true; this.pending[i] = null; Promise.reject(err); },
       () => { done = true; this.pending[i] = null; },
@@ -258,10 +258,10 @@ class TemplateSlot {
     this.setPending({
       source: value,
       cancel() {
-        if (typeof subscription === 'function') {
-          subscription();
-        } else {
-          subscription.unsubscribe();
+        if (typeof cancel === 'function') {
+          cancel();
+        } else if (cancel && typeof cancel.unsubscribe === 'function') {
+          cancel.unsubscribe();
         }
       },
     }, i);

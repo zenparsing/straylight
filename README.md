@@ -318,35 +318,6 @@ function renderClock() {
 }
 ```
 
-### Observables
-
-Straylight also supports [observables](https://github.com/tc39/proposal-observable). If an observable is supplied as a template value, then the document will be updated each time the observable sends a value.
-
-Let's take a look at the clock example again, this time implemented with an observable:
-
-```js
-import { html } from 'straylight';
-import Observable from 'zen-observable';
-
-function renderClock() {
-  return html`
-    <div class='clock'>
-      ${
-        new Observable(sink => {
-          sink.next(new Date().toLocaleString());
-          let interval = setInterval(() => sink.next(new Date().toLocaleString()), 1000);
-          return () => clearInterval(interval);
-        })
-      }
-    </div>
-  `;
-}
-```
-
-Did you know, you can build entire front-end applications by combining just Straylight and an observable state store like [Redux](https://github.com/reactjs/redux) or [Storelax](https://github.com/zenparsing/storelax)?
-
-&#x1f4a1;
-
 ### SVG
 
 SVG can be included directly within html tags.

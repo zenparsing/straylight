@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { Document } from '../src/extras/vdom.js';
-import { createPushStream } from './observable.js';
+import { AsyncIterationBuffer } from './async.js';
 
 describe('Attribute part updaters', () => {
   let document = new Document();
@@ -19,15 +19,16 @@ describe('Attribute part updaters', () => {
     });
   });
 
-  it('does not update until pending values are available', () => {
-    let stream = createPushStream();
+  it('does not update until pending values are available', async () => {
+    let buffer = new AsyncIterationBuffer();
     let target = document.createElement('div');
-    applyTemplate(target, html`<div x='a${'b'}${stream}d' />`);
+    applyTemplate(target, html`<div x='a${'b'}${buffer}d' />`);
     let div = target.firstElementChild;
+    await null;
     assert.deepEqual(div.toDataObject().attributes, {});
-    stream.next('c');
+    await buffer.next('c');
     assert.deepEqual(div.toDataObject().attributes, { x: 'abcd' });
-    stream.next('C');
+    await buffer.next('C');
     assert.deepEqual(div.toDataObject().attributes, { x: 'abCd' });
   });
 

@@ -4,7 +4,7 @@ import { symbols } from '../src/symbols.js';
 import { withKeys } from '../src/extras';
 import { Document } from '../src/extras/vdom.js';
 import { MapSlot } from '../src/extras/map-slot.js';
-import { createPushStream } from './observable.js';
+import { AsyncIterationBuffer } from './async.js';
 
 describe('MapSlot', () => {
   let document = new Document();
@@ -33,19 +33,19 @@ describe('MapSlot', () => {
     assert.deepEqual(target.toDataObject().childNodes, ['test-1', 'test-2']);
   });
 
-  it('inserts slots', () => {
-    let stream = createPushStream();
+  it('inserts slots', async () => {
+    let buffer = new AsyncIterationBuffer();
     let target = document.createElement('div');
-    applyTemplate(target, render(stream));
+    applyTemplate(target, render(buffer));
     function renderChild(text) {
       return html`<div>${text}</div>`;
     }
-    stream.next(MapSlot.value([
+    await buffer.next(MapSlot.value([
       ['a', renderChild('test-1')],
       ['b', renderChild('test-2')],
     ]));
     let first = target.firstElementChild;
-    stream.next(MapSlot.value([
+    await buffer.next(MapSlot.value([
       ['c', renderChild('test-3')],
       ['a', renderChild('test-4')],
       ['b', renderChild('test-5')],
@@ -58,20 +58,20 @@ describe('MapSlot', () => {
     ]);
   });
 
-  it('removes slots', () => {
-    let stream = createPushStream();
+  it('removes slots', async () => {
+    let buffer = new AsyncIterationBuffer();
     let target = document.createElement('div');
-    applyTemplate(target, render(stream));
+    applyTemplate(target, render(buffer));
     function renderChild(text) {
       return html`<div>${text}</div>`;
     }
-    stream.next(MapSlot.value([
+    await buffer.next(MapSlot.value([
       ['a', renderChild('test-1')],
       ['b', renderChild('test-2')],
       ['c', renderChild('test-3')],
     ]));
     let first = target.firstElementChild;
-    stream.next(MapSlot.value([
+    await buffer.next(MapSlot.value([
       ['d', renderChild('test-4')],
       ['e', renderChild('test-5')],
     ]));
@@ -80,7 +80,7 @@ describe('MapSlot', () => {
       { nodeName: 'div', attributes: {}, childNodes: ['test-4'] },
       { nodeName: 'div', attributes: {}, childNodes: ['test-5'] },
     ]);
-    stream.next(MapSlot.value([
+    await buffer.next(MapSlot.value([
       ['d', renderChild('test-6')],
     ]));
     assert.deepEqual(target.toDataObject().childNodes, [
@@ -88,19 +88,19 @@ describe('MapSlot', () => {
     ]);
   });
 
-  it('repositions slots', () => {
-    let stream = createPushStream();
+  it('repositions slots', async () => {
+    let buffer = new AsyncIterationBuffer();
     let target = document.createElement('div');
-    applyTemplate(target, render(stream));
+    applyTemplate(target, render(buffer));
     function renderChild(text) {
       return html`<div>${text}</div>`;
     }
-    stream.next(MapSlot.value([
+    await buffer.next(MapSlot.value([
       ['a', renderChild('test-1')],
       ['b', renderChild('test-2')],
     ]));
     let first = target.firstElementChild;
-    stream.next(MapSlot.value([
+    await buffer.next(MapSlot.value([
       ['b', renderChild('test-3')],
       ['a', renderChild('test-4')],
     ]));
@@ -111,27 +111,30 @@ describe('MapSlot', () => {
     ]);
   });
 
-  it('removes all slots when removed', () => {
-    let stream = createPushStream();
+  it('removes all slots when removed', async () => {
+    let buffer = new AsyncIterationBuffer();
     let target = document.createElement('div');
-    applyTemplate(target, render(stream));
-    stream.next(MapSlot.value([
+    applyTemplate(target, render(buffer));
+    await buffer.next(MapSlot.value([
       ['a', 'test-1'],
       ['b', 'test-2'],
     ]));
-    stream.next('text');
+    await buffer.next('text');
     assert.deepEqual(target.toDataObject().childNodes, ['text']);
   });
 
   it('cancels updates on child slots', () => {
-    let stream = createPushStream();
+    let cancelled = false;
+    let buffer = new AsyncIterationBuffer({
+      cancel() { cancelled = true; },
+    });
     let target = document.createElement('div');
     applyTemplate(target, render(MapSlot.value([
-      ['a', html`${stream}`],
+      ['a', html`${buffer}`],
     ])));
-    assert.equal(stream.observers.size, 1);
+    assert.equal(cancelled, false);
     applyTemplate(target, render(''));
-    assert.equal(stream.observers.size, 0);
+    assert.equal(cancelled, true);
   });
 
   it('exposes withKeys helper', () => {

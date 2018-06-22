@@ -2,7 +2,7 @@ import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { symbols } from '../src/symbols.js';
 import { Document } from '../src/extras/vdom.js';
-import { Observable, createPushStream } from './observable.js';
+import { asyncList, AsyncIterationBuffer, afterTasks } from './async.js';
 
 describe('Child updaters', () => {
   let document = new Document();
@@ -10,7 +10,7 @@ describe('Child updaters', () => {
   function assertResult(content, data) {
     let target = document.createElement('div');
     applyTemplate(target, html`${content}`);
-    return Promise.resolve().then(() => {
+    return afterTasks().then(() => {
       assert.deepEqual(target.toDataObject().childNodes, data);
     });
   }
@@ -71,21 +71,21 @@ describe('Child updaters', () => {
   describe('Multiple updates', () => {
     it('updates a template with multiple children to text', () => {
       return assertResult(
-        Observable.of(html`<span>a</span><span>b</span>`, ''),
+        asyncList(html`<span>a</span><span>b</span>`, ''),
         []
       );
     });
 
     it('updates from text to null', () => {
       return assertResult(
-        Observable.of('a', null),
+        asyncList('a', null),
         [],
       );
     });
 
     it('updates from vector to scalar', () => {
       return assertResult(
-        Observable.of(
+        asyncList(
           ['a', html`<span>x</span>`, 'b'],
           'c'
         ), ['c']
@@ -94,42 +94,42 @@ describe('Child updaters', () => {
 
     it('updates from empty vector to scalar', () => {
       return assertResult(
-        Observable.of([], 'text'),
+        asyncList([], 'text'),
         ['text']
       );
     });
 
     it('updates from a larger array to a smaller array', () => {
       return assertResult(
-        Observable.of(['a', 'b', 'c'], ['d', 'e']),
+        asyncList(['a', 'b', 'c'], ['d', 'e']),
         ['d', 'e']
       );
     });
 
     it('updates from a larger array to a smaller array twice', () => {
       return assertResult(
-        Observable.of(['a', 'b', 'c'], ['d', 'e'], ['e', 'd']),
+        asyncList(['a', 'b', 'c'], ['d', 'e'], ['e', 'd']),
         ['e', 'd']
       );
     });
 
     it('updates from a smaller array to a larger array', () => {
       return assertResult(
-        Observable.of(['a', 'b'], ['c', 'd', 'e']),
+        asyncList(['a', 'b'], ['c', 'd', 'e']),
         ['c', 'd', 'e']
       );
     });
 
     it('inserts slots at front of array', () => {
       return assertResult(
-        Observable.of(['a'], [html`b`, 'a']),
+        asyncList(['a'], [html`b`, 'a']),
         ['b', 'a']
       );
     });
 
     it('updates from scalar to vector', () => {
       return assertResult(
-        Observable.of(
+        asyncList(
           'a',
           ['b', html`<span>x</span>`, 'c']
         ), [
@@ -146,26 +146,27 @@ describe('Child updaters', () => {
 
     it('updates from empty template to text', () => {
       return assertResult(
-        Observable.of(html``, 'text'),
+        asyncList(html``, 'text'),
         ['text'],
       );
     });
 
     it('updates from template with dynamic first child to text', () => {
       return assertResult(
-        Observable.of(html`${'a'}${'b'}`, 'text'),
+        asyncList(html`${'a'}${'b'}`, 'text'),
         ['text'],
       );
     });
 
-    it('updates from template with changed content to text', () => {
+    it('updates from template with changed content to text', async () => {
       let render = val => html`${val}`;
       let target = document.createElement('div');
-      let stream = createPushStream();
-      applyTemplate(target, html`${stream}`);
-      stream.next(render(html`<div>1</div>`));
-      stream.next(render(html`<div>2</div>`));
-      stream.next('text');
+      let buffer = new AsyncIterationBuffer();
+      applyTemplate(target, html`${buffer}`);
+      buffer.next(render(html`<div>1</div>`));
+      buffer.next(render(html`<div>2</div>`));
+      buffer.next('text');
+      await afterTasks();
       assert.deepEqual(target.toDataObject().childNodes, ['text']);
     });
 
@@ -173,7 +174,7 @@ describe('Child updaters', () => {
       let a = html`first`;
       let b = html`second`;
       return assertResult(
-        Observable.of([a, b], [b, a]),
+        asyncList([a, b], [b, a]),
         ['second', 'first']
       );
     });
@@ -183,7 +184,7 @@ describe('Child updaters', () => {
       let b = html`second`;
       let c = html`third`;
       return assertResult(
-        Observable.of([a, b, c], [c, b, a]),
+        asyncList([a, b, c], [c, b, a]),
         ['third', 'second', 'first']
       );
     });
@@ -192,7 +193,7 @@ describe('Child updaters', () => {
       let a = html`<div>a</div><div>b</div>`;
       let b = html`<div>c</div><div>d</div>`;
       return assertResult(
-        Observable.of([a, b], [b, a]),
+        asyncList([a, b], [b, a]),
         [
           { nodeName: 'div', attributes: {}, childNodes: ['c'] },
           { nodeName: 'div', attributes: {}, childNodes: ['d'] },
@@ -202,48 +203,59 @@ describe('Child updaters', () => {
       );
     });
 
-    it('does not set text value for repeated identical values', () => {
-      let stream = createPushStream();
+    it('does not set text value for repeated identical values', async () => {
+      let buffer = new AsyncIterationBuffer();
       let target = document.createElement('div');
-      applyTemplate(target, html`${stream}`);
-      stream.next('');
+      applyTemplate(target, html`${buffer}`);
+      buffer.next('');
+      await afterTasks();
       let textNode = target.firstChild.nextSibling;
       let assignedValues = [];
       Object.defineProperty(textNode, 'nodeValue', {
         set(value) { assignedValues.push(value); },
       });
-      stream.next('a');
-      stream.next('a');
+      buffer.next('a');
+      buffer.next('a');
+      await afterTasks();
       assert.deepEqual(assignedValues, ['a']);
     });
   });
 
   describe('Cancellation', () => {
     it('cancels slot updates for single values', () => {
-      let stream = createPushStream();
+      let cancelled = false;
+      let buffer = new AsyncIterationBuffer({
+        cancel() { cancelled = true; },
+      });
       let target = document.createElement('div');
-      applyTemplate(target, html`${stream}`);
-      assert.equal(stream.observers.size, 1);
+      applyTemplate(target, html`${buffer}`);
+      assert.equal(cancelled, false);
       applyTemplate(target, html``);
-      assert.equal(stream.observers.size, 0);
+      assert.equal(cancelled, true);
     });
 
     it('cancels slot updates for multiple values', () => {
-      let stream = createPushStream();
+      let cancelled = false;
+      let buffer = new AsyncIterationBuffer({
+        cancel() { cancelled = true; },
+      });
       let target = document.createElement('div');
-      applyTemplate(target, html`${['a', html`${stream}`, 'b']}`);
-      assert.equal(stream.observers.size, 1);
+      applyTemplate(target, html`${['a', html`${buffer}`, 'b']}`);
+      assert.equal(cancelled, false);
       applyTemplate(target, html``);
-      assert.equal(stream.observers.size, 0);
+      assert.equal(cancelled, true);
     });
 
     it('cancels slot updates in nested templates', () => {
-      let stream = createPushStream();
+      let cancelled = false;
+      let buffer = new AsyncIterationBuffer({
+        cancel() { cancelled = true; },
+      });
       let target = document.createElement('div');
-      applyTemplate(target, html`${html`${stream}`}`);
-      assert.equal(stream.observers.size, 1);
+      applyTemplate(target, html`${html`${buffer}`}`);
+      assert.equal(cancelled, false);
       applyTemplate(target, html``);
-      assert.equal(stream.observers.size, 0);
+      assert.equal(cancelled, true);
     });
   });
 

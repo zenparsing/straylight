@@ -2,51 +2,7 @@ import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { symbols } from '../src/symbols.js';
 import { Document } from '../src/extras/vdom.js';
-import { createPushStream } from './observable.js';
-
-function createAsyncIterator() {
-  let results = [];
-  let requests = [];
-  let done = false;
-  function resolveNext() {
-    while (requests.length > 0 && (results.length > 0 || done)) {
-      let request = requests.shift();
-      if (done) {
-        request.resolve({ done });
-      } else {
-        let result = results.shift();
-        if (result instanceof Error) {
-          request.reject(result);
-        } else {
-          request.resolve(result);
-          if (result.done) {
-            done = true;
-          }
-        }
-      }
-    }
-  }
-  return {
-    [symbols.asyncIterator]() { return this; },
-    returnCalled: false,
-    yield(result) {
-      if (!done) {
-        results.push(result);
-        resolveNext();
-      }
-    },
-    next() {
-      return new Promise((resolve, reject) => {
-        requests.push({ resolve, reject });
-      });
-    },
-    return() {
-      this.returnCalled = true;
-      this.yield({ done: true });
-      return this.next();
-    },
-  };
-}
+import { AsyncIterationBuffer } from './async.js';
 
 describe('Pending updates', () => {
   let document = new Document();
@@ -66,235 +22,158 @@ describe('Pending updates', () => {
     process.removeListener('unhandledRejection', pushError);
   });
 
-  describe('Observables', () => {
-    it('updates values', () => {
-      let stream = createPushStream();
+  describe('Promises', () => {
+    it('updates values', async () => {
+      let promise = Promise.resolve('a');
       let target = document.createElement('div');
-      applyTemplate(target, render(stream));
+      applyTemplate(target, render(promise));
       let elem = target.firstElementChild;
       assert.equal(elem.getAttribute('x'), undefined);
-      stream.next('a');
+      await promise;
       assert.equal(elem.getAttribute('x'), 'a');
-      stream.next('b');
+      applyTemplate(target, render('b'));
       assert.equal(elem.getAttribute('x'), 'b');
-      stream.complete();
+    });
+
+    it('cancels when updated with a new value', async () => {
+      let promise = Promise.resolve('a');
+      let target = document.createElement('div');
+      applyTemplate(target, render(promise));
+      let elem = target.firstElementChild;
+      assert.equal(elem.getAttribute('x'), undefined);
+      applyTemplate(target, render('b'));
+      assert.equal(elem.getAttribute('x'), 'b');
+      await promise;
+      assert.equal(elem.getAttribute('x'), 'b');
+    });
+
+    it('cancels when a new template is applied', async () => {
+      let promise = Promise.resolve('a');
+      let target = document.createElement('div');
+      applyTemplate(target, render(promise));
+      applyTemplate(target, html`test`);
+      await promise;
+      assert.ok(true);
+    });
+
+    it('cancels a rejection when updated with a new value', async () => {
+      let promise = Promise.reject(new Error('test'));
+      let target = document.createElement('div');
+      applyTemplate(target, render(promise));
+      let elem = target.firstElementChild;
+      applyTemplate(target, render('b'));
+      assert.equal(elem.getAttribute('x'), 'b');
+      await promise.catch(() => {});
+      assert.equal(elem.getAttribute('x'), 'b');
+    });
+
+    it('does not cancel when updated with the same value', async () => {
+      let promise = Promise.resolve('a');
+      let target = document.createElement('div');
+      applyTemplate(target, render(promise));
+      applyTemplate(target, render(promise));
+      let elem = target.firstElementChild;
+      await promise;
+      assert.equal(elem.getAttribute('x'), 'a');
+    });
+
+    it('handles errors', async () => {
+      let promise = Promise.reject(new Error('test'));
+      let target = document.createElement('div');
+      applyTemplate(target, render(promise));
+      let elem = target.firstElementChild;
+      await new Promise(resolve => setTimeout(resolve));
+      assert.equal(errors.length, 1);
+      applyTemplate(target, render('a'));
+      assert.equal(elem.getAttribute('x'), 'a');
+    });
+  });
+
+  describe('Async iterators', () => {
+    it('updates values', async () => {
+      let target = document.createElement('div');
+      let buffer = new AsyncIterationBuffer();
+      applyTemplate(target, render(buffer));
+      let elem = target.firstElementChild;
+      assert.equal(elem.getAttribute('x'), undefined);
+      await buffer.next('a');
+      assert.equal(elem.getAttribute('x'), 'a');
+      await buffer.next('b');
+      assert.equal(elem.getAttribute('x'), 'b');
+      await buffer.return();
       assert.equal(elem.getAttribute('x'), 'b');
       applyTemplate(target, render('c'));
       assert.equal(elem.getAttribute('x'), 'c');
     });
 
-    it('cancels when updated with a new value', () => {
-      let stream = createPushStream();
+    it('cancels when updated with a new value', async () => {
+      let cancelled = false;
       let target = document.createElement('div');
-      applyTemplate(target, render(stream));
-      assert.equal(stream.observers.size, 1);
+      let buffer = new AsyncIterationBuffer({
+        cancel() { cancelled = true; },
+      });
+      applyTemplate(target, render(buffer));
       let elem = target.firstElementChild;
-      assert.equal(elem.getAttribute('x'), undefined);
+      await buffer.next('a');
+      applyTemplate(target, render('b'));
+      assert.equal(cancelled, true);
+      assert.equal(elem.getAttribute('x'), 'b');
+    });
+
+    it('cancels when a new template is applied', () => {
+      let target = document.createElement('div');
+      let cancelled = false;
+      let buffer = new AsyncIterationBuffer({
+        cancel() { cancelled = true; },
+      });
+      applyTemplate(target, render(buffer));
+      applyTemplate(target, html`test`);
+      assert.equal(cancelled, true);
+    });
+
+    it('cancels a rejection when updated with a new value', async () => {
+      let target = document.createElement('div');
+      let buffer = new AsyncIterationBuffer();
+      applyTemplate(target, render(buffer));
+      let elem = target.firstElementChild;
+      await buffer.throw(new Error('test'));
+      applyTemplate(target, render('b'));
+      assert.equal(elem.getAttribute('x'), 'b');
+    });
+
+    it('handles iterators with no return method', async () => {
+      let target = document.createElement('div');
+      let buffer = new AsyncIterationBuffer();
+      let iter = buffer[symbols.asyncIterator]();
+      iter.return = undefined;
+      applyTemplate(target, render(buffer));
+      let elem = target.firstElementChild;
+      await buffer.next('a');
+      applyTemplate(target, render('b'));
       applyTemplate(target, render('a'));
-      assert.equal(stream.observers.size, 0);
-      assert.equal(elem.getAttribute('x'), 'a');
-      stream.next('b');
       assert.equal(elem.getAttribute('x'), 'a');
     });
 
-    it('cancels when a new template is applied', () => {
-      let stream = createPushStream();
+    it('does not cancel when updated with the same value', async () => {
       let target = document.createElement('div');
-      applyTemplate(target, render(stream));
-      assert.equal(stream.observers.size, 1);
-      applyTemplate(target, html`test`);
-    });
-
-    it('does not cancel when updated with same value', () => {
-      let stream = createPushStream();
-      let target = document.createElement('div');
-      applyTemplate(target, render(stream));
-      applyTemplate(target, render(stream));
+      let buffer = new AsyncIterationBuffer();
+      applyTemplate(target, render(buffer));
+      applyTemplate(target, render(buffer));
       let elem = target.firstElementChild;
-      assert.equal(elem.getAttribute('x'), undefined);
-      stream.next('a');
+      await buffer.next('a');
       assert.equal(elem.getAttribute('x'), 'a');
     });
 
-    it('handles errors', () => {
-      let stream = createPushStream();
+    it('handles errors', async () => {
       let target = document.createElement('div');
-      applyTemplate(target, render(stream));
+      let buffer = new AsyncIterationBuffer();
+      applyTemplate(target, render(buffer));
       let elem = target.firstElementChild;
-      stream.error(new Error('test'));
-      return new Promise(setTimeout).then(() => {
-        assert.equal(errors.length, 1);
-        applyTemplate(target, render('a'));
-        assert.equal(elem.getAttribute('x'), 'a');
-      });
-    });
-  });
-
-  describe('Promises', () => {
-    it('updates values', () => {
-      let promise = Promise.resolve('a');
-      let target = document.createElement('div');
-      applyTemplate(target, render(promise));
-      let elem = target.firstElementChild;
-      assert.equal(elem.getAttribute('x'), undefined);
-      return promise.then(() => {
-        assert.equal(elem.getAttribute('x'), 'a');
-        applyTemplate(target, render('b'));
-        assert.equal(elem.getAttribute('x'), 'b');
-      });
-    });
-
-    it('cancels when updated with a new value', () => {
-      let promise = Promise.resolve('a');
-      let target = document.createElement('div');
-      applyTemplate(target, render(promise));
-      let elem = target.firstElementChild;
-      assert.equal(elem.getAttribute('x'), undefined);
-      applyTemplate(target, render('b'));
-      assert.equal(elem.getAttribute('x'), 'b');
-      return promise.then(() => {
-        assert.equal(elem.getAttribute('x'), 'b');
-      });
-    });
-
-    it('cancels when a new template is applied', () => {
-      let promise = Promise.resolve('a');
-      let target = document.createElement('div');
-      applyTemplate(target, render(promise));
-      applyTemplate(target, html`test`);
-      return promise.then(() => {
-        assert.ok(true);
-      });
-    });
-
-    it('cancels a rejection when updated with a new value', () => {
-      let promise = Promise.reject(new Error('test'));
-      let target = document.createElement('div');
-      applyTemplate(target, render(promise));
-      let elem = target.firstElementChild;
-      applyTemplate(target, render('b'));
-      assert.equal(elem.getAttribute('x'), 'b');
-      return promise.catch(() => {
-        assert.equal(elem.getAttribute('x'), 'b');
-      });
-    });
-
-    it('does not cancel when updated with the same value', () => {
-      let promise = Promise.resolve('a');
-      let target = document.createElement('div');
-      applyTemplate(target, render(promise));
-      applyTemplate(target, render(promise));
-      let elem = target.firstElementChild;
-      return promise.then(() => {
-        assert.equal(elem.getAttribute('x'), 'a');
-      });
-    });
-
-    it('handles errors', () => {
-      let promise = Promise.reject(new Error('test'));
-      let target = document.createElement('div');
-      applyTemplate(target, render(promise));
-      let elem = target.firstElementChild;
-      return new Promise(resolve => setTimeout(resolve)).then(() => {
-        assert.equal(errors.length, 1);
-        applyTemplate(target, render('a'));
-        assert.equal(elem.getAttribute('x'), 'a');
-      });
-    });
-  });
-
-  describe('Async iterators', () => {
-    it('updates values', () => {
-      let target = document.createElement('div');
-      let iterator = createAsyncIterator();
-      applyTemplate(target, render(iterator));
-      let elem = target.firstElementChild;
-      assert.equal(elem.getAttribute('x'), undefined);
-      iterator.yield({ value: 'a' });
-      return Promise.resolve().then(() => {
-        assert.equal(elem.getAttribute('x'), 'a');
-        iterator.yield({ value: 'b' });
-      }).then(() => {
-        assert.equal(elem.getAttribute('x'), 'b');
-        iterator.yield({ done: true });
-      }).then(() => {
-        assert.equal(elem.getAttribute('x'), 'b');
-        applyTemplate(target, render('c'));
-        assert.equal(elem.getAttribute('x'), 'c');
-      });
-    });
-
-    it('cancels when updated with a new value', () => {
-      let target = document.createElement('div');
-      let iterator = createAsyncIterator();
-      applyTemplate(target, render(iterator));
-      let elem = target.firstElementChild;
-      iterator.yield({ value: 'a' });
-      applyTemplate(target, render('b'));
-      assert.equal(iterator.returnCalled, true);
-      return Promise.resolve(() => {
-        assert.equal(elem.getAttribute('x'), 'b');
-      });
-    });
-
-    it('cancels when a new template is applied', () => {
-      let target = document.createElement('div');
-      let iterator = createAsyncIterator();
-      applyTemplate(target, render(iterator));
-      applyTemplate(target, html`test`);
-      assert.equal(iterator.returnCalled, true);
-    });
-
-    it('cancels a rejection when updated with a new value', () => {
-      let target = document.createElement('div');
-      let iterator = createAsyncIterator();
-      applyTemplate(target, render(iterator));
-      let elem = target.firstElementChild;
-      iterator.yield(new Error('test'));
-      applyTemplate(target, render('b'));
-      return Promise.resolve(() => {
-        assert.equal(elem.getAttribute('x'), 'b');
-      });
-    });
-
-    it('handles iterators with no return method', () => {
-      let target = document.createElement('div');
-      let iterator = createAsyncIterator();
-      iterator.return = undefined;
-      applyTemplate(target, render(iterator));
-      let elem = target.firstElementChild;
-      iterator.yield({ value: 'a' });
-      applyTemplate(target, render('b'));
-      assert.equal(iterator.returnCalled, false);
-      return Promise.resolve(() => {
-        applyTemplate(target, render('a'));
-        assert.equal(elem.getAttribute('x'), 'a');
-      });
-    });
-
-    it('does not cancel when updated with the same value', () => {
-      let target = document.createElement('div');
-      let iterator = createAsyncIterator();
-      applyTemplate(target, render(iterator));
-      applyTemplate(target, render(iterator));
-      let elem = target.firstElementChild;
-      iterator.yield({ value: 'a' });
-      return Promise.resolve(() => {
-        assert.equal(elem.getAttribute('x'), 'a');
-      });
-    });
-
-    it('handles errors', () => {
-      let target = document.createElement('div');
-      let iterator = createAsyncIterator();
-      applyTemplate(target, render(iterator));
-      let elem = target.firstElementChild;
-      iterator.yield(new Error('test'));
-      return new Promise(resolve => setTimeout(resolve)).then(() => {
-        assert.equal(errors.length, 1);
-        applyTemplate(target, render('a'));
-        assert.equal(elem.getAttribute('x'), 'a');
-      });
+      buffer.throw(new Error('test'));
+      await new Promise(resolve => setTimeout(resolve));
+      assert.equal(errors.length, 1);
+      applyTemplate(target, render('a'));
+      assert.equal(elem.getAttribute('x'), 'a');
     });
   });
 });

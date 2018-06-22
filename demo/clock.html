@@ -2,20 +2,17 @@
 <script src='../dist/straylight.js'></script>
 <script type='module'>
 
-import { Observable } from 'https://cdn.jsdelivr.net/npm/zen-observable/src/Observable.js';
+import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/default.js';
+import iterop from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
 
 const { html, applyTemplate } = Straylight;
 
-const ticks = new Observable(sink => {
-  sink.next(null);
-  let interval = setInterval(() => sink.next(null), 1000);
-  return () => clearInterval(interval);
-});
+const store = new Store({ time: new Date() });
+
+setInterval(() => store.update({ time: new Date() }), 1000);
 
 applyTemplate('#mount', html`
-  <div class='clock'>
-    ${ ticks.map(() => new Date().toLocaleString()) }
-  </div>
+  <div class='clock'>${iterop(store).map(x => x.time.toLocaleString())}</div>
 `);
 
 </script>

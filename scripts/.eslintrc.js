@@ -24,7 +24,11 @@ module.exports = {
     "no-spaced-func": ["error"],
     "no-whitespace-before-property": ["error"],
     "space-before-blocks": ["error"],
-    "space-before-function-paren": ["error", "never"],
+    "space-before-function-paren": ["error", {
+      "anonymous": "never",
+      "named": "never",
+      "asyncArrow": "always"
+    }],
     "space-in-parens": ["error", "never"],
     "eol-last": ["error"],
     "quotes": ["error", "single", { "avoidEscape": true }],
@@ -39,7 +43,7 @@ module.exports = {
   },
 
   "parserOptions": {
-    "ecmaVersion": 8,
+    "ecmaVersion": 2017,
     "sourceType": "module"
   }
 };

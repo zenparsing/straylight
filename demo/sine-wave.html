@@ -25,17 +25,9 @@
   <script src='../dist/straylight.js'></script>
   <script type='module'>
 
-  import { Observable } from 'https://cdn.jsdelivr.net/npm/zen-observable/src/Observable.js';
+  import iterop from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
 
   const { html, applyTemplate } = Straylight;
-
-  const animationFrames = new Observable(sink => {
-    let req = requestAnimationFrame(function next() {
-      sink.next();
-      req = requestAnimationFrame(next);
-    });
-    return () => cancelAnimationFrame(req);
-  });
 
   const state = {
     bars: 90,
@@ -44,6 +36,13 @@
     running: true,
   };
 
+  async function* animationFrames() {
+    while (true) {
+      await new Promise(r => requestAnimationFrame(r));
+      yield null;
+    }
+  }
+
   function toggle() {
     state.running = !state.running;
   }
@@ -51,7 +50,7 @@
   applyTemplate('#mount', html`
     <div class='animated-sin-wave' this.onclick=${toggle}>
       ${
-        animationFrames.filter(() => state.running).map(() => {
+        iterop(animationFrames()).filter(() => state.running).map(() => {
           let { bars, barWidth, count } = state;
           state.count += 1;
           return Array(bars).fill(0).map((x, i) => {

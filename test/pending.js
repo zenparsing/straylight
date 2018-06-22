@@ -141,6 +141,23 @@ describe('Pending updates', () => {
       assert.equal(elem.getAttribute('x'), 'b');
     });
 
+    it('cancels when an error is thrown from update', async () => {
+      let target = document.createElement('div');
+      let cancelled = false;
+      let buffer = new AsyncIterationBuffer({
+        cancel() { cancelled = true; },
+      });
+      applyTemplate(target, render(buffer));
+      let elem = target.firstElementChild;
+      assert.equal(cancelled, false);
+      await buffer.next({
+        toString() { throw new Error('x'); },
+      });
+      assert.equal(cancelled, true);
+      applyTemplate(target, render('b'));
+      assert.equal(elem.getAttribute('x'), 'b');
+    });
+
     it('handles iterators with no return method', async () => {
       let target = document.createElement('div');
       let buffer = new AsyncIterationBuffer();

@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { Document } from '../src/extras/vdom.js';
-import { AsyncIterationBuffer } from './async.js';
+import AsyncIterationBuffer from 'async-iteration-buffer';
 
 describe('Attribute part updaters', () => {
   let document = new Document();

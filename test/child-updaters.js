@@ -1,7 +1,11 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { Document } from '../src/extras/vdom.js';
-import { asyncList, AsyncIterationBuffer, afterTasks } from './async.js';
+import AsyncIterationBuffer from 'async-iteration-buffer';
+
+function afterTasks() {
+  return new Promise(r => setTimeout(r));
+}
 
 describe('Child updaters', () => {
   let document = new Document();
@@ -70,21 +74,21 @@ describe('Child updaters', () => {
   describe('Multiple updates', () => {
     it('updates a template with multiple children to text', () => {
       return assertResult(
-        asyncList(html`<span>a</span><span>b</span>`, ''),
+        AsyncIterationBuffer.of(html`<span>a</span><span>b</span>`, ''),
         []
       );
     });
 
     it('updates from text to null', () => {
       return assertResult(
-        asyncList('a', null),
+        AsyncIterationBuffer.of('a', null),
         [],
       );
     });
 
     it('updates from vector to scalar', () => {
       return assertResult(
-        asyncList(
+        AsyncIterationBuffer.of(
           ['a', html`<span>x</span>`, 'b'],
           'c'
         ), ['c']
@@ -93,42 +97,42 @@ describe('Child updaters', () => {
 
     it('updates from empty vector to scalar', () => {
       return assertResult(
-        asyncList([], 'text'),
+        AsyncIterationBuffer.of([], 'text'),
         ['text']
       );
     });
 
     it('updates from a larger array to a smaller array', () => {
       return assertResult(
-        asyncList(['a', 'b', 'c'], ['d', 'e']),
+        AsyncIterationBuffer.of(['a', 'b', 'c'], ['d', 'e']),
         ['d', 'e']
       );
     });
 
     it('updates from a larger array to a smaller array twice', () => {
       return assertResult(
-        asyncList(['a', 'b', 'c'], ['d', 'e'], ['e', 'd']),
+        AsyncIterationBuffer.of(['a', 'b', 'c'], ['d', 'e'], ['e', 'd']),
         ['e', 'd']
       );
     });
 
     it('updates from a smaller array to a larger array', () => {
       return assertResult(
-        asyncList(['a', 'b'], ['c', 'd', 'e']),
+        AsyncIterationBuffer.of(['a', 'b'], ['c', 'd', 'e']),
         ['c', 'd', 'e']
       );
     });
 
     it('inserts slots at front of array', () => {
       return assertResult(
-        asyncList(['a'], [html`b`, 'a']),
+        AsyncIterationBuffer.of(['a'], [html`b`, 'a']),
         ['b', 'a']
       );
     });
 
     it('updates from scalar to vector', () => {
       return assertResult(
-        asyncList(
+        AsyncIterationBuffer.of(
           'a',
           ['b', html`<span>x</span>`, 'c']
         ), [
@@ -145,14 +149,14 @@ describe('Child updaters', () => {
 
     it('updates from empty template to text', () => {
       return assertResult(
-        asyncList(html``, 'text'),
+        AsyncIterationBuffer.of(html``, 'text'),
         ['text'],
       );
     });
 
     it('updates from template with dynamic first child to text', () => {
       return assertResult(
-        asyncList(html`${'a'}${'b'}`, 'text'),
+        AsyncIterationBuffer.of(html`${'a'}${'b'}`, 'text'),
         ['text'],
       );
     });
@@ -173,7 +177,7 @@ describe('Child updaters', () => {
       let a = html`first`;
       let b = html`second`;
       return assertResult(
-        asyncList([a, b], [b, a]),
+        AsyncIterationBuffer.of([a, b], [b, a]),
         ['second', 'first']
       );
     });
@@ -183,7 +187,7 @@ describe('Child updaters', () => {
       let b = html`second`;
       let c = html`third`;
       return assertResult(
-        asyncList([a, b, c], [c, b, a]),
+        AsyncIterationBuffer.of([a, b, c], [c, b, a]),
         ['third', 'second', 'first']
       );
     });
@@ -192,7 +196,7 @@ describe('Child updaters', () => {
       let a = html`<div>a</div><div>b</div>`;
       let b = html`<div>c</div><div>d</div>`;
       return assertResult(
-        asyncList([a, b], [b, a]),
+        AsyncIterationBuffer.of([a, b], [b, a]),
         [
           { nodeName: 'div', attributes: {}, childNodes: ['c'] },
           { nodeName: 'div', attributes: {}, childNodes: ['d'] },

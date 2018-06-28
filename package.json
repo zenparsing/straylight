@@ -12,7 +12,7 @@
     "htmltag": "^0.4.4"
   },
   "devDependencies": {
-    "async-iteration-buffer": "^0.1.0",
+    "async-iteration-buffer": "^0.1.2",
     "babel-cli": "^6.26.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-es2015": "^6.24.1",
@@ -29,6 +29,7 @@
   "scripts": {
     "test": "node scripts/test.js",
     "build": "node scripts/build.js",
+    "perf": "node scripts/perf.js",
     "test-only": "node scripts/test-only.js",
     "coverage-report": "node scripts/coverage-report.js",
     "prepublishOnly": "node ./scripts/build.js"

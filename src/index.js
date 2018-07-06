@@ -4,7 +4,7 @@ import * as dom from './dom.js';
 
 const slotMap = new WeakMap();
 
-export { html };
+export { html, createSlot, removeSlot };
 
 export function applyTemplate(target, template) {
   if (typeof target === 'string' && typeof document === 'object') {

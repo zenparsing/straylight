@@ -1,6 +1,5 @@
 import * as dom from '../dom.js';
 import { createSlot, removeSlot } from '../slots.js';
-import { symbols } from '../symbols.js';
 import { convertToMap } from '../shim.js';
 
 class MapSlotList {
@@ -53,7 +52,7 @@ export class MapSlot {
   }
 
   matches(value) {
-    return value && value[symbols.slotConstructor] === this.constructor;
+    return value && value.slotConstructor === this.constructor;
   }
 
   update(value) {
@@ -100,7 +99,7 @@ export class MapSlot {
   static value(map) {
     return {
       map: convertToMap(map),
-      [symbols.slotConstructor]: this,
+      slotConstructor: this,
     };
   }
 }

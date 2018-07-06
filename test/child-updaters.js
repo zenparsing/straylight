@@ -1,6 +1,5 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
-import { symbols } from '../src/symbols.js';
 import { Document } from '../src/extras/vdom.js';
 import { asyncList, AsyncIterationBuffer, afterTasks } from './async.js';
 
@@ -260,7 +259,7 @@ describe('Child updaters', () => {
   });
 
   describe('Custom slot types', () => {
-    it('creates a slot using symbols.slotConstructor', () => {
+    it('creates a slot using value.slotConstructor', () => {
       class CustomSlot {
         constructor(parent, next, wrapped) {
           this.start = document.createTextNode('start');
@@ -275,7 +274,7 @@ describe('Child updaters', () => {
         }
 
         match(value) {
-          return value && value[symbols.slotConstructor] === this.constructor;
+          return value && value.slotConstructor === this.constructor;
         }
 
         update(wrapped) {
@@ -283,7 +282,7 @@ describe('Child updaters', () => {
         }
 
         static value(value) {
-          return { value, [symbols.slotConstructor]: this };
+          return { value, slotConstructor: this };
         }
       }
 

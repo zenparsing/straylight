@@ -26,8 +26,8 @@ function getSlotConstructor(value) {
     return TextSlot;
   }
 
-  if (value[symbols.slotConstructor]) {
-    return value[symbols.slotConstructor];
+  if (typeof value.slotConstructor === 'function') {
+    return value.slotConstructor;
   }
 
   if (isIterable(value)) {

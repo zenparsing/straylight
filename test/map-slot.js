@@ -1,6 +1,5 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
-import { symbols } from '../src/symbols.js';
 import { withKeys } from '../src/extras';
 import { Document } from '../src/extras/vdom.js';
 import { MapSlot } from '../src/extras/map-slot.js';
@@ -139,7 +138,7 @@ describe('MapSlot', () => {
 
   it('exposes withKeys helper', () => {
     let value = withKeys([['a', 'test-1']]);
-    assert.equal(value[symbols.slotConstructor], MapSlot);
+    assert.equal(value.slotConstructor, MapSlot);
   });
 
 });

@@ -1,11 +1,11 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
-import { Document } from '../src/extras/vdom.js';
+import { createDocument } from '../src/extras/vdom.js';
 
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
 describe('Render', () => {
-  let document = new Document();
+  let document = createDocument();
 
   it('throws if tagname is a template value', () => {
     assert.throws(() => {

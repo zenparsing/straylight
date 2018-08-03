@@ -1,9 +1,9 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
-import { Document } from '../src/extras/vdom.js';
+import { createDocument } from '../src/extras/vdom.js';
 
 describe('Attribute updaters', () => {
-  let document = new Document();
+  let document = createDocument();
   let render = val => html`<div x=${val} />`;
 
   function assertResult(template, expected) {

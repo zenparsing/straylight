@@ -1,9 +1,9 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
-import { Document } from '../src/extras/vdom.js';
+import { createDocument } from '../src/extras/vdom.js';
 
 describe('Attribute map updaters', () => {
-  let document = new Document();
+  let document = createDocument();
 
   function assertResult(template, expected) {
     let target = document.createElement('div');

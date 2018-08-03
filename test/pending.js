@@ -1,11 +1,11 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { symbols } from '../src/symbols.js';
-import { Document } from '../src/extras/vdom.js';
+import { createDocument } from '../src/extras/vdom.js';
 import AsyncIterationBuffer from 'async-iteration-buffer';
 
 describe('Pending updates', () => {
-  let document = new Document();
+  let document = createDocument();
   let errors = [];
   let pushError = err => errors.push(err);
   let render = val => html`<div x=${val} />`;

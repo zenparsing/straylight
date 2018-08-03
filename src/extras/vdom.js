@@ -19,9 +19,13 @@ function esc(s) {
   return /[&<>"'`]/.test(s) ? s.replace(/[&<>"'`]/g, m => htmlEscapes[m]) : s;
 }
 
-export class Document {
+export function createDocument() {
+  return new Document();
+}
+
+class Document {
   createTextNode(text) {
-    return new Text(this, text);
+    return new TextNode(this, text);
   }
 
   createElement(tag) {
@@ -65,7 +69,7 @@ class Node {
   }
 }
 
-class Text extends Node {
+class TextNode extends Node {
   constructor(doc, text) {
     super(doc, 3, '#text');
     this.nodeValue = text;

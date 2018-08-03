@@ -1,12 +1,12 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src';
 import { withKeys } from '../src/extras';
-import { Document } from '../src/extras/vdom.js';
+import { createDocument } from '../src/extras/vdom.js';
 import { MapSlot } from '../src/extras/map-slot.js';
 import AsyncIterationBuffer from 'async-iteration-buffer';
 
 describe('MapSlot', () => {
-  let document = new Document();
+  let document = createDocument();
 
   function render(content) {
     return html`${content}`;

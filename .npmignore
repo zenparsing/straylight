@@ -3,3 +3,7 @@
 .vscode
 coverage/
 node_modules/
+docs/
+demo/
+test/
+scripts/

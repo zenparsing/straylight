@@ -22,12 +22,10 @@
 </head>
 <body>
   <div id='mount'></div>
-  <script src='../dist/straylight.js'></script>
   <script type='module'>
 
+  import { html, applyTemplate } from '../dist/straylight.js';
   import iterop from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
-
-  const { html, applyTemplate } = Straylight;
 
   const state = {
     bars: 90,

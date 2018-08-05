@@ -1,5 +1,6 @@
+import { html, applyTemplate } from '../dist/straylight.js';
+
 window.onload = () => {
-  const { html, applyTemplate } = Straylight;
   function render() {
     return html`
       <script>

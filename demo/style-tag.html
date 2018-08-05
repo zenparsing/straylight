@@ -1,9 +1,9 @@
 <div id='mount'></div>
-<script src='../dist/straylight.js'></script>
-<script>
+<script type='module'>
+
+import { html, applyTemplate } from '../dist/straylight.js';
 
 window.onload = () => {
-  const { html, applyTemplate } = Straylight;
   let count = 1;
   function render() {
     let hue = count++ % 360;

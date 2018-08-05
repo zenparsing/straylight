@@ -1,11 +1,9 @@
 <div id='mount'></div>
-<script src='../dist/straylight.js'></script>
 <script type='module'>
 
+import { html, applyTemplate } from '../dist/straylight.js';
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/default.js';
 import iterop from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
-
-const { html, applyTemplate } = Straylight;
 
 const store = new Store({ time: new Date() });
 

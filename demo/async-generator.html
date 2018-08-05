@@ -1,8 +1,7 @@
 <div id='mount'></div>
-<script src='../dist/straylight.js'></script>
-<script>
+<script type='module'>
 
-const { html, applyTemplate } = Straylight;
+import { html, applyTemplate } from '../dist/straylight.js';
 
 async function* generateTime() {
   while (true) {

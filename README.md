@@ -52,7 +52,11 @@ import { html, applyTemplate } from 'straylight';
 Or download from a CDN:
 
 ```html
-<script src='https://unpkg.com/straylight/dist/straylight.min.js'></script>
+<script type='module'>
+
+import { html, applyTemplate } from 'https://unpkg.com/straylight/dist/straylight.js';
+
+</script>
 ```
 
 ## Guide
@@ -65,11 +69,11 @@ Straylight's `html` function is a template literal tag. You can create a templat
 
 ```html
 <div id='mount'></div>
-<script src='https://unpkg.com/straylight/dist/straylight.min.js'></script>
-<script>
+<script type='module'>
+
+import { html, applyTemplate } from 'https://unpkg.com/straylight/dist/straylight.js';
 
 window.onload = () => {
-  const { html, applyTemplate } = Straylight;
   const world = 'Earth';
 
   applyTemplate('#mount', html`
@@ -91,12 +95,11 @@ In the example below, we render a clock and then update the clock's display ever
 
 ```html
 <div id='clock'></div>
-<script src='https://unpkg.com/straylight/dist/straylight.min.js'></script>
-<script>
+<script type='module'>
+
+import { html, applyTemplate } from 'https://unpkg.com/straylight/dist/straylight.js';
 
 window.onload = () => {
-  const { html, applyTemplate } = Straylight;
-
   function renderTime() {
     return html`
       <span>${new Date().toLocaleString()}</span>

@@ -1,0 +1,4 @@
+{
+  "main": "../lib/extras/index.js",
+  "module": "../src/extras/index.js"
+}

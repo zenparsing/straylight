@@ -1,3 +1,3 @@
 const $ = require('./exec.js');
 
-$('mocha --require babel-core/register');
+$('mocha --require annotated/register');

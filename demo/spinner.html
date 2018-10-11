@@ -1,0 +1,34 @@
+<div id='mount'></div>
+<script type='module'>
+
+import { html, applyTemplate } from '../dist/straylight.js';
+import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/default.js';
+import iter from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
+
+const store = new Store({ time: new Date() });
+
+function loadData() {
+  return new Promise(resolve => {
+    setTimeout(resolve, 1000);
+  }).then(() => {
+    return html`
+      <ul>
+      ${
+        ['Sun', 'Moon', 'Stars'].map(n => html`
+          <li>${ n }</li>
+        `)
+      }
+      </ul>
+    `;
+  });
+}
+
+setInterval(() => store.update({ time: new Date() }), 1000);
+
+applyTemplate('#mount', html`
+  <div>
+    ${iter.async(['Loading...', loadData()])}
+  </div>
+`);
+
+</script>

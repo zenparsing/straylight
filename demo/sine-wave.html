@@ -25,7 +25,7 @@
   <script type='module'>
 
   import { html, applyTemplate } from '../dist/straylight.js';
-  import iterop from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
+  import iter from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
 
   const state = {
     bars: 90,
@@ -48,7 +48,7 @@
   applyTemplate('#mount', html`
     <div class='animated-sin-wave' this.onclick=${toggle}>
       ${
-        iterop(animationFrames()).filter(() => state.running).map(() => {
+        iter(animationFrames()).filter(() => state.running).map(() => {
           let { bars, barWidth, count } = state;
           state.count += 1;
           return Array(bars).fill(0).map((x, i) => {

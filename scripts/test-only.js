@@ -1,3 +1,3 @@
 const $ = require('./exec.js');
 
-$('mocha --require annotated/register');
+$('mocha --require @zenparsing/skert/loader');

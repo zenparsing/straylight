@@ -12,7 +12,7 @@
     "htmltag": "^0.4.4"
   },
   "devDependencies": {
-    "annotated": "^0.3.9",
+    "@zenparsing/skert": "0.0.6",
     "async-iteration-buffer": "^0.1.2",
     "eslint": "^4.19.1",
     "express": "^4.16.3",

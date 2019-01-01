@@ -9,10 +9,10 @@
   },
   "homepage": "https://github.com/zenparsing/straylight",
   "dependencies": {
+    "@zenparsing/skert": "0.0.7",
     "htmltag": "^0.4.4"
   },
   "devDependencies": {
-    "@zenparsing/skert": "0.0.6",
     "async-iteration-buffer": "^0.1.2",
     "eslint": "^4.19.1",
     "express": "^4.16.3",

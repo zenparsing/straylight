@@ -3,7 +3,7 @@ const $ = require('./exec.js');
 $('git clean -dfX ./lib ./dist');
 
 console.log('\nCompiling...\n');
-$('skertc src -o lib --transform-modules');
+$('skertc src -o lib --cjs');
 
 console.log('Bundling...');
 $('rollup -c scripts/rollup.config.js');

@@ -19,6 +19,12 @@ describe('Attribute map updaters', () => {
     });
   });
 
+  it('joins array values with spaces', () => {
+    assertResult(html`<div ${{ x: ['a', 'b'] }} />`, {
+      x: 'a b',
+    });
+  });
+
   it('throws if the value is a function', () => {
     assert.throws(() => {
       function f() {}

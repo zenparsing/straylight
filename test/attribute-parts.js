@@ -19,6 +19,19 @@ describe('Attribute part updaters', () => {
     });
   });
 
+  it('joins array values with spaces', () => {
+    assertResult(html`<div x='a ${['b', 'c']} d' />`, {
+      x: 'a b c d',
+    });
+  });
+
+  it('joins iterable values with spaces', () => {
+    function* g() { yield 'b'; yield 'c'; }
+    assertResult(html`<div x='a ${g()} d' />`, {
+      x: 'a b c d',
+    });
+  });
+
   it('does not update until pending values are available', async () => {
     let buffer = new AsyncIterationBuffer();
     let target = document.createElement('div');

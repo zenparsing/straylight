@@ -1,6 +1,6 @@
 {
   "name": "straylight",
-  "version": "0.3.11",
+  "version": "0.3.12",
   "description": "HTML templating and update engine",
   "license": "MIT",
   "repository": {

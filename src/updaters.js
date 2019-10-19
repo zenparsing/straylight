@@ -1,5 +1,19 @@
 import { createSlot, removeSlot } from './slots.js';
+import { symbols } from './symbols.js';
 import * as dom from './dom.js';
+
+function toAttributeValue(value) {
+  if (typeof value === 'object' && value) {
+    if (Array.isArray(value)) {
+      return value.join(' ');
+    }
+    if (value[symbols.iterator]) {
+      return Array.from(value).join(' ');
+    }
+    throw new TypeError('Invalid attribute value');
+  }
+  return value;
+}
 
 export class CommentUpdater {
   update() {
@@ -15,9 +29,10 @@ export class AttributeUpdater {
   }
 
   update(value) {
-    if (value !== this.last) {
-      this.last = value;
-      dom.setAttr(this.node, this.name, value);
+    let attrValue = toAttributeValue(value);
+    if (attrValue !== this.last) {
+      this.last = attrValue;
+      dom.setAttr(this.node, this.name, attrValue);
     }
   }
 }
@@ -45,7 +60,7 @@ export class AttributePartUpdater {
   }
 
   update(value) {
-    this.parts[this.pos] = value;
+    this.parts[this.pos] = toAttributeValue(value);
     if (this.isReady()) {
       dom.setAttr(this.node, this.name, this.parts.join(''));
     }
@@ -63,7 +78,7 @@ export class AttributeMapUpdater {
       throw new TypeError('Expected an attribute map object');
     }
     for (let key in map) {
-      dom.setAttr(this.node, key, map[key]);
+      dom.setAttr(this.node, key, toAttributeValue(map[key]));
     }
   }
 }

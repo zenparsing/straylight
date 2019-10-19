@@ -52,4 +52,13 @@ describe('Attribute updaters', () => {
     assertResult(render(true), { x: 'x' });
   });
 
+  it('joins array values with spaces', () => {
+    assertResult(render(['a', 'b']), { x: 'a b' });
+  });
+
+  it('joins iterable values with spaces', () => {
+    function* g() { yield 'a'; yield 'b'; }
+    assertResult(render(g()), { x: 'a b' });
+  });
+
 });

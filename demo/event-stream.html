@@ -1,0 +1,33 @@
+<div id='mount'></div>
+<script type='module'>
+
+import { html, applyTemplate } from '../dist/straylight.js';
+
+let timeStream = {
+  listen(observer) {
+    function tick() {
+      observer.next(new Date().toLocaleString());
+    }
+    setTimeout(tick, 0);
+    setInterval(tick, 1000);
+  },
+};
+
+let pointerStream = {
+  listen(observer) {
+    document.body.addEventListener('mousemove', event => {
+      observer.next(`<${event.x}:${event.y}>`);
+    });
+  },
+};
+
+applyTemplate('#mount', html`
+  <div class='clock'>
+    ${timeStream}
+  </div>
+  <div class='position'>
+    Mouse Position: ${pointerStream}
+  </div>
+`);
+
+</script>

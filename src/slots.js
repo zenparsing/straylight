@@ -186,6 +186,8 @@ class TemplateSlot {
         this.awaitPromise(value, i);
       } else if (value && value[symbols.asyncIterator]) {
         this.awaitAsyncIterator(value, i);
+      } else if (value && typeof value.listen === 'function') {
+        this.awaitEventStream(value, i);
       } else {
         this.cancelPending(i);
         this.updaters[i].update(value);
@@ -234,6 +236,19 @@ class TemplateSlot {
     });
 
     this.setPending(pending, i);
+  }
+
+  awaitEventStream(value, i) {
+    if (this.pendingSource(i) === value) {
+      return;
+    }
+
+    let cancel = value.listen({
+      next: (val) => { this.updaters[i].update(val); },
+      return: () => { this.pending[i] = null; },
+    });
+
+    this.setPending({ source: value, cancel }, i);
   }
 
   awaitAsyncIterator(value, i) {

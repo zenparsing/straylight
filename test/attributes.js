@@ -24,12 +24,6 @@ describe('Attribute updaters', () => {
     assert.equal(target.firstElementChild.getAttribute('x'), 'a');
   });
 
-  it('sets properties when name starts with this-dot', () => {
-    let target = document.createElement('div');
-    applyTemplate(target, html`<div this.testName=${'value'} />`);
-    assert.equal(target.firstElementChild.testName, 'value');
-  });
-
   it('removes attributes whose value is undefined', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));

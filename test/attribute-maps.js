@@ -25,10 +25,21 @@ describe('Attribute map updaters', () => {
     });
   });
 
-  it('throws if the value is a function', () => {
+  it('ignores null and undefined', () => {
+    assertResult(html`<div ${null} />`, {});
+    assertResult(html`<div ${undefined} />`, {});
+  });
+
+  it('throws if the value is a non-object', () => {
     assert.throws(() => {
-      function f() {}
-      applyTemplate(document.createElement('div'), html`<div ${f} />`);
+      applyTemplate(document.createElement('div'), html`<div ${0} />`);
+    });
+  });
+
+  it('executes functions', () => {
+    assertResult(html`<div ${() => ({ x: 1, y: 2 })} />`, {
+      x: '1',
+      y: '2',
     });
   });
 

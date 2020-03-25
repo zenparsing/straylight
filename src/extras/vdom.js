@@ -160,10 +160,17 @@ class ParentNode extends Node {
   }
 }
 
+class ShadowRoot extends ParentNode {
+  constructor(doc) {
+    super(doc, 11, '#shadow-root');
+  }
+}
+
 class Element extends ParentNode {
   constructor(doc, tag) {
     super(doc, 1, tag);
     this._attributes = new Map();
+    this._shadowRoot = null;
   }
 
   getAttribute(name) {
@@ -182,9 +189,20 @@ class Element extends ParentNode {
     this._attributes.delete(String(name));
   }
 
+  attachShadow() {
+    if (this._shadowRoot) {
+      throw new Error('Shadow root already attached');
+    }
+    this._shadowRoot = new ShadowRoot(this.ownerDocument);
+    return this._shadowRoot;
+  }
+
   toDataObject() {
     let data = super.toDataObject();
     data.attributes = {};
+    if (this._shadowRoot) {
+      data.shadowRoot = this._shadowRoot;
+    }
     this._attributes.forEach((value, key) => data.attributes[key] = value);
     return data;
   }

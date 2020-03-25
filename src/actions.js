@@ -5,16 +5,15 @@ import {
   AttributeUpdater,
   AttributeMapUpdater,
   AttributePartUpdater,
-  ChildUpdater,
-} from './updaters.js';
+  ChildUpdater } from './updaters.js';
 
 class Dynamic {
   constructor(value) { this.value = value; }
 }
 
-function isDynamic(x) { return x instanceof Dynamic; }
-
-function isShadowRoot(x) { return Boolean(x.host); }
+function isDynamic(x) {
+  return x instanceof Dynamic;
+}
 
 export class Actions {
   constructor(parent, next) {
@@ -36,10 +35,9 @@ export class Actions {
     if (typeof tag !== 'string') {
       throw new TypeError('Tag name must be a string');
     }
-    if (tag === '#shadow-root') {
-      return dom.createShadowRoot(parent);
-    }
-    return dom.createElement(tag, parent);
+    return tag === '#shadow-root'
+      ? dom.createShadowRoot(parent)
+      : dom.createElement(tag, parent);
   }
 
   createComment(value) {
@@ -57,13 +55,11 @@ export class Actions {
     let next = node === this.parent ? this.next : null;
     if (isDynamic(child)) {
       this.updaters.push(new ChildUpdater(node, next));
-    } else if (child !== null) {
+    } else if (child !== null && !dom.isShadowRoot(child)) {
       if (typeof child === 'string') {
         child = dom.createText(child, node);
       }
-      if (!isShadowRoot(child)) {
-        dom.insertChild(child, node, next);
-      }
+      dom.insertChild(child, node, next);
     }
   }
 

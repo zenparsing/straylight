@@ -46,7 +46,7 @@
   }
 
   applyTemplate('#mount', html`
-    <div class='animated-sin-wave' this.onclick=${toggle}>
+    <div class='animated-sin-wave' ${node => { node.onclick = toggle; }}>
       ${
         iter(animationFrames()).filter(() => state.running).map(() => {
           let { bars, barWidth, count } = state;

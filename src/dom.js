@@ -8,11 +8,11 @@ export function isElement(x) {
   return x && x.nodeType === 1;
 }
 
+export function isShadowRoot(x) {
+  return x && x.constructor.name === 'ShadowRoot';
+}
+
 export function setAttr(node, name, value) {
-  if (name.length > 5 && name.slice(0, 5) === 'this.') {
-    node[name.slice(5)] = value;
-    return;
-  }
   if (value === undefined || value === null || value === false) {
     node.removeAttribute(name);
   } else {

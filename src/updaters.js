@@ -73,9 +73,14 @@ export class AttributeMapUpdater {
   }
 
   update(map) {
-    // Support future use of functions
+    if (typeof map === 'function') {
+      map = map(this.node);
+    }
+    if (map === undefined || map === null) {
+      return;
+    }
     if (typeof map !== 'object') {
-      throw new TypeError('Expected an attribute map object');
+      throw new Error('Invalid attribute map value');
     }
     for (let key in map) {
       dom.setAttr(this.node, key, toAttributeValue(map[key]));

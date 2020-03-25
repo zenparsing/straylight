@@ -48,6 +48,10 @@ export function createElement(tag, context) {
     doc(context).createElementNS(namespace, tag);
 }
 
+export function createShadowRoot(parent) {
+  return parent.attachShadow({ mode: 'open' });
+}
+
 export function firstChild(node) {
   return node.firstChild;
 }

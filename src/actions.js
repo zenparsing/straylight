@@ -14,6 +14,8 @@ class Dynamic {
 
 function isDynamic(x) { return x instanceof Dynamic; }
 
+function isShadowRoot(x) { return Boolean(x.host); }
+
 export class Actions {
   constructor(parent, next) {
     this.parent = parent;
@@ -33,6 +35,9 @@ export class Actions {
     // Dynamic tags throw
     if (typeof tag !== 'string') {
       throw new TypeError('Tag name must be a string');
+    }
+    if (tag === '#shadow-root') {
+      return dom.createShadowRoot(parent);
     }
     return dom.createElement(tag, parent);
   }
@@ -56,7 +61,9 @@ export class Actions {
       if (typeof child === 'string') {
         child = dom.createText(child, node);
       }
-      dom.insertChild(child, node, next);
+      if (!isShadowRoot(child)) {
+        dom.insertChild(child, node, next);
+      }
     }
   }
 

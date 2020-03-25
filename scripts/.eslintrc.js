@@ -17,7 +17,13 @@ module.exports = {
     "no-throw-literal": ["error"],
     "comma-spacing": ["error", { "before": false, "after": true }],
     "comma-style": ["error", "last"],
-    "comma-dangle": ["error", "always-multiline"],
+    "comma-dangle": ["error", {
+      "arrays": "always-multiline",
+      "objects": "always-multiline",
+      "imports": "always-multiline",
+      "exports": "always-multiline",
+      "functions": "never"
+    }],
     "keyword-spacing": ["error"],
     "no-trailing-spaces": ["error"],
     "no-multi-spaces": ["error"],

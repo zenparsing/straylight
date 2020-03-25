@@ -8,7 +8,10 @@ import {
   ChildUpdater,
 } from './updaters.js';
 
-function Dynamic(value) { this.value = value; }
+class Dynamic {
+  constructor(value) { this.value = value; }
+}
+
 function isDynamic(x) { return x instanceof Dynamic; }
 
 export class Actions {

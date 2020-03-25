@@ -82,7 +82,7 @@ describe('Child updaters', () => {
     it('updates from text to null', () => {
       return assertResult(
         AsyncIterationBuffer.of('a', null),
-        [],
+        []
       );
     });
 
@@ -150,14 +150,14 @@ describe('Child updaters', () => {
     it('updates from empty template to text', () => {
       return assertResult(
         AsyncIterationBuffer.of(html``, 'text'),
-        ['text'],
+        ['text']
       );
     });
 
     it('updates from template with dynamic first child to text', () => {
       return assertResult(
         AsyncIterationBuffer.of(html`${'a'}${'b'}`, 'text'),
-        ['text'],
+        ['text']
       );
     });
 

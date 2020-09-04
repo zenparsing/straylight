@@ -25,7 +25,7 @@
   <script type='module'>
 
   import { html, applyTemplate } from '../dist/straylight.js';
-  import iter from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
+  import { EventStream } from 'https://cdn.jsdelivr.net/npm/geneviv/geneviv.js';
 
   const state = {
     bars: 90,
@@ -48,7 +48,7 @@
   applyTemplate('#mount', html`
     <div class='animated-sin-wave' ${node => { node.onclick = toggle; }}>
       ${
-        iter(animationFrames()).filter(() => state.running).map(() => {
+        EventStream.from(animationFrames()).filter(() => state.running).map(() => {
           let { bars, barWidth, count } = state;
           state.count += 1;
           return Array(bars).fill(0).map((x, i) => {

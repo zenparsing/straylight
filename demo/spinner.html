@@ -2,10 +2,6 @@
 <script type='module'>
 
 import { html, applyTemplate } from '../dist/straylight.js';
-import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/default.js';
-import iter from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
-
-const store = new Store({ time: new Date() });
 
 function loadData() {
   return new Promise(resolve => {
@@ -23,11 +19,15 @@ function loadData() {
   });
 }
 
-setInterval(() => store.update({ time: new Date() }), 1000);
+async function* asyncList(...list) {
+  for (const value of list) {
+    yield value;
+  }
+}
 
 applyTemplate('#mount', html`
   <div>
-    ${iter.async(['Loading...', loadData()])}
+    ${asyncList('Loading...', loadData())}
   </div>
 `);
 

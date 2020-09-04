@@ -2,15 +2,15 @@
 <script type='module'>
 
 import { html, applyTemplate } from '../dist/straylight.js';
-import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/default.js';
-import iterop from 'https://cdn.jsdelivr.net/npm/iterop/default.js';
+import { EventStream } from 'https://cdn.jsdelivr.net/npm/geneviv/geneviv.js';
 
-const store = new Store({ time: new Date() });
-
-setInterval(() => store.update({ time: new Date() }), 1000);
+const stream = new EventStream(observer => {
+  let interval = setInterval(() => observer.next({ time: new Date() }), 1000);
+  return () => clearInterval(interval);
+});
 
 applyTemplate('#mount', html`
-  <div class='clock'>${iterop(store).map(x => x.time.toLocaleString())}</div>
+  <div class='clock'>${stream.map(x => x.time.toLocaleString())}</div>
 `);
 
 </script>

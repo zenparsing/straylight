@@ -6,7 +6,5 @@ export default {
     file: 'dist/straylight.js',
     format: 'es',
   },
-  plugins: [
-    nodeResolve()
-  ],
+  plugins: [nodeResolve()],
 };

@@ -1,6 +1,7 @@
 .DS_Store
 .nyc_output
 .vscode
+.editorconfig
 coverage/
 node_modules/
 docs/

@@ -1,4 +1,3 @@
-import commonjs from 'rollup-plugin-commonjs';
 import nodeResolve from 'rollup-plugin-node-resolve';
 
 export default {
@@ -8,13 +7,6 @@ export default {
     format: 'es',
   },
   plugins: [
-    nodeResolve(),
-    commonjs({
-      include: /node_modules/,
-      exclude: /node_modules\/htmltag/,
-      namedExports: {
-        htmltag: ['html', 'TemplateResult']
-      },
-    }),
+    nodeResolve()
   ],
 };

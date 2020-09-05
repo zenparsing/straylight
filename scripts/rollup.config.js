@@ -11,6 +11,7 @@ export default {
     nodeResolve(),
     commonjs({
       include: /node_modules/,
+      exclude: /node_modules\/htmltag/,
       namedExports: {
         htmltag: ['html', 'TemplateResult']
       },

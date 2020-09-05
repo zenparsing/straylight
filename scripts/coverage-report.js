@@ -1,5 +1,5 @@
-const path = require('path');
-const $ = require('./exec.js');
+import * as path from 'path';
+import { $ } from './exec.js';
 
 $('nyc report --reporter=html');
 let file = path.resolve(__dirname, '../coverage/index.html');

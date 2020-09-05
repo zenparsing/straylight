@@ -1,3 +1,3 @@
-const $ = require('./exec.js');
+import { $ } from './exec.js';
 
-$('mocha --require @zenparsing/skert/loader');
+$('mocha');

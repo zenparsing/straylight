@@ -1,6 +1,6 @@
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
-module.exports = function(cmd, opts = {}) {
+export function $(cmd, opts = {}) {
   try {
     execSync(cmd, { stdio: 'inherit', env: process.env });
   } catch (err) {
@@ -8,4 +8,4 @@ module.exports = function(cmd, opts = {}) {
       process.exit(1);
     }
   }
-};
+}

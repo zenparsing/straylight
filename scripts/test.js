@@ -1,4 +1,4 @@
-const $ = require('./exec.js');
+import { $ } from './exec.js';
 
-$('eslint -c scripts/.eslintrc.js src/*.js src/**/*.js test/*.js test/**/*.js');
-$('nyc mocha --require @zenparsing/skert/loader');
+$('eslint -c scripts/.eslintrc.json src/*.js src/**/*.js test/*.js test/**/*.js');
+$('nyc mocha');

@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { html, applyTemplate } from '../src';
+import { html, applyTemplate } from '../src/index.js';
 import { createDocument } from '../src/extras/vdom.js';
 import AsyncIterationBuffer from 'async-iteration-buffer';
 

@@ -1,4 +1,4 @@
-const $ = require('./exec.js');
+import { $ } from './exec.js';
 
 $('git clean -dfX ./lib ./dist');
 

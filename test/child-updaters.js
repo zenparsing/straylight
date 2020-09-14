@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { html, applyTemplate } from '../src/index.js';
 import { createDocument } from '../src/extras/vdom.js';
-import AsyncIterationBuffer from 'async-iteration-buffer';
+import { AsyncIterationBuffer } from 'async-iteration-buffer';
 
 function afterTasks() {
   return new Promise(r => setTimeout(r));

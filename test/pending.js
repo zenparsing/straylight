@@ -2,7 +2,7 @@ import assert from 'assert';
 import { html, applyTemplate } from '../src/index.js';
 import { symbols } from '../src/symbols.js';
 import { createDocument } from '../src/extras/vdom.js';
-import AsyncIterationBuffer from 'async-iteration-buffer';
+import { AsyncIterationBuffer } from 'async-iteration-buffer';
 
 describe('Pending updates', () => {
   let document = createDocument();

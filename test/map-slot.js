@@ -3,7 +3,7 @@ import { html, applyTemplate } from '../src/index.js';
 import { withKeys } from '../src/extras/index.js';
 import { createDocument } from '../src/extras/vdom.js';
 import { MapSlot } from '../src/extras/map-slot.js';
-import AsyncIterationBuffer from 'async-iteration-buffer';
+import { AsyncIterationBuffer } from 'async-iteration-buffer';
 
 describe('MapSlot', () => {
   let document = createDocument();

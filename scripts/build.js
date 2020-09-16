@@ -1,11 +1,14 @@
 import { $ } from './exec.js';
 
-$('git clean -dfX ./lib ./dist');
+console.log('Cleaning...');
+$('git clean -qdfX ./lib ./dist');
 
 console.log('Bundling...');
-$('rollup -c scripts/rollup.config.js');
+$('rollup --silent -c scripts/rollup.config.js');
+
+console.log('Minifying...');
 $('terser dist/straylight.js -c -m -o dist/straylight.min.js');
 
-process.stdout.write('\nBundle size: ');
+process.stdout.write('Bundle size: ');
 $('gzip-size dist/straylight.min.js');
 process.stdout.write('\n');

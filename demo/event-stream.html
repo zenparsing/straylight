@@ -2,24 +2,30 @@
 <script type='module'>
 
 import { html, applyTemplate } from '../dist/straylight.js';
+import { EventStream } from 'https://cdn.jsdelivr.net/npm/geneviv/geneviv.js';
 
-let timeStream = {
-  listen(observer) {
-    function tick() {
-      observer.next(new Date().toLocaleString());
-    }
-    setTimeout(tick, 0);
-    setInterval(tick, 1000);
-  },
-};
+let timeStream = new EventStream(observer => {
+  function tick() {
+    observer.next(new Date().toLocaleString());
+  }
 
-let pointerStream = {
-  listen(observer) {
-    document.body.addEventListener('mousemove', event => {
-      observer.next(`<${event.x}:${event.y}>`);
-    });
-  },
-};
+  setTimeout(tick, 0);
+  let interval = setInterval(tick, 1000);
+
+  return () => {
+    clearInterval(interval);
+  };
+});
+
+let pointerStream = new EventStream(observer => {
+  function onMove(event) {
+    observer.next(`<${event.x}:${event.y}>`);
+  }
+  document.body.addEventListener('mousemove', onMove);
+  return () => {
+    document.body.removeEventListener('mousemove', onMove);
+  };
+});
 
 applyTemplate('#mount', html`
   <div class='clock'>

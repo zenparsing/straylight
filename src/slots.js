@@ -179,15 +179,11 @@ class TemplateSlot {
 
   update(template) {
     // Assert: template.source === this.updater.source
-    let values = template.values;
+    let { values } = template;
     for (let i = 0; i < this.updaters.length; ++i) {
       let value = values[i];
-      if (value && typeof value.then === 'function') {
-        this.awaitPromise(value, i);
-      } else if (value && value[symbols.asyncIterator]) {
+      if (value && value[symbols.asyncIterator]) {
         this.awaitAsyncIterator(value, i);
-      } else if (value && typeof value.listen === 'function') {
-        this.awaitEventStream(value, i);
       } else {
         this.cancelPending(i);
         this.updaters[i].update(value);
@@ -210,45 +206,6 @@ class TemplateSlot {
   setPending(pending, i) {
     this.cancelPending(i);
     this.pending[i] = pending;
-  }
-
-  awaitPromise(value, i) {
-    if (this.pendingSource(i) === value) {
-      return;
-    }
-
-    let pending = {
-      source: value,
-      cancelled: false,
-      cancel() { this.cancelled = true; },
-    };
-
-    value.then(val => {
-      if (!pending.cancelled) {
-        this.pending[i] = null;
-        this.updaters[i].update(val);
-      }
-    }, err => {
-      if (!pending.cancelled) {
-        this.pending[i] = null;
-      }
-      throw err;
-    });
-
-    this.setPending(pending, i);
-  }
-
-  awaitEventStream(value, i) {
-    if (this.pendingSource(i) === value) {
-      return;
-    }
-
-    let cancel = value.listen({
-      next: (val) => { this.updaters[i].update(val); },
-      return: () => { this.pending[i] = null; },
-    });
-
-    this.setPending({ source: value, cancel }, i);
   }
 
   awaitAsyncIterator(value, i) {

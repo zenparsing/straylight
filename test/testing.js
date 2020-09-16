@@ -66,6 +66,11 @@ let style = {
   bold(msg) { return `\x1B[1m${ msg }\x1B[22m`; },
 };
 
+let unicode = {
+  check: '\u2714',
+  x: '\u2717',
+};
+
 class ConsoleLogger {
   constructor() {
     this.depth = 0;
@@ -87,12 +92,12 @@ class ConsoleLogger {
 
   onSuccess(name) {
     this.tests += 1;
-    this._print(style.green('\u2714') + ' ' + style.gray(name));
+    this._print(style.green(unicode.check) + ' ' + style.gray(name));
   }
 
   onFailure(name, error) {
     this.tests += 1;
-    this._print(style.red('\u2717') + ' ' + style.gray(name));
+    this._print(style.red(unicode.x) + ' ' + style.gray(name));
     this.errors.push({ name, error });
   }
 
@@ -105,15 +110,19 @@ class ConsoleLogger {
     if (failed > 0) {
       this._print('  ' + style.red(failed + ' failed'));
       this._print();
-      let errorString = this.errors[0].error.stack;
-      errorString = errorString.replace(/(^|\n)/g, '\n  ');
-      this._print(errorString);
+      this._printError(this.errors[0]);
     }
     this._print();
   }
 
   _print(msg) {
     console.log(msg ? ' '.repeat(this.depth * 2) + msg : ''); // eslint-disable-line
+  }
+
+  _printError({ error }) {
+    let errorString = error.stack;
+    errorString = errorString.replace(/(^|\n)/g, '\n  ');
+    this._print(errorString);
   }
 }
 

@@ -1,4 +1,5 @@
-import assert from 'assert';
+import * as assert from 'assert';
+import { describe, it } from './testing.js';
 import { createDocument } from '../src/extras/vdom.js';
 
 describe('vdom', () => {

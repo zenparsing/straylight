@@ -1,4 +1,5 @@
-import assert from 'assert';
+import * as assert from 'assert';
+import { describe, it } from './testing.js';
 import { html } from '../src/index.js';
 import { stringify } from '../src/extras/index.js';
 

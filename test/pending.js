@@ -1,4 +1,5 @@
-import assert from 'assert';
+import * as assert from 'assert';
+import { describe, it, before, beforeEach, after } from './testing.js';
 import { html, applyTemplate } from '../src/index.js';
 import { symbols } from '../src/symbols.js';
 import { createDocument } from '../src/extras/vdom.js';
@@ -14,7 +15,8 @@ describe('Pending updates', () => {
     process.addListener('unhandledRejection', pushError);
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await new Promise(resolve => setTimeout(resolve));
     errors.length = 0;
   });
 

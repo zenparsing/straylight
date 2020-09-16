@@ -1,3 +1,17 @@
+let runTimer = 0;
+
+function scheduleRun() {
+  if (runTimer) {
+    clearTimeout(runTimer);
+  }
+  runTimer = setTimeout(() => {
+    runTimer = 0;
+    runTests().catch((err) => {
+      queueMicrotask(() => { throw err; });
+    });
+  }, 0);
+}
+
 function createNode(name, test = null) {
   return {
     name,
@@ -6,6 +20,7 @@ function createNode(name, test = null) {
     beforeEach: [],
     after: [],
     afterEach: [],
+    only: false,
     test,
   };
 }
@@ -22,8 +37,7 @@ function createTreeBuilder() {
       stack.push(child);
     },
     add: (name, test) => {
-      let child = createNode(name, test);
-      current().nodes.push(child);
+      current().nodes.push(createNode(name, test));
     },
     pop: () => {
       stack.pop();
@@ -41,6 +55,7 @@ export function describe(name, fn) {
 
 export function it(name, fn) {
   treeBuilder.add(name, fn);
+  scheduleRun();
 }
 
 export function before(fn) {
@@ -106,11 +121,13 @@ class ConsoleLogger {
     let passed = this.tests - failed;
     if (passed > 0) {
       this._print('  ' + style.green(passed + ' passed'));
+      process.exitCode = 0;
     }
     if (failed > 0) {
       this._print('  ' + style.red(failed + ' failed'));
       this._print();
       this._printError(this.errors[0]);
+      process.exitCode = 1;
     }
     this._print();
   }
@@ -126,7 +143,7 @@ class ConsoleLogger {
   }
 }
 
-export async function runTests(logger = new ConsoleLogger()) {
+async function runTests(logger = new ConsoleLogger()) {
   let beforeEach = [];
   let afterEach = [];
 

@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { describe, it } from './testing.js';
+import { describe, it } from 'moon-unit';
 import { createDocument } from '../src/extras/vdom.js';
 
 describe('vdom', () => {

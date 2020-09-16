@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { describe, it, before, beforeEach, after } from './testing.js';
+import { describe, it, before, beforeEach, after } from 'moon-unit';
 import { html, applyTemplate } from '../src/index.js';
 import { symbols } from '../src/symbols.js';
 import { createDocument } from '../src/extras/vdom.js';

@@ -16,6 +16,7 @@
     "eslint": "^7.8.1",
     "express": "^4.17.1",
     "gzip-size-cli": "^3.0.0",
+    "moon-unit": "^0.3.1",
     "rollup": "^2.26.10",
     "rollup-plugin-node-resolve": "^5.2.0",
     "terser": "^5.3.0"

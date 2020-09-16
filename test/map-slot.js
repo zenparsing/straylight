@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { describe, it } from './testing.js';
+import { describe, it } from 'moon-unit';
 import { html, applyTemplate } from '../src/index.js';
 import { withKeys } from '../src/extras/index.js';
 import { createDocument } from '../src/extras/vdom.js';

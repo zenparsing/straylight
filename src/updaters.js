@@ -75,6 +75,7 @@ export class AttributeMapUpdater {
   update(map) {
     if (typeof map === 'function') {
       map = map(this.node);
+      return;
     }
     if (map === undefined || map === null) {
       return;

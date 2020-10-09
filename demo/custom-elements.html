@@ -1,0 +1,39 @@
+<div id='mount'></div>
+<script type='module'>
+
+import { html, applyTemplate } from '../dist/straylight.js';
+
+customElements.define('new-tab-link', class extends HTMLElement {
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
+  static observedAttributes = ['href'];
+
+  connectedCallback() {
+    this.render();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  render() {
+    applyTemplate(this.shadowRoot, html`
+      <a href=${this.getAttribute('href')} target='_blank' rel='noopener noreferrer'>
+        <slot></slot>
+      </a>
+    `);
+  }
+
+});
+
+applyTemplate('#mount', html`
+  <new-tab-link href='https://www.google.com'>
+    Search engine
+  </new-tab-link>
+`);
+
+</script>

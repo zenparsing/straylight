@@ -10,8 +10,8 @@ export function applyTemplate(target, template) {
   if (typeof target === 'string' && typeof document === 'object') {
     target = document.querySelector(target);
   }
-  if (!dom.isElement(target)) {
-    throw new TypeError(`${target} is not a DOM element`);
+  if (!target || typeof target.appendChild !== 'function') {
+    throw new TypeError(`${target} is not a valid DOM target`);
   }
   if (!(template instanceof TemplateResult)) {
     throw new TypeError(`${template} is not a TemplateResult object`);

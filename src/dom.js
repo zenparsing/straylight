@@ -4,14 +4,6 @@ function doc(node) {
   return node.ownerDocument;
 }
 
-export function isElement(x) {
-  return x && x.nodeType === 1;
-}
-
-export function isShadowRoot(x) {
-  return x && x.constructor.name === 'ShadowRoot';
-}
-
 export function setAttr(node, name, value) {
   if (value === undefined || value === null || value === false) {
     node.removeAttribute(name);
@@ -46,10 +38,6 @@ export function createElement(tag, context) {
   return namespace === HTML_NS ?
     doc(context).createElement(tag) :
     doc(context).createElementNS(namespace, tag);
-}
-
-export function createShadowRoot(parent) {
-  return parent.attachShadow({ mode: 'open' });
 }
 
 export function firstChild(node) {

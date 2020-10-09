@@ -35,9 +35,7 @@ export class Actions {
     if (typeof tag !== 'string') {
       throw new TypeError('Tag name must be a string');
     }
-    return tag === '#shadow-root'
-      ? dom.createShadowRoot(parent)
-      : dom.createElement(tag, parent);
+    return dom.createElement(tag, parent);
   }
 
   createComment(value) {
@@ -55,7 +53,7 @@ export class Actions {
     let next = node === this.parent ? this.next : null;
     if (isDynamic(child)) {
       this.updaters.push(new ChildUpdater(node, next));
-    } else if (child !== null && !dom.isShadowRoot(child)) {
+    } else if (child !== null) {
       if (typeof child === 'string') {
         child = dom.createText(child, node);
       }

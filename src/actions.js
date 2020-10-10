@@ -3,8 +3,8 @@ import * as dom from './dom.js';
 import {
   CommentUpdater,
   AttributeUpdater,
-  AttributeMapUpdater,
   AttributePartUpdater,
+  PropertyMapUpdater,
   ChildUpdater } from './updaters.js';
 
 class Dynamic {
@@ -67,15 +67,21 @@ export class Actions {
 
   setAttribute(node, name, value) {
     if (isDynamic(value)) {
-      this.updaters.push(new AttributeUpdater(node, name));
+      // TODO: Should we update immediately as we build the
+      // tree, so that attributes will be populated when the
+      // element is connected? What about other kinds of
+      // updaters?
+      let updater = new AttributeUpdater(node, name);
+      this.updaters.push(updater);
+      updater.update(value.value);
     } else {
       dom.setAttr(node, name, value);
     }
   }
 
   setAttributes(node) {
-    // Assert: attribute map is Dynamic
-    this.updaters.push(new AttributeMapUpdater(node));
+    // Assert: value is Dynamic
+    this.updaters.push(new PropertyMapUpdater(node));
   }
 
   setAttributeParts(node, name, parts) {

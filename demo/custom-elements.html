@@ -1,4 +1,17 @@
 <div id='mount'></div>
+<style>
+  a {
+    color: red;
+  }
+
+  a .foobar {
+    color: red;
+  }
+
+  .foobar {
+    color: orange;
+  }
+</style>
 <script type='module'>
 
 import { html, applyTemplate } from '../dist/straylight.js';
@@ -22,6 +35,15 @@ customElements.define('new-tab-link', class extends HTMLElement {
 
   render() {
     applyTemplate(this.shadowRoot, html`
+      <style>
+        a {
+          color: green;
+        }
+
+        a .foobar {
+          color: blue !important;
+        }
+      </style>
       <a href=${this.getAttribute('href')} target='_blank' rel='noopener noreferrer'>
         <slot></slot>
       </a>
@@ -30,10 +52,31 @@ customElements.define('new-tab-link', class extends HTMLElement {
 
 });
 
+customElements.define('kevin-test', class extends HTMLElement {
+  constructor() {
+    super();
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  attributeChangedCallback() {
+    this.render();
+  }
+
+  render() {
+  }
+});
+
 applyTemplate('#mount', html`
   <new-tab-link href='https://www.google.com'>
     Search engine
+    <span class='foobar'>foobar</span>
   </new-tab-link>
+  <div>
+    <kevin-test><button>Press Me</button></kevin-test>
+  </div>
 `);
 
 </script>

@@ -67,7 +67,7 @@ export class AttributePartUpdater {
   }
 }
 
-export class AttributeMapUpdater {
+export class PropertyMapUpdater {
   constructor(node) {
     this.node = node;
   }
@@ -80,11 +80,9 @@ export class AttributeMapUpdater {
       return;
     }
     if (typeof map !== 'object') {
-      throw new Error('Invalid attribute map value');
+      throw new Error('Invalid property map value');
     }
-    for (let key in map) {
-      dom.setAttr(this.node, key, toAttributeValue(map[key]));
-    }
+    Object.assign(this.node, map);
   }
 }
 

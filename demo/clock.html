@@ -2,15 +2,27 @@
 <script type='module'>
 
 import { html, applyTemplate } from '../dist/straylight.js';
-import { EventStream } from 'https://cdn.jsdelivr.net/npm/geneviv/geneviv.js';
+import { Store } from 'https://unpkg.com/storelax@0.8.0/storelax.js?module';
 
-const stream = new EventStream(observer => {
-  let interval = setInterval(() => observer.next({ time: new Date() }), 1000);
-  return () => clearInterval(interval);
-});
+class TimeStore extends Store {
+  constructor() {
+    super({ time: new Date() });
+  }
+
+  wakeCallback() {
+    this.update({ time: new Date() });
+    this.interval = setInterval(() => this.update({ time: new Date() }), 1000);
+  }
+
+  sleepCallback() {
+    clearInterval(this.interval);
+  }
+}
+
+let timeStore = new TimeStore();
 
 applyTemplate('#mount', html`
-  <div class='clock'>${stream.map(x => x.time.toLocaleString())}</div>
+  <div class='clock'>${timeStore.stream.map(x => x.time.toLocaleString())}</div>
 `);
 
 </script>

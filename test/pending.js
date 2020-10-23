@@ -1,9 +1,9 @@
 import * as assert from 'assert';
 import { describe, it, before, beforeEach, after } from 'moon-unit';
+import { AsyncIterationBuffer } from 'async-iteration-buffer';
 import { html, applyTemplate } from '../src/index.js';
 import { symbols } from '../src/symbols.js';
 import { createDocument } from '../src/extras/vdom.js';
-import { AsyncIterationBuffer } from 'async-iteration-buffer';
 
 describe('Pending updates', () => {
   let document = createDocument();
@@ -30,15 +30,15 @@ describe('Pending updates', () => {
       let buffer = new AsyncIterationBuffer();
       applyTemplate(target, render(buffer));
       let elem = target.firstElementChild;
-      assert.equal(elem.getAttribute('x'), undefined);
+      assert.strictEqual(elem.getAttribute('x'), null);
       await buffer.next('a');
-      assert.equal(elem.getAttribute('x'), 'a');
+      assert.strictEqual(elem.getAttribute('x'), 'a');
       await buffer.next('b');
-      assert.equal(elem.getAttribute('x'), 'b');
+      assert.strictEqual(elem.getAttribute('x'), 'b');
       await buffer.return();
-      assert.equal(elem.getAttribute('x'), 'b');
+      assert.strictEqual(elem.getAttribute('x'), 'b');
       applyTemplate(target, render('c'));
-      assert.equal(elem.getAttribute('x'), 'c');
+      assert.strictEqual(elem.getAttribute('x'), 'c');
     });
 
     it('cancels when updated with a new value', async () => {
@@ -51,8 +51,8 @@ describe('Pending updates', () => {
       let elem = target.firstElementChild;
       await buffer.next('a');
       applyTemplate(target, render('b'));
-      assert.equal(cancelled, true);
-      assert.equal(elem.getAttribute('x'), 'b');
+      assert.strictEqual(cancelled, true);
+      assert.strictEqual(elem.getAttribute('x'), 'b');
     });
 
     it('cancels when a new template is applied', () => {
@@ -63,7 +63,7 @@ describe('Pending updates', () => {
       });
       applyTemplate(target, render(buffer));
       applyTemplate(target, html`test`);
-      assert.equal(cancelled, true);
+      assert.strictEqual(cancelled, true);
     });
 
     it('cancels a rejection when updated with a new value', async () => {
@@ -73,7 +73,7 @@ describe('Pending updates', () => {
       let elem = target.firstElementChild;
       await buffer.throw(new Error('test'));
       applyTemplate(target, render('b'));
-      assert.equal(elem.getAttribute('x'), 'b');
+      assert.strictEqual(elem.getAttribute('x'), 'b');
     });
 
     it('cancels when an error is thrown from update', async () => {
@@ -84,13 +84,13 @@ describe('Pending updates', () => {
       });
       applyTemplate(target, render(buffer));
       let elem = target.firstElementChild;
-      assert.equal(cancelled, false);
+      assert.strictEqual(cancelled, false);
       await buffer.next({
         toString() { throw new Error('x'); },
       });
-      assert.equal(cancelled, true);
+      assert.strictEqual(cancelled, true);
       applyTemplate(target, render('b'));
-      assert.equal(elem.getAttribute('x'), 'b');
+      assert.strictEqual(elem.getAttribute('x'), 'b');
     });
 
     it('handles iterators with no return method', async () => {
@@ -103,7 +103,7 @@ describe('Pending updates', () => {
       await buffer.next('a');
       applyTemplate(target, render('b'));
       applyTemplate(target, render('a'));
-      assert.equal(elem.getAttribute('x'), 'a');
+      assert.strictEqual(elem.getAttribute('x'), 'a');
     });
 
     it('does not cancel when updated with the same value', async () => {
@@ -113,7 +113,7 @@ describe('Pending updates', () => {
       applyTemplate(target, render(buffer));
       let elem = target.firstElementChild;
       await buffer.next('a');
-      assert.equal(elem.getAttribute('x'), 'a');
+      assert.strictEqual(elem.getAttribute('x'), 'a');
     });
 
     it('handles errors', async () => {
@@ -123,9 +123,9 @@ describe('Pending updates', () => {
       let elem = target.firstElementChild;
       buffer.throw(new Error('test'));
       await new Promise(resolve => setTimeout(resolve));
-      assert.equal(errors.length, 1);
+      assert.strictEqual(errors.length, 1);
       applyTemplate(target, render('a'));
-      assert.equal(elem.getAttribute('x'), 'a');
+      assert.strictEqual(elem.getAttribute('x'), 'a');
     });
   });
 });

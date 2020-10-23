@@ -1,7 +1,15 @@
 const HTML_NS = 'http://www.w3.org/1999/xhtml';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 function doc(node) {
   return node.ownerDocument;
+}
+
+function convertToString(value) {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return typeof value === 'string' ? value : String(value);
 }
 
 export function setAttr(node, name, value) {
@@ -10,13 +18,6 @@ export function setAttr(node, name, value) {
   } else {
     node.setAttribute(name, value === true ? name : value);
   }
-}
-
-function convertToString(value) {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  return typeof value === 'string' ? value : String(value);
 }
 
 export function setTextValue(node, text) {
@@ -35,17 +36,34 @@ export function insertMarker(parent, next) {
 
 export function createElement(tag, context) {
   let namespace = getNamespace(tag, context);
-  return namespace === HTML_NS ?
-    doc(context).createElement(tag) :
-    doc(context).createElementNS(namespace, tag);
+  return namespace === HTML_NS
+    ? doc(context).createElement(tag)
+    : doc(context).createElementNS(namespace, tag);
+}
+
+export function createFragment(context) {
+  let fragment = doc(context).createDocumentFragment();
+  let { namespaceURI } = context;
+  if (namespaceURI) {
+    // TODO: This is a bit of a hack to make sure that elements
+    // created inside of a fragment that will be inserted into
+    // svg will be created with the right namespace. Is this
+    // acceptable?
+    fragment.namespaceURI = namespaceURI;
+  }
+  return fragment;
 }
 
 export function firstChild(node) {
   return node.firstChild;
 }
 
-export function insertChild(node, parent, next) {
-  parent.insertBefore(node, next || null);
+export function parent(node) {
+  return node ? node.parentNode : null;
+}
+
+export function insertChild(node, parent, next = null) {
+  parent.insertBefore(node, next);
 }
 
 export function insertSiblings(first, last, nextNode) {
@@ -73,7 +91,7 @@ export function removeSiblings(first, last) {
 function getNamespace(tag, context) {
   switch (tag) {
     case 'svg':
-      return 'http://www.w3.org/2000/svg';
+      return SVG_NS;
     default:
       return context.namespaceURI || HTML_NS;
   }

@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
+import { AsyncIterationBuffer } from 'async-iteration-buffer';
 import { html, applyTemplate } from '../src/index.js';
 import { createDocument } from '../src/extras/vdom.js';
-import { AsyncIterationBuffer } from 'async-iteration-buffer';
 
 describe('Attribute part updaters', () => {
   let document = createDocument();
@@ -11,7 +11,7 @@ describe('Attribute part updaters', () => {
     let target = document.createElement('div');
     applyTemplate(target, template);
     let actual = target.firstElementChild.toDataObject().attributes;
-    assert.deepEqual(actual, expected);
+    assert.deepStrictEqual(actual, expected);
   }
 
   it('concatenates strings', () => {
@@ -39,11 +39,11 @@ describe('Attribute part updaters', () => {
     applyTemplate(target, html`<div x='a${'b'}${buffer}d' />`);
     let div = target.firstElementChild;
     await null;
-    assert.deepEqual(div.toDataObject().attributes, {});
+    assert.deepStrictEqual(div.toDataObject().attributes, {});
     await buffer.next('c');
-    assert.deepEqual(div.toDataObject().attributes, { x: 'abcd' });
+    assert.deepStrictEqual(div.toDataObject().attributes, { x: 'abcd' });
     await buffer.next('C');
-    assert.deepEqual(div.toDataObject().attributes, { x: 'abCd' });
+    assert.deepStrictEqual(div.toDataObject().attributes, { x: 'abCd' });
   });
 
 });

@@ -9,7 +9,7 @@ let timeStream = new EventStream(observer => {
     observer.next(new Date().toLocaleString());
   }
 
-  setTimeout(tick, 0);
+  queueMicrotask(tick);
   let interval = setInterval(tick, 1000);
 
   return () => {
@@ -18,12 +18,12 @@ let timeStream = new EventStream(observer => {
 });
 
 let pointerStream = new EventStream(observer => {
-  function onMove(event) {
+  function handler(event) {
     observer.next(`<${event.x}:${event.y}>`);
   }
-  document.body.addEventListener('mousemove', onMove);
+  document.body.addEventListener('mousemove', handler);
   return () => {
-    document.body.removeEventListener('mousemove', onMove);
+    document.body.removeEventListener('mousemove', handler);
   };
 });
 

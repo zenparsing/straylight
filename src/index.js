@@ -1,12 +1,14 @@
 import { html, TemplateResult } from 'htmltag';
 import { createSlot, removeSlot } from './slots.js';
+import { ChildUpdater } from './updaters.js';
+import { symbols } from './symbols.js';
 import * as dom from './dom.js';
 
-const slotMap = new WeakMap();
+const createSlotSymbol = symbols.createSlot;
 
-export { html, createSlot, removeSlot };
+const updaterMap = new WeakMap();
 
-export function applyTemplate(target, template) {
+function applyTemplate(target, template) {
   if (typeof target === 'string' && typeof document === 'object') {
     target = document.querySelector(target);
   }
@@ -16,18 +18,22 @@ export function applyTemplate(target, template) {
   if (!(template instanceof TemplateResult)) {
     throw new TypeError(`${template} is not a TemplateResult object`);
   }
-  let slot = slotMap.get(target);
-  if (slot && slot.matches(template)) {
-    slot.update(template);
-  } else {
-    if (slot) {
-      removeSlot(slot);
-    }
+  let updater = updaterMap.get(target);
+  if (!updater) {
     let next = dom.firstChild(target);
-    slot = createSlot(target, next, template);
-    slotMap.set(target, slot);
     if (next) {
       dom.removeSiblings(next, null);
     }
+    updater = new ChildUpdater(target);
+    updaterMap.set(target, updater);
   }
+  updater.update(template);
 }
+
+export {
+  html,
+  applyTemplate,
+  createSlot,
+  removeSlot,
+  createSlotSymbol,
+};

@@ -4,18 +4,6 @@ import { symbols } from './symbols.js';
 import * as dom from './dom.js';
 
 export function createSlot(parent, next, value) {
-  let ctor = getSlotConstructor(value);
-  let slot = new ctor(parent, next, value);
-  slot.update(value);
-  return slot;
-}
-
-export function removeSlot(slot) {
-  slot.cancelUpdates();
-  dom.removeSiblings(slot.start, slot.end);
-}
-
-function getSlotConstructor(value) {
   if (
     value === null ||
     value === undefined ||
@@ -23,22 +11,27 @@ function getSlotConstructor(value) {
     typeof value === 'boolean' ||
     typeof value === 'number'
   ) {
-    return TextSlot;
+    return new TextSlot(parent, next, value);
   }
 
-  if (typeof value.slotConstructor === 'function') {
-    return value.slotConstructor;
+  if (typeof value[symbols.createSlot] === 'function') {
+    return value[symbols.createSlot](parent, next);
   }
 
   if (isIterable(value)) {
-    return ArraySlot;
+    return new ArraySlot(parent, next, value);
   }
 
   if (value instanceof TemplateResult) {
-    return TemplateSlot;
+    return new TemplateSlot(parent, next, value);
   }
 
   throw new TypeError('Invalid child slot value');
+}
+
+export function removeSlot(slot) {
+  slot.cancelUpdates();
+  dom.removeSiblings(slot.start, slot.end);
 }
 
 function isIterable(value) {
@@ -48,11 +41,36 @@ function isIterable(value) {
   );
 }
 
+class TextSlot {
+  constructor(parent, next, value) {
+    let node = dom.createText(value, parent);
+    dom.insertChild(node, parent, next);
+    this.start = node;
+    this.end = node;
+    this.last = value;
+  }
+
+  cancelUpdates() {
+    // Empty
+  }
+
+  matches(value) {
+    return value === null || typeof value !== 'object';
+  }
+
+  update(value) {
+    if (value !== this.last) {
+      this.last = value;
+      dom.setTextValue(this.start, value);
+    }
+  }
+}
+
 class ArraySlot {
-  constructor(parent, next) {
-    this.parent = parent;
+  constructor(parent, next, value) {
     this.end = dom.insertMarker(parent, next);
     this.slots = [];
+    this.update(value);
   }
 
   get start() {
@@ -110,7 +128,7 @@ class ArraySlot {
 
   insertSlot(value, pos) {
     let next = pos >= this.slots.length ? this.end : this.slots[pos].start;
-    let slot = createSlot(this.parent, next, value);
+    let slot = createSlot(dom.parent(next), next, value);
     this.slots.splice(pos, 0, slot);
   }
 
@@ -124,40 +142,23 @@ class ArraySlot {
   }
 }
 
-class TextSlot {
-  constructor(parent, next, value) {
-    let node = dom.createText(value, parent);
-    dom.insertChild(node, parent, next);
-    this.start = node;
-    this.end = node;
-    this.last = value;
-  }
-
-  cancelUpdates() {
-    // Empty
-  }
-
-  matches(value) {
-    return value === null || typeof value !== 'object';
-  }
-
-  update(value) {
-    if (value !== this.last) {
-      this.last = value;
-      dom.setTextValue(this.start, value);
-    }
-  }
-}
-
 class TemplateSlot {
   constructor(parent, next, template) {
+    let fragment = dom.createFragment(parent);
+
     // The first and last nodes of the template could be dynamic,
     // so create stable marker nodes before and after the content
     this.start = dom.insertMarker(parent, next);
     this.end = dom.insertMarker(parent, next);
     this.source = template.source;
-    this.updaters = template.evaluate(new Actions(parent, this.end));
+    this.updaters = template.evaluate(new Actions(fragment));
     this.pending = Array(this.updaters.length);
+
+    this.update(template);
+
+    // Insert the generated tree into the document after the
+    // first update
+    dom.insertChild(fragment, parent, this.end);
   }
 
   cancelUpdates() {

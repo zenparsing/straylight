@@ -24,7 +24,7 @@ Over the years, web developers have approached this problem in many different wa
 - React combined with JSX
 - And so on and so on...
 
-With the introduction of [template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) in ES2015, we finally have the opportunity to express HTML directly in Javascript without an offline compilation process.
+With the introduction of [template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals), we finally have the opportunity to express HTML directly in Javascript without an offline compilation process.
 
 &#x1f60c;
 
@@ -207,6 +207,31 @@ function renderFruit() {
 }
 ```
 
+### Async Iterators
+
+Straylight has built-in support for [async iterators](https://jakearchibald.com/2017/async-iterators-and-generators/). If an async iterator is supplied as a template value, then the document will be updated each time a new value is available.
+
+Here is the clock example again, implemented with an async generator function:
+
+```js
+import { html } from 'straylight';
+
+async function *generateTime() {
+  while (true) {
+    yield new Date().toLocaleString();
+    await new Promise(r => setTimeout(r, 1000));
+  }
+}
+
+function renderClock() {
+  return html`
+    <div class='clock'>
+      ${generateTime()}
+    </div>
+  `;
+}
+```
+
 ### Attributes
 
 Template values can be used to update element attributes:
@@ -233,91 +258,23 @@ function renderWithAddedClass(className) {
 }
 ```
 
-### Attribute Collections
+### Property Collections
 
-A collection of attribute values can be supplied as an object:
+In some situations you might want to assign a value to an element **property** instead of an attribute.
+ A collection of property values can be supplied as an object:
 
 ```js
 import { html } from 'straylight';
 
 function usernameInput() {
-  const attributes = {
+  const properties = {
     id: 'username-input',
     type: 'text',
     name: 'username',
     autocomplete: false,
+    className: 'rounded'
   };
-  return html`<input ${attributes} />`;
-}
-```
-
-### Properties
-
-In some situations you might want to assign a value to an element **property** instead of an attribute. For instance, if you want to add a click handler directly to a `<button>` element you could assign a function to its `onclick` property.
-
-To set a property value instead of an attribute, prefix the property name with `this.`:
-
-```js
-import { html } from 'straylight';
-
-function sayHello() {
-  alert('hello!');
-}
-
-function renderButton() {
-  return html`
-    <button type='button' this.onclick=${sayHello}>Say Hello</button>
-  `;
-}
-```
-
-### Promises
-
-Straylight has built-in support for [promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise). If a promise is supplied as a template value, then the document will be updated when the promise resolves:
-
-```js
-import { html } from 'straylight';
-
-function renderFetchResult() {
-  return html`
-    <div>
-      ${
-        fetch('/api/books')
-        .then(response => response.json())
-        .then(data => {
-          return data.books.map(book => html`
-            <div>${book.author}</div>
-            <div>${book.title}</div>
-          `);
-        })
-      }
-    </div>
-  `;
-}
-```
-
-### Async Iterators
-
-Straylight also has built-in support for [async iterators](https://jakearchibald.com/2017/async-iterators-and-generators/). If an async iterator is supplied as a template value, then the document will be updated each time a new value is available.
-
-Here is the clock example again, implemented with an async generator function:
-
-```js
-import { html } from 'straylight';
-
-async function *generateTime() {
-  while (true) {
-    yield new Date().toLocaleString();
-    await new Promise(r => setTimeout(r, 1000));
-  }
-}
-
-function renderClock() {
-  return html`
-    <div class='clock'>
-      ${generateTime()}
-    </div>
-  `;
+  return html`<input ${properties} />`;
 }
 ```
 
@@ -412,19 +369,4 @@ import { html, applyTemplate } from 'straylight';
 applyTemplate('#mount', html`
   <div>Hi!</div>
 `);
-```
-
-### stringify(templateResult)
-
-Converts the template result to an HTML string.
-
-```js
-import { stringify } from 'straylight/extras';
-
-const result = html`
-  <div>Hello ${'Earth'}</div>
-`;
-
-// Prints: <div>Hello Earth</div>
-console.log(stringify(result));
 ```

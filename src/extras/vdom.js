@@ -37,6 +37,10 @@ class Document {
     e.namespaceURI = namespace;
     return e;
   }
+
+  createDocumentFragment() {
+    return new DocumentFragment(this);
+  }
 }
 
 class Node {
@@ -141,11 +145,19 @@ class ParentNode extends Node {
       newNode.parentNode.removeChild(newNode);
     }
     let prev = next ? next.previousSibling : this.lastChild;
-    prev ? prev.nextSibling = newNode : this.firstChild = newNode;
-    next ? next.previousSibling = newNode : this.lastChild = newNode;
-    newNode.previousSibling = prev;
-    newNode.nextSibling = next;
-    newNode.parentNode = this;
+    if (newNode.nodeName === '#document-fragment') {
+      for (let child = newNode.firstChild; child;) {
+        let nextChild = child.nextSibling;
+        this.insertBefore(child, next);
+        child = nextChild;
+      }
+    } else {
+      prev ? prev.nextSibling = newNode : this.firstChild = newNode;
+      next ? next.previousSibling = newNode : this.lastChild = newNode;
+      newNode.previousSibling = prev;
+      newNode.nextSibling = next;
+      newNode.parentNode = this;
+    }
   }
 
   toDataObject() {
@@ -167,7 +179,8 @@ class Element extends ParentNode {
   }
 
   getAttribute(name) {
-    return this._attributes.get(String(name));
+    let value = this._attributes.get(String(name));
+    return value === undefined ? null : value;
   }
 
   setAttribute(name, value) {
@@ -208,5 +221,11 @@ class Element extends ParentNode {
       html += `>${this.innerHTML}</${this.nodeName}>`;
     }
     return html;
+  }
+}
+
+class DocumentFragment extends ParentNode {
+  constructor(doc) {
+    super(doc, 1, '#document-fragment');
   }
 }

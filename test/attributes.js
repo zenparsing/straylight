@@ -11,7 +11,7 @@ describe('Attribute updaters', () => {
     let target = document.createElement('div');
     applyTemplate(target, template);
     let actual = target.firstElementChild.toDataObject().attributes;
-    assert.deepEqual(actual, expected);
+    assert.deepStrictEqual(actual, expected);
   }
 
   it('assigns attribute values', () => {
@@ -22,14 +22,14 @@ describe('Attribute updaters', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
     applyTemplate(target, render('a'));
-    assert.equal(target.firstElementChild.getAttribute('x'), 'a');
+    assert.strictEqual(target.firstElementChild.getAttribute('x'), 'a');
   });
 
   it('removes attributes whose value is undefined', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
     let elem = target.firstElementChild;
-    assert.equal(elem.getAttribute('x'), 'a');
+    assert.strictEqual(elem.getAttribute('x'), 'a');
     applyTemplate(target, render(undefined));
     assert.ok(!elem.hasAttribute('x'));
   });
@@ -38,7 +38,7 @@ describe('Attribute updaters', () => {
     let target = document.createElement('div');
     applyTemplate(target, render('a'));
     let elem = target.firstElementChild;
-    assert.equal(elem.getAttribute('x'), 'a');
+    assert.strictEqual(elem.getAttribute('x'), 'a');
     applyTemplate(target, render(false));
     assert.ok(!elem.hasAttribute('x'));
   });

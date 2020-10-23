@@ -1,10 +1,10 @@
 import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
+import { AsyncIterationBuffer } from 'async-iteration-buffer';
 import { html, applyTemplate } from '../src/index.js';
 import { withKeys } from '../src/extras/index.js';
 import { createDocument } from '../src/extras/vdom.js';
-import { MapSlot } from '../src/extras/map-slot.js';
-import { AsyncIterationBuffer } from 'async-iteration-buffer';
+import { MapSlotValue } from '../src/extras/map-slot.js';
 
 describe('MapSlot', () => {
   let document = createDocument();
@@ -19,8 +19,8 @@ describe('MapSlot', () => {
     map.set('b', html`test-2`);
 
     let target = document.createElement('div');
-    applyTemplate(target, render(MapSlot.value(map)));
-    assert.deepEqual(target.toDataObject().childNodes, ['test-1', 'test-2']);
+    applyTemplate(target, render(new MapSlotValue(map)));
+    assert.deepStrictEqual(target.toDataObject().childNodes, ['test-1', 'test-2']);
   });
 
   it('accepts an array of key-value pairs', () => {
@@ -29,8 +29,8 @@ describe('MapSlot', () => {
       ['b', html`test-2`],
     ];
     let target = document.createElement('div');
-    applyTemplate(target, render(MapSlot.value(pairs)));
-    assert.deepEqual(target.toDataObject().childNodes, ['test-1', 'test-2']);
+    applyTemplate(target, render(new MapSlotValue(pairs)));
+    assert.deepStrictEqual(target.toDataObject().childNodes, ['test-1', 'test-2']);
   });
 
   it('inserts slots', async () => {
@@ -40,18 +40,18 @@ describe('MapSlot', () => {
     function renderChild(text) {
       return html`<div>${text}</div>`;
     }
-    await buffer.next(MapSlot.value([
+    await buffer.next(new MapSlotValue([
       ['a', renderChild('test-1')],
       ['b', renderChild('test-2')],
     ]));
     let first = target.firstElementChild;
-    await buffer.next(MapSlot.value([
+    await buffer.next(new MapSlotValue([
       ['c', renderChild('test-3')],
       ['a', renderChild('test-4')],
       ['b', renderChild('test-5')],
     ]));
-    assert.equal(target.firstElementChild.nextElementSibling, first);
-    assert.deepEqual(target.toDataObject().childNodes, [
+    assert.strictEqual(target.firstElementChild.nextElementSibling, first);
+    assert.deepStrictEqual(target.toDataObject().childNodes, [
       { nodeName: 'div', attributes: {}, childNodes: ['test-3'] },
       { nodeName: 'div', attributes: {}, childNodes: ['test-4'] },
       { nodeName: 'div', attributes: {}, childNodes: ['test-5'] },
@@ -65,25 +65,25 @@ describe('MapSlot', () => {
     function renderChild(text) {
       return html`<div>${text}</div>`;
     }
-    await buffer.next(MapSlot.value([
+    await buffer.next(new MapSlotValue([
       ['a', renderChild('test-1')],
       ['b', renderChild('test-2')],
       ['c', renderChild('test-3')],
     ]));
     let first = target.firstElementChild;
-    await buffer.next(MapSlot.value([
+    await buffer.next(new MapSlotValue([
       ['d', renderChild('test-4')],
       ['e', renderChild('test-5')],
     ]));
-    assert.equal(target.firstElementChild !== first, true);
-    assert.deepEqual(target.toDataObject().childNodes, [
+    assert.strictEqual(target.firstElementChild !== first, true);
+    assert.deepStrictEqual(target.toDataObject().childNodes, [
       { nodeName: 'div', attributes: {}, childNodes: ['test-4'] },
       { nodeName: 'div', attributes: {}, childNodes: ['test-5'] },
     ]);
-    await buffer.next(MapSlot.value([
+    await buffer.next(new MapSlotValue([
       ['d', renderChild('test-6')],
     ]));
-    assert.deepEqual(target.toDataObject().childNodes, [
+    assert.deepStrictEqual(target.toDataObject().childNodes, [
       { nodeName: 'div', attributes: {}, childNodes: ['test-6'] },
     ]);
   });
@@ -95,17 +95,17 @@ describe('MapSlot', () => {
     function renderChild(text) {
       return html`<div>${text}</div>`;
     }
-    await buffer.next(MapSlot.value([
+    await buffer.next(new MapSlotValue([
       ['a', renderChild('test-1')],
       ['b', renderChild('test-2')],
     ]));
     let first = target.firstElementChild;
-    await buffer.next(MapSlot.value([
+    await buffer.next(new MapSlotValue([
       ['b', renderChild('test-3')],
       ['a', renderChild('test-4')],
     ]));
-    assert.equal(target.lastElementChild, first);
-    assert.deepEqual(target.toDataObject().childNodes, [
+    assert.strictEqual(target.lastElementChild, first);
+    assert.deepStrictEqual(target.toDataObject().childNodes, [
       { nodeName: 'div', attributes: {}, childNodes: ['test-3'] },
       { nodeName: 'div', attributes: {}, childNodes: ['test-4'] },
     ]);
@@ -115,12 +115,12 @@ describe('MapSlot', () => {
     let buffer = new AsyncIterationBuffer();
     let target = document.createElement('div');
     applyTemplate(target, render(buffer));
-    await buffer.next(MapSlot.value([
+    await buffer.next(new MapSlotValue([
       ['a', 'test-1'],
       ['b', 'test-2'],
     ]));
     await buffer.next('text');
-    assert.deepEqual(target.toDataObject().childNodes, ['text']);
+    assert.deepStrictEqual(target.toDataObject().childNodes, ['text']);
   });
 
   it('cancels updates on child slots', () => {
@@ -129,17 +129,18 @@ describe('MapSlot', () => {
       cancel() { cancelled = true; },
     });
     let target = document.createElement('div');
-    applyTemplate(target, render(MapSlot.value([
+    applyTemplate(target, render(new MapSlotValue([
       ['a', html`${buffer}`],
     ])));
-    assert.equal(cancelled, false);
+    assert.strictEqual(cancelled, false);
     applyTemplate(target, render(''));
-    assert.equal(cancelled, true);
+    assert.strictEqual(cancelled, true);
   });
 
   it('exposes withKeys helper', () => {
-    let value = withKeys([['a', 'test-1']]);
-    assert.equal(value.slotConstructor, MapSlot);
+    let target = document.createElement('div');
+    applyTemplate(target, render(withKeys([['a', 'test-1']])));
+    assert.deepStrictEqual(target.toDataObject().childNodes, ['test-1']);
   });
 
 });

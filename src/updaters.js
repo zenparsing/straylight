@@ -87,8 +87,7 @@ export class PropertyMapUpdater {
 }
 
 export class ChildUpdater {
-  constructor(parent, next) {
-    this.parent = parent;
+  constructor(parent, next = null) {
     this.slot = createSlot(parent, next);
   }
 
@@ -97,7 +96,8 @@ export class ChildUpdater {
       this.slot.update(value);
     } else {
       let slot = this.slot;
-      this.slot = createSlot(this.parent, slot.start, value);
+      let next = slot.start;
+      this.slot = createSlot(dom.parent(next), next, value);
       removeSlot(slot);
     }
   }

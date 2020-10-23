@@ -1,8 +1,8 @@
 import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
-import { html, applyTemplate } from '../src/index.js';
-import { createDocument } from '../src/extras/vdom.js';
 import { AsyncIterationBuffer } from 'async-iteration-buffer';
+import { html, applyTemplate, createSlotSymbol } from '../src/index.js';
+import { createDocument } from '../src/extras/vdom.js';
 
 function afterTasks() {
   return new Promise(r => setTimeout(r));
@@ -15,7 +15,7 @@ describe('Child updaters', () => {
     let target = document.createElement('div');
     applyTemplate(target, html`${content}`);
     return afterTasks().then(() => {
-      assert.deepEqual(target.toDataObject().childNodes, data);
+      assert.deepStrictEqual(target.toDataObject().childNodes, data);
     });
   }
 
@@ -171,7 +171,7 @@ describe('Child updaters', () => {
       buffer.next(render(html`<div>2</div>`));
       buffer.next('text');
       await afterTasks();
-      assert.deepEqual(target.toDataObject().childNodes, ['text']);
+      assert.deepStrictEqual(target.toDataObject().childNodes, ['text']);
     });
 
     it('swaps children', () => {
@@ -221,7 +221,7 @@ describe('Child updaters', () => {
       buffer.next('a');
       buffer.next('a');
       await afterTasks();
-      assert.deepEqual(assignedValues, ['a']);
+      assert.deepStrictEqual(assignedValues, ['a']);
     });
   });
 
@@ -233,9 +233,9 @@ describe('Child updaters', () => {
       });
       let target = document.createElement('div');
       applyTemplate(target, html`${buffer}`);
-      assert.equal(cancelled, false);
+      assert.strictEqual(cancelled, false);
       applyTemplate(target, html``);
-      assert.equal(cancelled, true);
+      assert.strictEqual(cancelled, true);
     });
 
     it('cancels slot updates for multiple values', () => {
@@ -245,9 +245,9 @@ describe('Child updaters', () => {
       });
       let target = document.createElement('div');
       applyTemplate(target, html`${['a', html`${buffer}`, 'b']}`);
-      assert.equal(cancelled, false);
+      assert.strictEqual(cancelled, false);
       applyTemplate(target, html``);
-      assert.equal(cancelled, true);
+      assert.strictEqual(cancelled, true);
     });
 
     it('cancels slot updates in nested templates', () => {
@@ -257,14 +257,26 @@ describe('Child updaters', () => {
       });
       let target = document.createElement('div');
       applyTemplate(target, html`${html`${buffer}`}`);
-      assert.equal(cancelled, false);
+      assert.strictEqual(cancelled, false);
       applyTemplate(target, html``);
-      assert.equal(cancelled, true);
+      assert.strictEqual(cancelled, true);
     });
   });
 
   describe('Custom slot types', () => {
-    it('creates a slot using value.slotConstructor', () => {
+    it('creates a slot using value.createSlot', () => {
+      assert.strictEqual(typeof createSlotSymbol, 'symbol');
+
+      class CustomSlotValue {
+        constructor(value) {
+          this.value = value;
+        }
+
+        [createSlotSymbol](parent, next) {
+          return new CustomSlot(parent, next, this);
+        }
+      }
+
       class CustomSlot {
         constructor(parent, next, wrapped) {
           this.start = document.createTextNode('start');
@@ -279,19 +291,15 @@ describe('Child updaters', () => {
         }
 
         match(value) {
-          return value && value.slotConstructor === this.constructor;
+          return value instanceof CustomSlotValue;
         }
 
         update(wrapped) {
           this.start.nextSibling.nodeValue = wrapped.value;
         }
-
-        static value(value) {
-          return { value, slotConstructor: this };
-        }
       }
 
-      return assertResult(CustomSlot.value('test'), ['start', 'test', 'end']);
+      return assertResult(new CustomSlotValue('test'), ['start', 'test', 'end']);
     });
   });
 

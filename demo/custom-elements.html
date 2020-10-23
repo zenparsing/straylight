@@ -1,20 +1,9 @@
 <div id='mount'></div>
-<style>
-  a {
-    color: red;
-  }
-
-  a .foobar {
-    color: red;
-  }
-
-  .foobar {
-    color: orange;
-  }
-</style>
 <script type='module'>
 
 import { html, applyTemplate } from '../dist/straylight.js';
+
+import { Store } from 'https://unpkg.com/storelax@0.8.0/storelax.js?module';
 
 customElements.define('new-tab-link', class extends HTMLElement {
 
@@ -37,11 +26,7 @@ customElements.define('new-tab-link', class extends HTMLElement {
     applyTemplate(this.shadowRoot, html`
       <style>
         a {
-          color: green;
-        }
-
-        a .foobar {
-          color: blue !important;
+          color: purple;
         }
       </style>
       <a href=${this.getAttribute('href')} target='_blank' rel='noopener noreferrer'>
@@ -52,30 +37,22 @@ customElements.define('new-tab-link', class extends HTMLElement {
 
 });
 
-customElements.define('kevin-test', class extends HTMLElement {
-  constructor() {
-    super();
-  }
-
-  connectedCallback() {
-    this.render();
-  }
-
-  attributeChangedCallback() {
-    this.render();
-  }
-
-  render() {
-  }
+let store = new Store({
+  href: 'https://www.google.com',
+  text: 'A search engine'
 });
 
 applyTemplate('#mount', html`
-  <new-tab-link href='https://www.google.com'>
-    Search engine
-    <span class='foobar'>foobar</span>
+  <new-tab-link href=${store.stream.map(state => state.href)}>
+    ${store.stream.map(state => state.text)}
   </new-tab-link>
-  <div>
-    <kevin-test><button>Press Me</button></kevin-test>
+  <div style='padding-top: 10px;'>
+    <button ${{ onclick() { store.update({ href: 'https://brave.com' }) } }}>
+      Switch link
+    </button>
+    <button ${{ onclick() { store.update({ text: 'A browser' }) } }}>
+      Switch text
+    </button>
   </div>
 `);
 

@@ -1,6 +1,17 @@
 import * as dom from '../dom.js';
+import { symbols } from '../symbols.js';
 import { createSlot, removeSlot } from '../slots.js';
 import { convertToMap } from '../shim.js';
+
+export class MapSlotValue {
+  constructor(map) {
+    this.map = convertToMap(map);
+  }
+
+  [symbols.createSlot](parent, next) {
+    return new MapSlot(parent, next, this);
+  }
+}
 
 class MapSlotList {
   constructor(slot, key) {
@@ -31,10 +42,11 @@ class MapSlotList {
 }
 
 export class MapSlot {
-  constructor(parent, next) {
+  constructor(parent, next, value) {
     this.parent = parent;
     this.map = new Map();
     this.list = new MapSlotList(createSlot(parent, next), null);
+    this.update(value);
   }
 
   get start() {
@@ -52,7 +64,7 @@ export class MapSlot {
   }
 
   matches(value) {
-    return value && value.slotConstructor === this.constructor;
+    return value instanceof MapSlotValue;
   }
 
   update(value) {
@@ -94,12 +106,5 @@ export class MapSlot {
     this.map.delete(item.key);
     removeSlot(item.slot);
     return next;
-  }
-
-  static value(map) {
-    return {
-      map: convertToMap(map),
-      slotConstructor: this,
-    };
   }
 }

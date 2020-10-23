@@ -42,7 +42,7 @@ describe('Render', () => {
     };
     try {
       applyTemplate('#mount', html`x`);
-      assert.equal(selector, '#mount');
+      assert.strictEqual(selector, '#mount');
     } finally {
       global.document = undefined;
     }
@@ -53,7 +53,7 @@ describe('Render', () => {
     target.appendChild(document.createElement('div'));
     target.appendChild(document.createElement('div'));
     applyTemplate(target, html`<span></span>`);
-    assert.deepEqual(target.toDataObject(), {
+    assert.deepStrictEqual(target.toDataObject(), {
       nodeName: 'div',
       attributes: {},
       childNodes: [{
@@ -68,26 +68,26 @@ describe('Render', () => {
     let target = document.createElement('div');
     applyTemplate(target, html`<svg><path /></svg>`);
     let elem = target.firstElementChild;
-    assert.deepEqual(elem.toDataObject(), {
+    assert.deepStrictEqual(elem.toDataObject(), {
       nodeName: 'svg',
       attributes: {},
       childNodes: [
         { nodeName: 'path', attributes: {}, childNodes: [] },
       ],
     });
-    assert.equal(elem.namespaceURI, svgNamespace);
-    assert.equal(elem.firstChild.namespaceURI, svgNamespace);
+    assert.strictEqual(elem.namespaceURI, svgNamespace);
+    assert.strictEqual(elem.firstChild.namespaceURI, svgNamespace);
   });
 
   it('renders svg into an svg element', () => {
     let target = document.createElementNS(svgNamespace, 'svg');
     applyTemplate(target, html`<path />`);
     let elem = target.firstElementChild;
-    assert.deepEqual(elem.toDataObject(), {
+    assert.deepStrictEqual(elem.toDataObject(), {
       nodeName: 'path',
       attributes: {},
       childNodes: [],
     });
-    assert.equal(elem.namespaceURI, 'http://www.w3.org/2000/svg');
+    assert.strictEqual(elem.namespaceURI, 'http://www.w3.org/2000/svg');
   });
 });

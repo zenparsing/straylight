@@ -1,6 +1,6 @@
 {
   "name": "straylight",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "HTML templating and update engine",
   "license": "MIT",
   "repository": {
@@ -9,14 +9,14 @@
   },
   "homepage": "https://github.com/zenparsing/straylight",
   "dependencies": {
-    "htmltag": "^0.6.1"
+    "htmltag": "^0.6.3"
   },
   "devDependencies": {
     "async-iteration-buffer": "^0.2.1",
-    "eslint": "^7.8.1",
+    "eslint": "^7.11.0",
     "express": "^4.17.1",
     "gzip-size-cli": "^3.0.0",
-    "moon-unit": "^0.3.1",
+    "moon-unit": "^0.3.2",
     "rollup": "^2.26.10",
     "rollup-plugin-node-resolve": "^5.2.0",
     "terser": "^5.3.0"
@@ -26,6 +26,6 @@
   "scripts": {
     "test": "node scripts/test.js",
     "build": "node scripts/build.js",
-    "prepublishOnly": "node ./scripts/build.js"
+    "prepublishOnly": "node scripts/test.js && node ./scripts/build.js"
   }
 }

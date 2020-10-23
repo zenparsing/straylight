@@ -21,14 +21,14 @@ describe('vdom', () => {
         elem.appendChild(create());
         elem.appendChild(createText());
         elem.appendChild(child);
-        assert.equal(elem.firstChild.nextElementSibling, child);
+        assert.strictEqual(elem.firstChild.nextElementSibling, child);
       });
 
       it('returns null if there are no next element siblings', () => {
         let elem = create();
         elem.appendChild(create());
         elem.appendChild(createText());
-        assert.equal(elem.firstChild.nextElementSibling, null);
+        assert.strictEqual(elem.firstChild.nextElementSibling, null);
       });
     });
 
@@ -39,14 +39,14 @@ describe('vdom', () => {
         elem.appendChild(child);
         elem.appendChild(createText());
         elem.appendChild(create());
-        assert.equal(elem.lastChild.previousElementSibling, child);
+        assert.strictEqual(elem.lastChild.previousElementSibling, child);
       });
 
       it('returns null if there are no previous element siblings', () => {
         let elem = create();
         elem.appendChild(createText());
         elem.appendChild(create());
-        assert.equal(elem.lastChild.previousElementSibling, null);
+        assert.strictEqual(elem.lastChild.previousElementSibling, null);
       });
     });
   });
@@ -67,7 +67,7 @@ describe('vdom', () => {
         elem.insertBefore(create(), null);
         elem.insertBefore(create(), null);
         elem.removeChild(elem.firstElementChild);
-        assert.equal(elem.firstChild.nextSibling, elem.lastChild);
+        assert.strictEqual(elem.firstChild.nextSibling, elem.lastChild);
       });
     });
 
@@ -77,7 +77,7 @@ describe('vdom', () => {
         let node = create('span');
         elem.insertBefore(node, null);
         elem.insertBefore(node, node);
-        assert.deepEqual(elem.toDataObject().childNodes, [
+        assert.deepStrictEqual(elem.toDataObject().childNodes, [
           { nodeName: 'span', attributes: {}, childNodes: [] },
         ]);
       });
@@ -97,13 +97,13 @@ describe('vdom', () => {
         let child = create();
         elem.appendChild(createText());
         elem.appendChild(child);
-        assert.equal(elem.firstElementChild, child);
+        assert.strictEqual(elem.firstElementChild, child);
       });
 
       it('returns null if there are no element children', () => {
         let elem = create();
         elem.appendChild(createText());
-        assert.equal(elem.firstElementChild, null);
+        assert.strictEqual(elem.firstElementChild, null);
       });
     });
 
@@ -113,13 +113,13 @@ describe('vdom', () => {
         let child = create();
         elem.appendChild(child);
         elem.appendChild(createText());
-        assert.equal(elem.lastElementChild, child);
+        assert.strictEqual(elem.lastElementChild, child);
       });
 
       it('returns null if there are no element children', () => {
         let elem = create();
         elem.appendChild(createText());
-        assert.equal(elem.lastElementChild, null);
+        assert.strictEqual(elem.lastElementChild, null);
       });
     });
   });
@@ -129,18 +129,18 @@ describe('vdom', () => {
       it('gets the current attribute value', () => {
         let elem = create();
         elem.setAttribute('x', 'a');
-        assert.equal(elem.getAttribute('x'), 'a');
+        assert.strictEqual(elem.getAttribute('x'), 'a');
       });
 
       it('returns null if the attribute is not present', () => {
         let elem = create();
-        assert.equal(elem.getAttribute('x'), null);
+        assert.strictEqual(elem.getAttribute('x'), null);
       });
 
       it('converts keys to string', () => {
         let elem = create();
         elem.setAttribute('1', 'a');
-        assert.equal(elem.getAttribute(1), 'a');
+        assert.strictEqual(elem.getAttribute(1), 'a');
       });
     });
 
@@ -148,13 +148,13 @@ describe('vdom', () => {
       it('sets the current attribute value', () => {
         let elem = create();
         elem.setAttribute('x', 'a');
-        assert.equal(elem.getAttribute('x'), 'a');
+        assert.strictEqual(elem.getAttribute('x'), 'a');
       });
 
       it('converts keys and values to string', () => {
         let elem = create();
         elem.setAttribute(1, 2);
-        assert.equal(elem.getAttribute('1'), 2);
+        assert.strictEqual(elem.getAttribute('1'), '2');
       });
     });
 
@@ -162,18 +162,18 @@ describe('vdom', () => {
       it('returns true if the attribute is set', () => {
         let elem = create();
         elem.setAttribute('x', 'a');
-        assert.equal(elem.hasAttribute('x'), true);
+        assert.strictEqual(elem.hasAttribute('x'), true);
       });
 
       it('returns false if the attribute is not set', () => {
         let elem = create();
-        assert.equal(elem.hasAttribute('x'), false);
+        assert.strictEqual(elem.hasAttribute('x'), false);
       });
 
       it('converts keys to string', () => {
         let elem = create();
         elem.setAttribute('1', 'a');
-        assert.equal(elem.hasAttribute(1), true);
+        assert.strictEqual(elem.hasAttribute(1), true);
       });
     });
 
@@ -182,14 +182,14 @@ describe('vdom', () => {
         let elem = create();
         elem.setAttribute('x', 'a');
         elem.removeAttribute('x');
-        assert.equal(elem.hasAttribute('x'), false);
+        assert.strictEqual(elem.hasAttribute('x'), false);
       });
 
       it('converts keys to string', () => {
         let elem = create();
         elem.setAttribute('1', 'a');
         elem.removeAttribute(1);
-        assert.equal(elem.hasAttribute('1'), false);
+        assert.strictEqual(elem.hasAttribute('1'), false);
       });
     });
   });

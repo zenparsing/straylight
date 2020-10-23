@@ -1,5 +1,3 @@
-/* istanbul ignore file */
-
 // IE11 does not support argument to Map constructor
 const supportsMapArg = (new Map([[1, 1]]).size > 0);
 

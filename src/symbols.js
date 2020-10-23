@@ -7,4 +7,5 @@ function getSymbol(name) {
 export const symbols = {
   iterator: getSymbol('iterator'),
   asyncIterator: getSymbol('asyncIterator'),
+  createSlot: Symbol('createSlot'),
 };

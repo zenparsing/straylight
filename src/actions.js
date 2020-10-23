@@ -16,14 +16,13 @@ function isDynamic(x) {
 }
 
 export class Actions {
-  constructor(parent, next) {
-    this.parent = parent;
-    this.next = next;
+  constructor(root) {
+    this.root = root;
     this.updaters = [];
   }
 
   createRoot() {
-    return this.parent;
+    return this.root;
   }
 
   finishRoot() {
@@ -31,7 +30,6 @@ export class Actions {
   }
 
   createElement(tag, parent) {
-    // Dynamic tags throw
     if (typeof tag !== 'string') {
       throw new TypeError('Tag name must be a string');
     }
@@ -50,14 +48,13 @@ export class Actions {
   }
 
   appendChild(node, child) {
-    let next = node === this.parent ? this.next : null;
     if (isDynamic(child)) {
-      this.updaters.push(new ChildUpdater(node, next));
+      this.updaters.push(new ChildUpdater(node, null));
     } else if (child !== null) {
       if (typeof child === 'string') {
         child = dom.createText(child, node);
       }
-      dom.insertChild(child, node, next);
+      dom.insertChild(child, node, null);
     }
   }
 
@@ -67,25 +64,17 @@ export class Actions {
 
   setAttribute(node, name, value) {
     if (isDynamic(value)) {
-      // TODO: Should we update immediately as we build the
-      // tree, so that attributes will be populated when the
-      // element is connected? What about other kinds of
-      // updaters?
-      let updater = new AttributeUpdater(node, name);
-      this.updaters.push(updater);
-      updater.update(value.value);
+      this.updaters.push(new AttributeUpdater(node, name));
     } else {
       dom.setAttr(node, name, value);
     }
   }
 
   setAttributes(node) {
-    // Assert: value is Dynamic
     this.updaters.push(new PropertyMapUpdater(node));
   }
 
   setAttributeParts(node, name, parts) {
-    // Assert: some part is Dynamic
     parts.pending = [];
     for (let i = 0; i < parts.length; ++i) {
       if (isDynamic(parts[i])) {

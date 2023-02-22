@@ -157,7 +157,7 @@ class ArraySlot {
 class TemplateSlot {
   constructor(parent, next, template) {
     // The first and last nodes of the template could be dynamic,
-    // so create stable marker nodes before and after the content
+    // so create stable marker nodes before and after the content.
     this.start = dom.insertMarker(parent, next);
     this.end = dom.insertMarker(parent, next);
     this.source = template.source;

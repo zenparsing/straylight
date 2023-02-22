@@ -52,21 +52,16 @@ insertStyles(css`
 
 `);
 
-class WithStateValue {
-  constructor(initialize, render) {
-    this.initialize = initialize;
-    this.render = render;
-  }
-
+class Component {
   [createSlotSymbol](parent, next) {
-    return new WithStateSlot(parent, next, this);
+    return new ComponentSlot(parent, next, this);
   }
 }
 
-class WithStateSlot {
+class ComponentSlot {
   constructor(parent, next, value) {
+    this.component = value;
     this.renderQueued = false;
-    this.render = value.render;
 
     this.state = new Proxy({}, {
       get: (target, name) => target[name],
@@ -75,7 +70,7 @@ class WithStateSlot {
         if (this.slot && !this.renderQueued) {
           queueMicrotask(() => {
             this.renderQueued = false;
-            this.slot.update(this.render(this.state));
+            this.slot.update(this.component.render(this.state));
           });
           this.renderQueued = true;
         }
@@ -83,9 +78,9 @@ class WithStateSlot {
       },
     });
 
-    Object.assign(this.state, value.initialize());
+    Object.assign(this.state, this.component.initialState());
 
-    this.slot = createSlot(parent, next, value.render(this.state));
+    this.slot = createSlot(parent, next, this.component.render(this.state));
   }
 
   cancelUpdates() {
@@ -93,22 +88,16 @@ class WithStateSlot {
   }
 
   matches(value) {
-    return value instanceof WithStateValue;
+    return value instanceof Component;
   }
 
   update(value) {
-    this.render = value.render;
-    this.slot = updateSlot(this.slot, this.render(this.state));
+    this.slot = updateSlot(this.slot, this.component.render(this.state));
   }
 
 }
 
-function withState(init, render) {
-  return new WithStateValue(init, render);
-}
-
 function buttonSwitch({ options, selectedValue, onSelect }) {
-
   function renderOption(opt, index) {
     const selected = opt.value === selectedValue;
 
@@ -137,42 +126,46 @@ function buttonSwitch({ options, selectedValue, onSelect }) {
   `;
 }
 
+class Main extends Component {
+  initialState() {
+    return { selectedValue: 1 };
+  }
+
+  render(state) {
+    return html`
+      <main>
+        ${
+          buttonSwitch({
+            options: [
+              {
+                value: 1,
+                content: 'Try 1',
+                caption: '1.000'
+              },
+              {
+                value: 2,
+                content: 'Try 2',
+                caption: '2.000'
+              },
+              {
+                value: 3,
+                content: 'Try 3',
+                caption: '3.000'
+              }
+            ],
+            selectedValue: state.selectedValue,
+            onSelect: value => state.selectedValue = value,
+          })
+        }
+      </main>
+    `;
+  }
+}
+
 function main() {
   return html`
     <div>${ new Date().toLocaleTimeString() }</div>
-    ${
-      withState(() => ({ selectedValue: 1 }), (state) => {
-        let options = [
-          {
-            value: 1,
-            content: 'Try 1',
-            caption: '1.000'
-          },
-          {
-            value: 2,
-            content: 'Try 2',
-            caption: '2.000'
-          },
-          {
-            value: 3,
-            content: 'Try 3',
-            caption: '3.000'
-          }
-        ];
-
-        return html`
-          <main>
-            ${
-              buttonSwitch({
-                options,
-                selectedValue: state.selectedValue,
-                onSelect: value => state.selectedValue = value,
-              })
-            }
-          </main>
-        `;
-      })
-    }
+    ${ new Main() }
   `;
 }
 

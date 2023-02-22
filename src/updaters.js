@@ -1,5 +1,5 @@
-import { createSlot, removeSlot } from './slots.js';
-import { symbols } from './symbols.js';
+import { createSlot, updateSlot } from './slots.js';
+
 import * as dom from './dom.js';
 
 function toAttributeValue(value) {
@@ -7,7 +7,7 @@ function toAttributeValue(value) {
     if (Array.isArray(value)) {
       return value.join(' ');
     }
-    if (value[symbols.iterator]) {
+    if (value[Symbol.iterator]) {
       return Array.from(value).join(' ');
     }
     throw new TypeError('Invalid attribute value');
@@ -92,13 +92,6 @@ export class ChildUpdater {
   }
 
   update(value) {
-    if (this.slot.matches(value)) {
-      this.slot.update(value);
-    } else {
-      let slot = this.slot;
-      let next = slot.start;
-      this.slot = createSlot(dom.parent(next), next, value);
-      removeSlot(slot);
-    }
+    this.slot = updateSlot(this.slot, value);
   }
 }

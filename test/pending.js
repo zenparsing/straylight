@@ -2,7 +2,6 @@ import * as assert from 'assert';
 import { describe, it, before, beforeEach, after } from 'moon-unit';
 import { AsyncIterationBuffer } from 'async-iteration-buffer';
 import { html, applyTemplate } from '../src/index.js';
-import { symbols } from '../src/symbols.js';
 import { createDocument } from '../src/extras/vdom.js';
 
 describe('Pending updates', () => {
@@ -96,7 +95,7 @@ describe('Pending updates', () => {
     it('handles iterators with no return method', async () => {
       let target = document.createElement('div');
       let buffer = new AsyncIterationBuffer();
-      let iter = buffer[symbols.asyncIterator]();
+      let iter = buffer[Symbol.asyncIterator]();
       iter.return = undefined;
       applyTemplate(target, render(buffer));
       let elem = target.firstElementChild;

@@ -1,0 +1,172 @@
+<div id='mount'></div>
+<script type='module'>
+
+import { html, applyTemplate } from '../dist/straylight.js'
+import { css, insertStyles } from 'https://cdn.jsdelivr.net/npm/lightstyle/lightstyle.js';
+
+insertStyles(css`
+
+  button-switch {
+    display: flex;
+    font-family: Arial, sans-serif;
+  }
+
+  button-switch > div {
+    flex: 1 1 auto;
+    padding: 0 5px;
+  }
+
+  button-switch button {
+    width: 100%;
+    padding: var(--button-switch-padding, 6px 0);
+    font-size: 12px;
+    line-height: 21px;
+    border-radius: 30px;
+    border: 1px solid rgba(115, 122, 222, 0.55);
+    background: #fff;
+    color: #4C54D2;
+    cursor: pointer;
+    outline: 0;
+  }
+
+  button-switch button:active,
+  button-switch button:focus {
+    background: #D0D2F7;
+    color: #4C54D2;
+  }
+
+  button-switch .selected button {
+    background: #4C54D2;
+    color: #fff;
+    cursor: default;
+  }
+
+  button-switch .caption {
+    margin-top: 5px;
+    text-align: center;
+    font-size: 12px;
+    line-height: 18px;
+    color: #5E6175;
+    text-align: center;
+  }
+
+`);
+
+function buttonSwitch({ options, selectedValue, onSelect }) {
+
+  function renderOption(opt, index) {
+    const selected = opt.value === selectedValue;
+
+    const onclick = () => {
+      if (!selected) {
+        onSelect(opt.value)
+      }
+    };
+
+    return html`
+      <div
+        class=${selected ? 'selected' : ''}
+        data-option-value=${opt.value}
+        data-option-index=${index}
+      >
+        <button ${{ onclick }}>${opt.content}</button>
+        ${opt.caption ? html`<div class='caption'>${opt.caption}</div>` : null}
+      </div>
+    `
+  }
+
+  return html`
+    <button-switch>
+      ${options.map(renderOption)}
+    </button-switch>
+  `;
+}
+
+let $renderQueued = Symbol();
+let $state = Symbol();
+let $queueRender = Symbol();
+
+function createComponent({ name, initialize, render }) {
+
+  function queueRender(elem) {
+    if (!elem[$renderQueued]) {
+      queueMicrotask(() => {
+        elem[$renderQueued] = false;
+        applyTemplate(elem, render(elem[$state]));
+      });
+      elem[$renderQueued] = true;
+    }
+  }
+
+  customElements.define(name, class extends HTMLElement {
+
+    constructor() {
+      super();
+      this[$renderQueued] = false;
+      this[$state] = null;
+    }
+
+    connectedCallback() {
+      this[$state] = new Proxy({}, {
+        get: (target, name) => target[name],
+        set: (target, name, value) => {
+          target[name] = value;
+          queueRender(this);
+          return true;
+        },
+      });
+
+      Object.assign(this[$state], initialize());
+    }
+
+  });
+}
+
+createComponent({
+
+  name: 'app-main',
+
+  initialize() {
+    return {
+      selectedValue: 1,
+    };
+  },
+
+  render(state) {
+    let options = [
+      {
+        value: 1,
+        content: 'Try 1',
+        caption: '1.000'
+      },
+      {
+        value: 2,
+        content: 'Try 2',
+        caption: '2.000'
+      },
+      {
+        value: 3,
+        content: 'Try 3',
+        caption: '3.000'
+      }
+    ];
+
+    return html`
+      <main>
+        ${
+          buttonSwitch({
+            options,
+            selectedValue: state.selectedValue,
+            onSelect: value => state.selectedValue = value,
+          })
+        }
+      </main>
+    `;
+  }
+})
+
+applyTemplate('#mount', html`
+  <app-main />
+`);
+
+</script>

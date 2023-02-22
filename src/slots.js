@@ -1,6 +1,7 @@
 import { TemplateResult } from 'htmltag';
 import { Actions } from './actions.js';
-import { symbols } from './symbols.js';
+
+import * as symbols from './symbols.js';
 import * as dom from './dom.js';
 
 export function createSlot(parent, next, value) {
@@ -29,6 +30,17 @@ export function createSlot(parent, next, value) {
   throw new TypeError('Invalid child slot value');
 }
 
+export function updateSlot(slot, value) {
+  if (slot.matches(value)) {
+    slot.update(value);
+    return slot;
+  }
+  let next = slot.start;
+  let newSlot = createSlot(dom.parent(next), next, value);
+  removeSlot(slot);
+  return newSlot;
+}
+
 export function removeSlot(slot) {
   slot.cancelUpdates();
   dom.removeSiblings(slot.start, slot.end);
@@ -37,7 +49,7 @@ export function removeSlot(slot) {
 function isIterable(value) {
   return (
     Array.isArray(value) ||
-    value && typeof value !== 'string' && value[symbols.iterator]
+    value && typeof value !== 'string' && value[Symbol.iterator]
   );
 }
 
@@ -144,21 +156,14 @@ class ArraySlot {
 
 class TemplateSlot {
   constructor(parent, next, template) {
-    let fragment = dom.createFragment(parent);
-
     // The first and last nodes of the template could be dynamic,
     // so create stable marker nodes before and after the content
     this.start = dom.insertMarker(parent, next);
     this.end = dom.insertMarker(parent, next);
     this.source = template.source;
-    this.updaters = template.evaluate(new Actions(fragment));
+    this.updaters = template.evaluate(new Actions(parent, this.end));
     this.pending = Array(this.updaters.length);
-
     this.update(template);
-
-    // Insert the generated tree into the document after the
-    // first update
-    dom.insertChild(fragment, parent, this.end);
   }
 
   cancelUpdates() {
@@ -183,7 +188,7 @@ class TemplateSlot {
     let { values } = template;
     for (let i = 0; i < this.updaters.length; ++i) {
       let value = values[i];
-      if (value && value[symbols.asyncIterator]) {
+      if (value && value[Symbol.asyncIterator]) {
         this.awaitAsyncIterator(value, i);
       } else {
         this.cancelPending(i);
@@ -214,7 +219,7 @@ class TemplateSlot {
       return;
     }
 
-    let iter = value[symbols.asyncIterator]();
+    let iter = value[Symbol.asyncIterator]();
 
     let next = () => {
       iter.next().then(result => {

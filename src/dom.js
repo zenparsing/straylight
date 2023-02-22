@@ -41,19 +41,6 @@ export function createElement(tag, context) {
     : doc(context).createElementNS(namespace, tag);
 }
 
-export function createFragment(context) {
-  let fragment = doc(context).createDocumentFragment();
-  let { namespaceURI } = context;
-  if (namespaceURI) {
-    // TODO: This is a bit of a hack to make sure that elements
-    // created inside of a fragment that will be inserted into
-    // svg will be created with the right namespace. Is this
-    // acceptable?
-    fragment.namespaceURI = namespaceURI;
-  }
-  return fragment;
-}
-
 export function firstChild(node) {
   return node.firstChild;
 }

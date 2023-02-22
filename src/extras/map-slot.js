@@ -1,11 +1,11 @@
-import * as dom from '../dom.js';
-import { symbols } from '../symbols.js';
 import { createSlot, removeSlot } from '../slots.js';
-import { convertToMap } from '../shim.js';
+
+import * as symbols from '../symbols.js';
+import * as dom from '../dom.js';
 
 export class MapSlotValue {
   constructor(map) {
-    this.map = convertToMap(map);
+    this.map = map instanceof Map ? map : new Map(map);
   }
 
   [symbols.createSlot](parent, next) {

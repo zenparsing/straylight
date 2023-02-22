@@ -16,8 +16,9 @@ function isDynamic(x) {
 }
 
 export class Actions {
-  constructor(root) {
+  constructor(root, next) {
     this.root = root;
+    this.next = next;
     this.updaters = [];
   }
 
@@ -48,13 +49,14 @@ export class Actions {
   }
 
   appendChild(node, child) {
+    let next = node === this.root ? this.next : null;
     if (isDynamic(child)) {
-      this.updaters.push(new ChildUpdater(node, null));
+      this.updaters.push(new ChildUpdater(node, next));
     } else if (child !== null) {
       if (typeof child === 'string') {
         child = dom.createText(child, node);
       }
-      dom.insertChild(child, node, null);
+      dom.insertChild(child, node, next);
     }
   }
 

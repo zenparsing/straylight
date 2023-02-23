@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
 import { AsyncIterationBuffer } from 'async-iteration-buffer';
 import { html, applyTemplate, createSlotSymbol } from '../src/index.js';
-import { createDocument } from '../src/extras/vdom.js';
+import { createDocument } from '../src/vdom.js';
 
 function afterTasks() {
   return new Promise(r => setTimeout(r));

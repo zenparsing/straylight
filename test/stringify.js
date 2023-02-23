@@ -1,7 +1,13 @@
 import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
-import { html } from '../src/index.js';
-import { stringify } from '../src/extras/index.js';
+import { html, applyTemplate } from '../src/index.js';
+import { createDocument } from '../src/vdom.js';
+
+function stringify(template) {
+  let target = createDocument().createElement('div');
+  applyTemplate(target, template);
+  return target.innerHTML;
+}
 
 describe('HTML stringification', () => {
   it('serializes to HTML', () => {

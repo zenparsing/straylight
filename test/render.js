@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
 import { html, applyTemplate } from '../src/index.js';
-import { createDocument } from '../src/extras/vdom.js';
+import { createDocument } from '../src/vdom.js';
 
 const svgNamespace = 'http://www.w3.org/2000/svg';
 

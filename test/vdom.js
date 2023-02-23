@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
-import { createDocument } from '../src/extras/vdom.js';
+import { createDocument } from '../src/vdom.js';
 
 describe('vdom', () => {
   let document = createDocument();

@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import { describe, it, before, beforeEach, after } from 'moon-unit';
 import { AsyncIterationBuffer } from 'async-iteration-buffer';
 import { html, applyTemplate } from '../src/index.js';
-import { createDocument } from '../src/extras/vdom.js';
+import { createDocument } from '../src/vdom.js';
 
 describe('Pending updates', () => {
   let document = createDocument();

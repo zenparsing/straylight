@@ -53,19 +53,22 @@ insertStyles(css`
 
 `);
 
-class Component {
+class ContextProvider {
+  constructor(value) {
+    this.value = value;
+  }
+
   [createSlotSymbol](context, parent, next) {
-    return new ComponentSlot(context, parent, next, this);
+    return new ContextSlot(context, parent, next, this);
   }
 }
 
-class ComponentSlot {
-  constructor(context, parent, next, component) {
-    component.context = this;
+class ContextSlot {
+  constructor(context, parent, next, contextProvider) {
+    let childContext = contextProvider.initialize();
+    childContext.parent = context;
     this.context = context;
-    this.component = component;
-    this.data = component.initialize();
-    this.slot = createSlot(context, parent, next, component.render(this.data));
+    this.slot = createSlot(childContext, parent, next, contextProvider.value);
   }
 
   get start() {
@@ -81,12 +84,68 @@ class ComponentSlot {
   }
 
   matches(value) {
-    return value instanceof Component;
+    return value instanceof ContextProvider;
   }
 
   update(value) {
-    this.slot = updateSlot(this.slot, this.component.render(this.data));
+    this.slot = updateSlot(this.slot, value.value);
   }
+}
+
+class WithContextValue {
+  constructor(render) {
+    this.render = render;
+  }
+
+  [createSlotSymbol](context, parent, next) {
+    return new WithContextSlot(context, parent, next, this);
+  }
+};
+
+class WithContextSlot {
+  constructor(context, parent, next, value) {
+    this.context = context;
+    this.slot = createSlot(context, parent, next, value.render(context));
+  }
+
+  get start() {
+    return this.slot.start;
+  }
+
+  get end() {
+    return this.slot.end;
+  }
+
+  cancelUpdates() {
+    this.slot.cancelUpdates();
+  }
+
+  matches(value) {
+    return value instanceof WithContextValue;
+  }
+
+  update(value) {
+    this.slot = updateSlot(this.slot, value.render(this.context));
+  }
+};
+
+class MainContext extends ContextProvider {
+  constructor(value) {
+    super(value);
+  }
+
+  initialize() {
+    return {
+      parent: null,
+      store: new Store({
+        selectedValue: 1
+      })
+    };
+  }
+};
+
+function withContext(render) {
+  return new WithContextValue(render);
 }
 
 function buttonSwitch({ options, selectedValue, onSelect }) {
@@ -118,49 +177,35 @@ function buttonSwitch({ options, selectedValue, onSelect }) {
   `;
 }
 
-class Main extends Component {
-  initialize() {
-    return new Store({
-      selectedValue: 1
-    });
-  }
-
-  render(store) {
-    return html`
-      <main>
-        ${
-          store.stream.map(state => buttonSwitch({
-              options: [
-                {
-                  value: 1,
-                  content: 'Try 1',
-                  caption: '1.000'
-                },
-                {
-                  value: 2,
-                  content: 'Try 2',
-                  caption: '2.000'
-                },
-                {
-                  value: 3,
-                  content: 'Try 3',
-                  caption: '3.000'
-                }
-              ],
-              selectedValue: state.selectedValue,
-              onSelect: value => store.update({ selectedValue: value })
-            })
-          )
-        }
-      </main>
-    `;
-  }
-}
-
 function main() {
   return html`
     <div>${ new Date().toLocaleTimeString() }</div>
-    ${ new Main() }
+    ${new MainContext(html`
+      <main>
+        ${withContext((context) => html`
+          ${context.store.stream.map(state => buttonSwitch({
+            options: [
+              {
+                value: 1,
+                content: 'Try 1',
+                caption: '1.000'
+              },
+              {
+                value: 2,
+                content: 'Try 2',
+                caption: '2.000'
+              },
+              {
+                value: 3,
+                content: 'Try 3',
+                caption: '3.000'
+              }
+            ],
+            selectedValue: state.selectedValue,
+            onSelect: value => context.store.update({ selectedValue: value })
+          }))}`)}
+      </main>
+    `)}
   `;
 }
 

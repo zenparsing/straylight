@@ -53,7 +53,26 @@ insertStyles(css`
 
 `);
 
+const contextSymbol = Symbol('context');
+
 class Component {
+  createContext() {
+    return null;
+  }
+
+  render() {
+    return html``;
+  }
+
+  useContext(contextClass = null) {
+    for (let context = this[contextSymbol]; context; context = context.parent) {
+      if (!contextClass || context.provider instanceof contextClass) {
+        return context.value;
+      }
+    }
+    return null;
+  }
+
   [createSlotSymbol](context, parent, next) {
     return new ComponentSlot(context, parent, next, this);
   }
@@ -61,11 +80,17 @@ class Component {
 
 class ComponentSlot {
   constructor(context, parent, next, component) {
-    component.context = this;
+    this.childContext = {
+      provider: component,
+      parent: context,
+      value: component.createContext()
+    };
+
+    component[contextSymbol] = this.childContext;
+
     this.context = context;
     this.component = component;
-    this.data = component.initialize();
-    this.slot = createSlot(context, parent, next, component.render(this.data));
+    this.slot = createSlot(this.childContext, parent, next, component.render());
   }
 
   get start() {
@@ -84,8 +109,10 @@ class ComponentSlot {
     return value instanceof Component;
   }
 
-  update(value) {
-    this.slot = updateSlot(this.slot, this.component.render(this.data));
+  update(component) {
+    component[contextSymbol] = this.childContext;
+    this.component = component;
+    this.slot = updateSlot(this.slot, component.render());
   }
 }
 
@@ -118,49 +145,78 @@ function buttonSwitch({ options, selectedValue, onSelect }) {
   `;
 }
 
+class AppContext extends Component {
+  constructor(content) {
+    super();
+    this.content = content;
+  }
+
+  createContext() {
+    return {
+      async purchaseItems() {
+        return true;
+      }
+    };
+  }
+
+  render() {
+    return this.content;
+  }
+}
+
 class Main extends Component {
-  initialize() {
+  createContext() {
     return new Store({
       selectedValue: 1
     });
   }
 
-  render(store) {
+  render() {
+    let store = this.useContext();
+    let app = this.useContext(AppContext);
+
+    function onSelect(value) {
+      store.update({ selectedValue: value });
+      app.purchaseItems().then(() => console.log('items purchased'));
+    }
+
     return html`
       <main>
-        ${
-          store.stream.map(state => buttonSwitch({
-              options: [
-                {
-                  value: 1,
-                  content: 'Try 1',
-                  caption: '1.000'
-                },
-                {
-                  value: 2,
-                  content: 'Try 2',
-                  caption: '2.000'
-                },
-                {
-                  value: 3,
-                  content: 'Try 3',
-                  caption: '3.000'
-                }
-              ],
-              selectedValue: state.selectedValue,
-              onSelect: value => store.update({ selectedValue: value })
-            })
-          )
-        }
+      ${
+        store.stream.map(state => buttonSwitch({
+          options: [
+            {
+              value: 1,
+              content: 'Try 1',
+              caption: '1.000'
+            },
+            {
+              value: 2,
+              content: 'Try 2',
+              caption: '2.000'
+            },
+            {
+              value: 3,
+              content: 'Try 3',
+              caption: '3.000'
+            }
+          ],
+          selectedValue: state.selectedValue,
+          onSelect
+        }))
+      }
       </main>
-    `;
+    `
   }
-}
+};
 
 function main() {
   return html`
-    <div>${ new Date().toLocaleTimeString() }</div>
-    ${ new Main() }
+    ${new AppContext(html`
+      <div>${ new Date().toLocaleTimeString() }</div>
+      ${new Main()}
+      ${new Map([['a', 1], ['b', 2]])}
+    `)}
   `;
 }
 

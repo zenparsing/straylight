@@ -87,8 +87,8 @@ export class PropertyMapUpdater {
 }
 
 export class ChildUpdater {
-  constructor(parent, next = null) {
-    this.slot = createSlot(parent, next);
+  constructor(context, parent, next) {
+    this.slot = createSlot(context, parent, next, null);
   }
 
   update(value) {

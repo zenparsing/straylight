@@ -23,7 +23,7 @@ function applyTemplate(target, template) {
     slot = updateSlot(slot, template);
   } else {
     let next = dom.firstChild(target);
-    slot = createSlot(target, next, template);
+    slot = createSlot(null, target, next, template);
     if (next) {
       dom.removeSiblings(next, null);
     }

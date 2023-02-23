@@ -53,13 +53,14 @@ insertStyles(css`
 `);
 
 class Component {
-  [createSlotSymbol](parent, next) {
-    return new ComponentSlot(parent, next, this);
+  [createSlotSymbol](context, parent, next) {
+    return new ComponentSlot(context, parent, next, this);
   }
 }
 
 class ComponentSlot {
-  constructor(parent, next, value) {
+  constructor(context, parent, next, value) {
+    this.context = context;
     this.component = value;
     this.renderQueued = false;
 
@@ -80,7 +81,7 @@ class ComponentSlot {
 
     Object.assign(this.state, this.component.initialState());
 
-    this.slot = createSlot(parent, next, this.component.render(this.state));
+    this.slot = createSlot(context, parent, next, this.component.render(this.state));
   }
 
   cancelUpdates() {

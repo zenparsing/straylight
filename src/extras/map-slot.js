@@ -8,8 +8,8 @@ export class MapSlotValue {
     this.map = map instanceof Map ? map : new Map(map);
   }
 
-  [symbols.createSlot](parent, next) {
-    return new MapSlot(parent, next, this);
+  [symbols.createSlot](context, parent, next) {
+    return new MapSlot(context, parent, next, this);
   }
 }
 
@@ -42,10 +42,11 @@ class MapSlotList {
 }
 
 export class MapSlot {
-  constructor(parent, next, value) {
+  constructor(context, parent, next, value) {
+    this.context = context;
     this.parent = parent;
     this.map = new Map();
-    this.list = new MapSlotList(createSlot(parent, next), null);
+    this.list = new MapSlotList(createSlot(this.context, parent, next), null);
     this.update(value);
   }
 
@@ -92,7 +93,7 @@ export class MapSlot {
         item.insertBefore(next);
       }
     } else {
-      let slot = createSlot(this.parent, next.slot.start, value);
+      let slot = createSlot(this.context, this.parent, next.slot.start, value);
       item = new MapSlotList(slot, key);
       item.insertBefore(next);
       this.map.set(key, item);

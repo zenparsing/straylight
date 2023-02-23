@@ -4,7 +4,7 @@ import { Actions } from './actions.js';
 import * as symbols from './symbols.js';
 import * as dom from './dom.js';
 
-export function createSlot(parent, next, value) {
+export function createSlot(context, parent, next, value) {
   if (
     value === null ||
     value === undefined ||
@@ -12,19 +12,19 @@ export function createSlot(parent, next, value) {
     typeof value === 'boolean' ||
     typeof value === 'number'
   ) {
-    return new TextSlot(parent, next, value);
+    return new TextSlot(context, parent, next, value);
   }
 
   if (typeof value[symbols.createSlot] === 'function') {
-    return value[symbols.createSlot](parent, next);
+    return value[symbols.createSlot](context, parent, next);
   }
 
   if (isIterable(value)) {
-    return new ArraySlot(parent, next, value);
+    return new ArraySlot(context, parent, next, value);
   }
 
   if (value instanceof TemplateResult) {
-    return new TemplateSlot(parent, next, value);
+    return new TemplateSlot(context, parent, next, value);
   }
 
   throw new TypeError('Invalid child slot value');
@@ -36,7 +36,7 @@ export function updateSlot(slot, value) {
     return slot;
   }
   let next = slot.start;
-  let newSlot = createSlot(dom.parent(next), next, value);
+  let newSlot = createSlot(slot.context, dom.parent(next), next, value);
   removeSlot(slot);
   return newSlot;
 }
@@ -54,9 +54,10 @@ function isIterable(value) {
 }
 
 class TextSlot {
-  constructor(parent, next, value) {
+  constructor(context, parent, next, value) {
     let node = dom.createText(value, parent);
     dom.insertChild(node, parent, next);
+    this.context = context;
     this.start = node;
     this.end = node;
     this.last = value;
@@ -79,7 +80,8 @@ class TextSlot {
 }
 
 class ArraySlot {
-  constructor(parent, next, value) {
+  constructor(context, parent, next, value) {
+    this.context = context;
     this.end = dom.insertMarker(parent, next);
     this.slots = [];
     this.update(value);
@@ -140,7 +142,7 @@ class ArraySlot {
 
   insertSlot(value, pos) {
     let next = pos >= this.slots.length ? this.end : this.slots[pos].start;
-    let slot = createSlot(dom.parent(next), next, value);
+    let slot = createSlot(this.context, dom.parent(next), next, value);
     this.slots.splice(pos, 0, slot);
   }
 
@@ -155,13 +157,14 @@ class ArraySlot {
 }
 
 class TemplateSlot {
-  constructor(parent, next, template) {
+  constructor(context, parent, next, template) {
+    this.context = context;
     // The first and last nodes of the template could be dynamic,
     // so create stable marker nodes before and after the content.
     this.start = dom.insertMarker(parent, next);
     this.end = dom.insertMarker(parent, next);
     this.source = template.source;
-    this.updaters = template.evaluate(new Actions(parent, this.end));
+    this.updaters = template.evaluate(new Actions(context, parent, this.end));
     this.pending = Array(this.updaters.length);
     this.update(template);
   }

@@ -58,13 +58,14 @@ class WithStateValue {
     this.render = render;
   }
 
-  [createSlotSymbol](parent, next) {
-    return new WithStateSlot(parent, next, this);
+  [createSlotSymbol](context, parent, next) {
+    return new WithStateSlot(context, parent, next, this);
   }
 }
 
 class WithStateSlot {
-  constructor(parent, next, value) {
+  constructor(context, parent, next, value) {
+    this.context = context;
     this.renderQueued = false;
     this.render = value.render;
 
@@ -85,7 +86,7 @@ class WithStateSlot {
 
     Object.assign(this.state, value.initialize());
 
-    this.slot = createSlot(parent, next, value.render(this.state));
+    this.slot = createSlot(context, parent, next, value.render(this.state));
   }
 
   cancelUpdates() {

@@ -16,7 +16,8 @@ function isDynamic(x) {
 }
 
 export class Actions {
-  constructor(root, next) {
+  constructor(context, root, next) {
+    this.context = context;
     this.root = root;
     this.next = next;
     this.updaters = [];
@@ -51,7 +52,7 @@ export class Actions {
   appendChild(node, child) {
     let next = node === this.root ? this.next : null;
     if (isDynamic(child)) {
-      this.updaters.push(new ChildUpdater(node, next));
+      this.updaters.push(new ChildUpdater(this.context, node, next));
     } else if (child !== null) {
       if (typeof child === 'string') {
         child = dom.createText(child, node);

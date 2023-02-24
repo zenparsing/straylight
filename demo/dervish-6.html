@@ -1,7 +1,7 @@
 <div id='mount'></div>
 <script type='module'>
 
-import { html, applyTemplate, createSlot, updateSlot, createSlotSymbol } from '../dist/straylight.js'
+import { html, applyTemplate, withKey, createSlot, updateSlot, createSlotSymbol } from '../dist/straylight.js'
 import { css, insertStyles } from 'https://cdn.jsdelivr.net/npm/lightstyle/lightstyle.js';
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
 
@@ -56,6 +56,10 @@ insertStyles(css`
 const contextSymbol = Symbol('context');
 
 class Component {
+  constructor() {
+    this[contextSymbol] = null;
+  }
+
   createContext() {
     return null;
   }
@@ -114,8 +118,8 @@ class ComponentSlot {
   }
 
   update(component) {
-    component[contextSymbol] = this.childContext;
     this.component = component;
+    component[contextSymbol] = this.childContext;
     this.slot = updateSlot(this.slot, component.render());
   }
 }
@@ -130,7 +134,7 @@ function buttonSwitch({ options, selectedValue, onSelect }) {
       }
     };
 
-    return html`
+    return withKey(opt.value, html`
       <div
         class=${selected ? 'selected' : ''}
         data-option-value=${opt.value}
@@ -138,8 +142,9 @@ function buttonSwitch({ options, selectedValue, onSelect }) {
       >
         <button ${{ onclick }}>${opt.content}</button>
         ${opt.caption ? html`<div class='caption'>${opt.caption}</div>` : null}
+        <div><input /></div>
       </div>
-    `
+    `)
   }
 
   return html`
@@ -171,7 +176,8 @@ class AppContext extends Component {
 class Main extends Component {
   createContext() {
     return new Store({
-      selectedValue: 1
+      selectedValue: 1,
+      rearrange: false
     });
   }
 
@@ -184,31 +190,61 @@ class Main extends Component {
       app.purchaseItems().then(() => console.log('items purchased'));
     }
 
+    function onRearrange() {
+      store.update({ rearrange: true });
+    }
+
+    function getOptions() {
+      if (store.state.rearrange) {
+        return [
+          {
+            value: 2,
+            content: 'Try 2',
+            caption: '2.000'
+          },
+          {
+            value: 3,
+            content: 'Try 3',
+            caption: '3.000'
+          },
+          {
+            value: 1,
+            content: 'Try 1',
+            caption: '1.000'
+          }
+        ];
+      }
+      return [
+        {
+          value: 1,
+          content: 'Try 1',
+          caption: '1.000'
+        },
+        {
+          value: 2,
+          content: 'Try 2',
+          caption: '2.000'
+        },
+        {
+          value: 3,
+          content: 'Try 3',
+          caption: '3.000'
+        }
+      ]
+    }
+
     return html`
       <main>
       ${
         store.stream.map(state => buttonSwitch({
-          options: [
-            {
-              value: 1,
-              content: 'Try 1',
-              caption: '1.000'
-            },
-            {
-              value: 2,
-              content: 'Try 2',
-              caption: '2.000'
-            },
-            {
-              value: 3,
-              content: 'Try 3',
-              caption: '3.000'
-            }
-          ],
+          options: getOptions(),
           selectedValue: state.selectedValue,
           onSelect
         }))
       }
+      <div>
+        <button ${{ onclick: onRearrange }}>Rearrange</button>
+      </div>
       </main>
     `
   }

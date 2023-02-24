@@ -1,5 +1,5 @@
 import { html, TemplateResult } from 'htmltag';
-import { createSlot, updateSlot, removeSlot } from './slots.js';
+import { createSlot, updateSlot, removeSlot, withKey } from './slots.js';
 
 import * as symbols from './symbols.js';
 import * as dom from './dom.js';
@@ -37,5 +37,6 @@ export {
   createSlot,
   updateSlot,
   removeSlot,
+  withKey,
   createSlotSymbol,
 };

@@ -23,12 +23,8 @@ export function createSlot(context, parent, next, value) {
     return new TemplateSlot(context, parent, next, value);
   }
 
-  if (value instanceof Map) {
-    return new MapSlot(context, parent, next, value);
-  }
-
   if (isIterable(value)) {
-    return new ArraySlot(context, parent, next, value);
+    return new MapSlot(context, parent, next, value);
   }
 
   throw new TypeError('Invalid child slot value');
@@ -48,6 +44,10 @@ export function updateSlot(slot, value) {
 export function removeSlot(slot) {
   slot.cancelUpdates();
   dom.removeSiblings(slot.start, slot.end);
+}
+
+export function withKey(key, value) {
+  return new KeyedValue(key, value);
 }
 
 function isIterable(value) {
@@ -83,81 +83,28 @@ class TextSlot {
   }
 }
 
-class ArraySlot {
-  constructor(context, parent, next, value) {
-    this.context = context;
-    this.end = dom.insertMarker(parent, next);
-    this.slots = [];
-    this.update(value);
+class KeyedValue {
+  constructor(key, value) {
+    this.key = key;
+    this.value = value;
   }
+}
 
-  get start() {
-    return this.slots.length > 0 ? this.slots[0].start : this.end;
+function convertValueToMap(value) {
+  if (value instanceof Map) {
+    return value;
   }
-
-  cancelUpdates() {
-    for (let i = 0; i < this.slots.length; ++i) {
-      this.slots[i].cancelUpdates();
-    }
-  }
-
-  matches(value) {
-    return isIterable(value);
-  }
-
-  update(list) {
-    let i = 0;
-    if (Array.isArray(list)) {
-      while (i < list.length) {
-        this.updateItem(list[i], i++);
-      }
+  let map = new Map();
+  let i = 0;
+  for (let item of value) {
+    if (item instanceof KeyedValue) {
+      map.set(item.key, item.value);
     } else {
-      for (let item of list) {
-        this.updateItem(item, i++);
-      }
+      map.set('wyxOoLpzQhihTM6QZ83HVA0:' + i, item);
     }
-    let length = i;
-    while (i < this.slots.length) {
-      removeSlot(this.slots[i++]);
-    }
-    this.slots.length = length;
+    i++;
   }
-
-  updateItem(value, i) {
-    let pos = this.findMatch(value, i);
-    if (pos === -1) {
-      this.insertSlot(value, i);
-    } else {
-      if (pos !== i) {
-        this.moveSlot(pos, i);
-      }
-      this.slots[i].update(value);
-    }
-  }
-
-  findMatch(input, i) {
-    for (; i < this.slots.length; ++i) {
-      if (this.slots[i].matches(input)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  insertSlot(value, pos) {
-    let next = pos >= this.slots.length ? this.end : this.slots[pos].start;
-    let slot = createSlot(this.context, dom.parent(next), next, value);
-    this.slots.splice(pos, 0, slot);
-  }
-
-  moveSlot(from, to) {
-    // Assert: from > to
-    let slot = this.slots[from];
-    let next = this.slots[to].start;
-    this.slots.splice(from, 1);
-    this.slots.splice(to, 0, slot);
-    dom.insertSiblings(slot.start, slot.end, next);
-  }
+  return map;
 }
 
 class MapSlotList {
@@ -212,10 +159,11 @@ class MapSlot {
   }
 
   matches(value) {
-    return value instanceof Map;
+    return isIterable(value);
   }
 
-  update(map) {
+  update(value) {
+    let map = convertValueToMap(value);
     let next = this.list.next;
     map.forEach((value, key) => {
       while (!next.end && !map.has(next.key)) {

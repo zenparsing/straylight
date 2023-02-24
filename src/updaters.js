@@ -2,17 +2,21 @@ import { createSlot, updateSlot } from './slots.js';
 
 import * as dom from './dom.js';
 
+function isObjectLike(value) {
+  return value && (typeof value === 'function' || typeof value === 'object');
+}
+
 function toAttributeValue(value) {
-  if (typeof value === 'object' && value) {
-    if (Array.isArray(value)) {
-      return value.join(' ');
-    }
-    if (value[Symbol.iterator]) {
-      return Array.from(value).join(' ');
-    }
-    throw new TypeError('Invalid attribute value');
+  if (!isObjectLike(value)) {
+    return value;
   }
-  return value;
+  if (Array.isArray(value)) {
+    return value.join(' ');
+  }
+  if (value[Symbol.iterator]) {
+    return Array.from(value).join(' ');
+  }
+  throw new TypeError('Invalid attribute value');
 }
 
 export class CommentUpdater {

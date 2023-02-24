@@ -5,13 +5,7 @@ import * as symbols from './symbols.js';
 import * as dom from './dom.js';
 
 export function createSlot(context, parent, next, value) {
-  if (
-    value === null ||
-    value === undefined ||
-    typeof value === 'string' ||
-    typeof value === 'boolean' ||
-    typeof value === 'number'
-  ) {
+  if (isTextLike(value)) {
     return new TextSlot(context, parent, next, value);
   }
 
@@ -50,6 +44,13 @@ export function withKey(key, value) {
   return new KeyedValue(key, value);
 }
 
+function isTextLike(value) {
+  return value === null || (
+    typeof value !== 'function' &&
+    typeof value !== 'object'
+  );
+}
+
 function isIterable(value) {
   return (
     Array.isArray(value) ||
@@ -72,7 +73,7 @@ class TextSlot {
   }
 
   matches(value) {
-    return value === null || typeof value !== 'object';
+    return isTextLike(value);
   }
 
   update(value) {

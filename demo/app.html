@@ -1,7 +1,7 @@
 <div id='mount'></div>
 <script type='module'>
 
-import { html, applyTemplate, withKey, createSlot, updateSlot, createSlotSymbol } from '../dist/straylight.js'
+import { html, applyTemplate, withKey, Component } from '../dist/straylight.js'
 import { css, insertStyles } from 'https://cdn.jsdelivr.net/npm/lightstyle/lightstyle.js';
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
 
@@ -52,77 +52,6 @@ insertStyles(css`
   }
 
 `);
-
-const contextSymbol = Symbol('context');
-
-class Component {
-  constructor() {
-    this[contextSymbol] = null;
-  }
-
-  createContext() {
-    return null;
-  }
-
-  render() {
-    return html``;
-  }
-
-  useContext(contextClass = null) {
-    for (let context = this[contextSymbol]; context; context = context.parent) {
-      if (!contextClass || context.provider instanceof contextClass) {
-        return context.value;
-      }
-    }
-    return null;
-  }
-
-  [createSlotSymbol](context, parent, next) {
-    return new ComponentSlot(context, parent, next, this);
-  }
-}
-
-class ComponentSlot {
-  constructor(context, parent, next, component) {
-    this.context = context;
-    this.childContext = context;
-    this.component = component;
-
-    let contextValue = component.createContext();
-    if (contextValue) {
-      this.childContext = {
-        provider: component,
-        parent: context,
-        value: component.createContext()
-      };
-    }
-
-    component[contextSymbol] = this.childContext;
-    this.slot = createSlot(this.childContext, parent, next, component.render());
-  }
-
-  get start() {
-    return this.slot.start;
-  }
-
-  get end() {
-    return this.slot.end;
-  }
-
-  cancelUpdates() {
-    this.slot.cancelUpdates();
-  }
-
-  matches(value) {
-    return value instanceof Component;
-  }
-
-  update(component) {
-    this.component = component;
-    component[contextSymbol] = this.childContext;
-    this.slot = updateSlot(this.slot, component.render());
-  }
-}
 
 function buttonSwitch({ options, selectedValue, onSelect }) {
   function renderOption(opt, index) {

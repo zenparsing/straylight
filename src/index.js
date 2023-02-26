@@ -1,10 +1,13 @@
 import { html, TemplateResult } from 'htmltag';
-import { createSlot, updateSlot, removeSlot, withKey } from './slots.js';
 
-import * as symbols from './symbols.js';
+import {
+  createSlot,
+  updateSlot,
+  createSlotSymbol,
+  withKey,
+  Component } from './slots.js';
+
 import * as dom from './dom.js';
-
-const createSlotSymbol = symbols.createSlot;
 
 const slotMap = new WeakMap();
 
@@ -31,12 +34,4 @@ function applyTemplate(target, template) {
   slotMap.set(target, slot);
 }
 
-export {
-  html,
-  applyTemplate,
-  createSlot,
-  updateSlot,
-  removeSlot,
-  withKey,
-  createSlotSymbol,
-};
+export { html, applyTemplate, withKey, createSlotSymbol, Component };

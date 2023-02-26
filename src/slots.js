@@ -1,16 +1,19 @@
 import { TemplateResult } from 'htmltag';
 import { Actions } from './actions.js';
 
-import * as symbols from './symbols.js';
 import * as dom from './dom.js';
+
+export const createSlotSymbol = Symbol('createSlot');
+
+const contextSymbol = Symbol('context');
 
 export function createSlot(context, parent, next, value) {
   if (isTextLike(value)) {
     return new TextSlot(context, parent, next, value);
   }
 
-  if (typeof value[symbols.createSlot] === 'function') {
-    return value[symbols.createSlot](context, parent, next);
+  if (typeof value[createSlotSymbol] === 'function') {
+    return value[createSlotSymbol](context, parent, next);
   }
 
   if (value instanceof TemplateResult) {
@@ -309,5 +312,76 @@ class TemplateSlot {
 
     next();
     this.setPending(pending, i);
+  }
+}
+
+export class Component {
+  constructor() {
+    this[contextSymbol] = null;
+  }
+
+  createContext() {
+    return null;
+  }
+
+  render() {
+    return null;
+  }
+
+  useContext(contextClass = null) {
+    for (
+      let context = this[contextSymbol];
+      context;
+      context = context.parent
+    ) {
+      if (!contextClass || context.provider instanceof contextClass) {
+        return context.value;
+      }
+    }
+    return null;
+  }
+
+  [createSlotSymbol](context, parent, next) {
+    return new ComponentSlot(context, parent, next, this);
+  }
+}
+
+class ComponentSlot {
+  constructor(context, parent, next, component) {
+    this.context = context;
+    this.childContext = context;
+
+    let contextValue = component.createContext();
+    if (contextValue) {
+      this.childContext = {
+        provider: component,
+        parent: context,
+        value: component.createContext(),
+      };
+    }
+
+    component[contextSymbol] = this.childContext;
+    this.slot = createSlot(this.childContext, parent, next, component.render());
+  }
+
+  get start() {
+    return this.slot.start;
+  }
+
+  get end() {
+    return this.slot.end;
+  }
+
+  cancelUpdates() {
+    this.slot.cancelUpdates();
+  }
+
+  matches(value) {
+    return value instanceof Component;
+  }
+
+  update(component) {
+    component[contextSymbol] = this.childContext;
+    this.slot = updateSlot(this.slot, component.render());
   }
 }

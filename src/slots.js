@@ -5,9 +5,11 @@ import * as dom from './dom.js';
 
 export const createSlotSymbol = Symbol('createSlot');
 
-const contextSymbol = Symbol('context');
-
 export function createSlot(context, parent, next, value) {
+  while (typeof value === 'function') {
+    value = value(context);
+  }
+
   if (isTextLike(value)) {
     return new TextSlot(context, parent, next, value);
   }
@@ -45,6 +47,10 @@ export function removeSlot(slot) {
 
 export function withKey(key, value) {
   return new KeyedValue(key, value);
+}
+
+export function withContext(provider, content) {
+  return new ContextSlotValue(provider, content);
 }
 
 function isTextLike(value) {
@@ -315,61 +321,35 @@ class TemplateSlot {
   }
 }
 
-export class Component {
-  constructor() {
-    this[contextSymbol] = null;
-  }
-
-  createContext() {
-    return null;
-  }
-
-  render() {
-    return null;
-  }
-
-  useContext(contextProvider = this.constructor) {
-    if (!contextProvider) {
-      return null;
-    }
-    for (
-      let context = this[contextSymbol];
-      context;
-      context = context.parent
-    ) {
-      if (context.provider === contextProvider) {
-        return context.value;
-      }
-    }
-    let { defaultContext } = contextProvider;
-    if (defaultContext === undefined) {
-      defaultContext = null;
-    }
-    return defaultContext;
+class ContextSlotValue {
+  constructor(provider, content) {
+    this.provider = provider;
+    this.content = content;
   }
 
   [createSlotSymbol](context, parent, next) {
-    return new ComponentSlot(context, parent, next, this);
+    return new ContextSlot(context, parent, next, this);
   }
 }
 
-class ComponentSlot {
-  constructor(context, parent, next, component) {
-    this.context = context;
-    this.childContext = context;
-    this.contextProvider = component.constructor;
+class ContextSlot {
+  constructor(context, parent, next, value) {
+    let { provider } = value;
 
-    let contextValue = component.createContext();
+    this.context = context;
+    this.contextProvider = provider;
+    this.childContext = context;
+
+    let contextValue = provider.createContext();
     if (contextValue !== null && contextValue !== undefined) {
       this.childContext = {
-        provider: this.contextProvider,
+        provider,
         parent: context,
         value: contextValue,
       };
     }
 
-    component[contextSymbol] = this.childContext;
-    this.slot = createSlot(this.childContext, parent, next, component.render());
+    this.slot = createSlot(this.childContext, parent, next, value.content);
   }
 
   get start() {
@@ -385,11 +365,13 @@ class ComponentSlot {
   }
 
   matches(value) {
-    return value && value.constructor === this.contextProvider;
+    return (
+      value instanceof ContextSlotValue &&
+      value.provider === this.contextProvider
+    );
   }
 
-  update(component) {
-    component[contextSymbol] = this.childContext;
-    this.slot = updateSlot(this.slot, component.render());
+  update(value) {
+    this.slot = updateSlot(this.slot, value.content);
   }
 }

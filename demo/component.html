@@ -1,9 +1,45 @@
 <div id='mount'></div>
 <script type='module'>
 
-import { html, applyTemplate, withKey, Component } from '../dist/straylight.js'
+import { html, applyTemplate, withKey, withContext, createSlotSymbol, createSlot } from '../dist/straylight.js'
 import { css, insertStyles } from 'https://cdn.jsdelivr.net/npm/lightstyle/lightstyle.js';
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
+
+class Component {
+  constructor() {
+    this.context = null;
+  }
+
+  createContext() {
+    return null;
+  }
+
+  render() {
+    return null;
+  }
+
+  useContext(contextProvider = null) {
+    for (let context = this.context; context; context = context.parent) {
+      if (!contextProvider || context.provider instanceof contextProvider) {
+        return context.value;
+      }
+    }
+    if (contextProvider) {
+      let { defaultContext } = contextProvider;
+      if (defaultContext !== undefined) {
+        return defaultContext;
+      }
+    }
+    return null;
+  }
+
+  [createSlotSymbol](context, parent, next) {
+    return createSlot(context, parent, next, withContext(this, (context) => {
+      this.context = context;
+      return this.render();
+    }));
+  }
+}
 
 insertStyles(css`
 

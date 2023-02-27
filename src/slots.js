@@ -328,17 +328,24 @@ export class Component {
     return null;
   }
 
-  useContext(contextClass = null) {
+  useContext(contextProvider = this.constructor) {
+    if (!contextProvider) {
+      return null;
+    }
     for (
       let context = this[contextSymbol];
       context;
       context = context.parent
     ) {
-      if (!contextClass || context.provider instanceof contextClass) {
+      if (context.provider === contextProvider) {
         return context.value;
       }
     }
-    return null;
+    let { defaultContext } = contextProvider;
+    if (defaultContext === undefined) {
+      defaultContext = null;
+    }
+    return defaultContext;
   }
 
   [createSlotSymbol](context, parent, next) {
@@ -350,13 +357,14 @@ class ComponentSlot {
   constructor(context, parent, next, component) {
     this.context = context;
     this.childContext = context;
+    this.contextProvider = component.constructor;
 
     let contextValue = component.createContext();
-    if (contextValue) {
+    if (contextValue !== null && contextValue !== undefined) {
       this.childContext = {
-        provider: component,
+        provider: this.contextProvider,
         parent: context,
-        value: component.createContext(),
+        value: contextValue,
       };
     }
 
@@ -377,7 +385,7 @@ class ComponentSlot {
   }
 
   matches(value) {
-    return value instanceof Component;
+    return value && value.constructor === this.contextProvider;
   }
 
   update(component) {

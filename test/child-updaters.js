@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
 import { AsyncIterationBuffer } from 'async-iteration-buffer';
-import { html, applyTemplate, createSlotSymbol } from '../src/index.js';
+import { html, applyTemplate } from '../src/index.js';
 import { createDocument } from '../src/vdom.js';
 
 function afterTasks() {
@@ -267,47 +267,6 @@ describe('Child updaters', () => {
       assert.strictEqual(cancelled, false);
       applyTemplate(target, html``);
       assert.strictEqual(cancelled, true);
-    });
-  });
-
-  describe('Custom slot types', () => {
-    it('creates a slot using value.createSlot', () => {
-      assert.strictEqual(typeof createSlotSymbol, 'symbol');
-
-      class CustomSlotValue {
-        constructor(value) {
-          this.value = value;
-        }
-
-        [createSlotSymbol](context, parent, next) {
-          return new CustomSlot(context, parent, next, this);
-        }
-      }
-
-      class CustomSlot {
-        constructor(context, parent, next, wrapped) {
-          this.context = context;
-          this.start = document.createTextNode('start');
-          this.end = document.createTextNode('end');
-          parent.insertBefore(this.start, next);
-          parent.insertBefore(document.createTextNode(wrapped.value), next);
-          parent.insertBefore(this.end, next);
-        }
-
-        cancelUpdates() {
-          // Empty
-        }
-
-        match(value) {
-          return value instanceof CustomSlotValue;
-        }
-
-        update(wrapped) {
-          this.start.nextSibling.nodeValue = wrapped.value;
-        }
-      }
-
-      return assertResult(new CustomSlotValue('test'), ['start', 'test', 'end']);
     });
   });
 

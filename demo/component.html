@@ -1,12 +1,19 @@
 <div id='mount'></div>
 <script type='module'>
 
-import { html, applyTemplate, withKey, withContext, createSlotSymbol, createSlot } from '../dist/straylight.js'
+import { html, applyTemplate, withKey, contextProviderSymbol, contentSymbol } from '../dist/straylight.js'
 import { css, insertStyles } from 'https://cdn.jsdelivr.net/npm/lightstyle/lightstyle.js';
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
 
 class Component {
   constructor() {
+    this[contextProviderSymbol] = this;
+
+    this[contentSymbol] = (context) => {
+      this.context = context;
+      return this.render();
+    };
+
     this.context = null;
   }
 
@@ -31,13 +38,6 @@ class Component {
       }
     }
     return null;
-  }
-
-  [createSlotSymbol](context, parent, next) {
-    return createSlot(context, parent, next, withContext(this, (context) => {
-      this.context = context;
-      return this.render();
-    }));
   }
 }
 
@@ -119,7 +119,7 @@ function buttonSwitch({ options, selectedValue, onSelect }) {
   `;
 }
 
-class AppContext extends Component {
+class App extends Component {
   constructor(content) {
     super();
     this.content = content;
@@ -148,7 +148,7 @@ class Main extends Component {
 
   render() {
     let store = this.useContext();
-    let app = this.useContext(AppContext);
+    let app = this.useContext(App);
 
     function onSelect(value) {
       store.update({ selectedValue: value });
@@ -200,16 +200,16 @@ class Main extends Component {
 
     return html`
       <main>
-      ${
-        store.stream.map(state => buttonSwitch({
-          options: getOptions(),
-          selectedValue: state.selectedValue,
-          onSelect
-        }))
-      }
-      <div>
-        <button ${{ onclick: onRearrange }}>Rearrange</button>
-      </div>
+        ${
+          store.stream.map(state => buttonSwitch({
+            options: getOptions(),
+            selectedValue: state.selectedValue,
+            onSelect
+          }))
+        }
+        <div>
+          <button ${{ onclick: onRearrange }}>Rearrange</button>
+        </div>
       </main>
     `
   }
@@ -217,7 +217,7 @@ class Main extends Component {
 
 function main() {
   return html`
-    ${new AppContext(html`
+    ${new App(html`
       <div>${ new Date().toLocaleTimeString() }</div>
       ${new Main()}
       ${new Map([['a', 1], ['b', 2]])}

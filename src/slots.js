@@ -3,7 +3,9 @@ import { Actions } from './actions.js';
 
 import * as dom from './dom.js';
 
-export const createSlotSymbol = Symbol('createSlot');
+export const contextProviderSymbol = Symbol('contextProviderSymbol');
+
+export const contentSymbol = Symbol('content');
 
 export function createSlot(context, parent, next, value) {
   while (typeof value === 'function') {
@@ -14,8 +16,8 @@ export function createSlot(context, parent, next, value) {
     return new TextSlot(context, parent, next, value);
   }
 
-  if (typeof value[createSlotSymbol] === 'function') {
-    return value[createSlotSymbol](context, parent, next);
+  if (value[contextProviderSymbol]) {
+    return new ContextSlot(context, parent, next, value);
   }
 
   if (value instanceof TemplateResult) {
@@ -50,7 +52,10 @@ export function withKey(key, value) {
 }
 
 export function withContext(provider, content) {
-  return new ContextSlotValue(provider, content);
+  return {
+    [contextProviderSymbol]: provider,
+    [contentSymbol]: content,
+  };
 }
 
 function isTextLike(value) {
@@ -323,20 +328,9 @@ class TemplateSlot {
   }
 }
 
-class ContextSlotValue {
-  constructor(provider, content) {
-    this.provider = provider;
-    this.content = content;
-  }
-
-  [createSlotSymbol](context, parent, next) {
-    return new ContextSlot(context, parent, next, this);
-  }
-}
-
 class ContextSlot {
   constructor(context, parent, next, value) {
-    let { provider } = value;
+    let provider = value[contextProviderSymbol];
 
     this.context = context;
     this.contextProvider = provider;
@@ -351,7 +345,7 @@ class ContextSlot {
       };
     }
 
-    this.slot = createSlot(this.childContext, parent, next, value.content);
+    this.slot = createSlot(this.childContext, parent, next, value[contentSymbol]);
   }
 
   get start() {
@@ -367,13 +361,10 @@ class ContextSlot {
   }
 
   matches(value) {
-    return (
-      value instanceof ContextSlotValue &&
-      value.provider === this.contextProvider
-    );
+    return value && value[contextProviderSymbol] === this.contextProvider;
   }
 
   update(value) {
-    this.slot = updateSlot(this.slot, value.content);
+    this.slot = updateSlot(this.slot, value[contentSymbol]);
   }
 }

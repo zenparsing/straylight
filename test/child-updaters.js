@@ -65,6 +65,13 @@ describe('Child updaters', () => {
       return assertResult(new Set(['a', 'b', 'c']), ['a', 'b', 'c']);
     });
 
+    it('calls functions recursively', () => {
+      function f() {
+        return () => html`foo`;
+      }
+      assertResult(f, ['foo']);
+    });
+
     it('throws if child is not valid', () => {
       assert.throws(() => {
         applyTemplate(document.createElement('div'), html`${{}}`);

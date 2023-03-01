@@ -22,7 +22,7 @@ Over the years, web developers have approached this problem in many different wa
 - Underscore templates
 - Complex two-way binding frameworks
 - React combined with JSX
-- And so on and so on...
+- And so on...
 
 With the introduction of [template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals), we finally have the opportunity to express HTML directly in Javascript without an offline compilation process.
 
@@ -275,6 +275,21 @@ function usernameInput() {
     className: 'rounded'
   };
   return html`<input ${properties} />`;
+}
+```
+
+Property collections can be used to attach event handlers to elements:
+
+```js
+import { html } from 'straylight';
+
+function formButton() {
+  function onButtonClick() {
+    console.log('button clicked!');
+  }
+  return html`
+    <button ${{ onclick: onButtonClick }}>Go</button>
+  `;
 }
 ```
 

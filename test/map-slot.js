@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import { describe, it } from 'moon-unit';
 import { AsyncIterationBuffer } from 'async-iteration-buffer';
-import { html, applyTemplate } from '../src/index.js';
+import { html, applyTemplate, withKey } from '../src/index.js';
 import { createDocument } from '../src/vdom.js';
 
 describe('MapSlot', () => {
@@ -123,6 +123,29 @@ describe('MapSlot', () => {
     assert.strictEqual(cancelled, false);
     applyTemplate(target, render(''));
     assert.strictEqual(cancelled, true);
+  });
+
+  it('supports repositioning using withKey', async () => {
+    let buffer = new AsyncIterationBuffer();
+    let target = document.createElement('div');
+    applyTemplate(target, render(buffer));
+    function renderChild(text) {
+      return html`<div>${text}</div>`;
+    }
+    await buffer.next([
+      withKey('a', renderChild('test-1')),
+      withKey('b', renderChild('test-2')),
+    ]);
+    let first = target.firstElementChild;
+    await buffer.next([
+      withKey('b', renderChild('test-3')),
+      withKey('a', renderChild('test-4')),
+    ]);
+    assert.strictEqual(target.lastElementChild, first);
+    assert.deepStrictEqual(target.toDataObject().childNodes, [
+      { nodeName: 'div', attributes: {}, childNodes: ['test-3'] },
+      { nodeName: 'div', attributes: {}, childNodes: ['test-4'] },
+    ]);
   });
 
 });

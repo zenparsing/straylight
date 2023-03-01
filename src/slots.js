@@ -100,6 +100,8 @@ class KeyedValue {
   }
 }
 
+const positionKeyPrefix = 'wyxOoLpzQhihTM6QZ83HVA0';
+
 function convertValueToMap(value) {
   if (value instanceof Map) {
     return value;
@@ -110,7 +112,7 @@ function convertValueToMap(value) {
     if (item instanceof KeyedValue) {
       map.set(item.key, item.value);
     } else {
-      map.set('wyxOoLpzQhihTM6QZ83HVA0:' + i, item);
+      map.set(`${positionKeyPrefix}:${i}`, item);
     }
     i++;
   }

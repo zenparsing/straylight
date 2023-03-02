@@ -1,12 +1,11 @@
 import { html, TemplateResult } from 'htmltag';
 
 import {
+  createSlotSymbol,
   createSlot,
   updateSlot,
-  withKey,
-  withContext,
-  contextProviderSymbol,
-  contentSymbol } from './slots.js';
+  removeSlot,
+  withKey } from './slots.js';
 
 import * as dom from './dom.js';
 
@@ -38,10 +37,9 @@ function applyTemplate(target, template) {
 export {
   html,
   applyTemplate,
+  createSlotSymbol,
   createSlot,
   updateSlot,
+  removeSlot,
   withKey,
-  withContext,
-  contextProviderSymbol,
-  contentSymbol,
 };

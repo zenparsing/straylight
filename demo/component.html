@@ -1,23 +1,18 @@
 <div id='mount'></div>
 <script type='module'>
 
-import { html, applyTemplate, withKey, contextProviderSymbol, contentSymbol } from '../dist/straylight.js'
+import { html, applyTemplate, withKey, createSlotSymbol, createSlot, updateSlot } from '../dist/straylight.js'
 import { css, insertStyles } from 'https://cdn.jsdelivr.net/npm/lightstyle/lightstyle.js';
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
 
+const contextSymbol = Symbol('context');
+
 class Component {
   constructor() {
-    this[contextProviderSymbol] = this;
-
-    this[contentSymbol] = (context) => {
-      this.context = context;
-      return this.render();
-    };
-
-    this.context = null;
+    this[contextSymbol] = null;
   }
 
-  createContext() {
+  createState() {
     return null;
   }
 
@@ -25,19 +20,64 @@ class Component {
     return null;
   }
 
-  useContext(contextProvider = null) {
-    for (let context = this.context; context; context = context.parent) {
-      if (!contextProvider || context.provider instanceof contextProvider) {
+  [createSlotSymbol](context, parent, next) {
+    return new ComponentSlot(context, parent, next, this);
+  }
+
+  useState(componentClass = this.constructor) {
+    let context = this[contextSymbol];
+    while (context) {
+      if (context.provider === componentClass) {
         return context.value;
       }
+      context = context.parent;
     }
-    if (contextProvider) {
-      let { defaultContext } = contextProvider;
-      if (defaultContext !== undefined) {
-        return defaultContext;
-      }
+    let { defaultContext } = componentClass;
+    return defaultContext === undefined ? null : defaultContext;
+  }
+}
+
+class ComponentSlot {
+  constructor(context, parent, next, value) {
+    this.context = context;
+    this.component = value;
+    this.childContext = context;
+
+    let state = this.component.createState();
+    if (state !== null && state !== undefined) {
+      this.childContext = {
+        provider: this.component.constructor,
+        parent: context,
+        value: state,
+      };
     }
-    return null;
+
+    this.component[contextSymbol] = this.childContext;
+    this.slot = createSlot(this.childContext, parent, next, this.component.render());
+  }
+
+  get start() {
+    return this.slot.start;
+  }
+
+  get end() {
+    return this.slot.end;
+  }
+
+  cancelUpdates() {
+    this.slot.cancelUpdates();
+  }
+
+  matches(value) {
+    return (
+      value instanceof Component &&
+      value.constructor === this.component.constructor
+    );
+  }
+
+  update(value) {
+    this.component[contextSymbol] = this.childContext;
+    this.slot = updateSlot(this.slot, this.component.render());
   }
 }
 
@@ -120,17 +160,14 @@ function buttonSwitch({ options, selectedValue, onSelect }) {
 }
 
 class App extends Component {
-  constructor(content) {
+  constructor(value, content) {
     super();
+    this.value = value;
     this.content = content;
   }
 
-  createContext() {
-    return {
-      async purchaseItems() {
-        return true;
-      }
-    };
+  createState() {
+    return this.value;
   }
 
   render() {
@@ -138,8 +175,16 @@ class App extends Component {
   }
 }
 
+function createModel() {
+  return {
+    async purchaseItems() {
+      return false;
+    }
+  };
+}
+
 class Main extends Component {
-  createContext() {
+  createState() {
     return new Store({
       selectedValue: 1,
       rearrange: false
@@ -147,12 +192,12 @@ class Main extends Component {
   }
 
   render() {
-    let store = this.useContext();
-    let app = this.useContext(App);
+    let store = this.useState();
+    let app = this.useState(App);
 
     function onSelect(value) {
       store.update({ selectedValue: value });
-      app.purchaseItems().then(() => console.log('items purchased'));
+      app.purchaseItems().then((ok) => console.log('items purchased', ok));
     }
 
     function onRearrange() {
@@ -201,7 +246,7 @@ class Main extends Component {
     return html`
       <main>
         ${
-          store.stream.map(state => buttonSwitch({
+          store.map(state => buttonSwitch({
             options: getOptions(),
             selectedValue: state.selectedValue,
             onSelect
@@ -217,7 +262,7 @@ class Main extends Component {
 
 function main() {
   return html`
-    ${new App(html`
+    ${new App(createModel(), html`
       <div>${ new Date().toLocaleTimeString() }</div>
       ${new Main()}
       ${new Map([['a', 1], ['b', 2]])}

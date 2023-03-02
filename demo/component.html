@@ -20,10 +20,6 @@ class Component {
     return null;
   }
 
-  [createSlotSymbol](context, parent, next) {
-    return new ComponentSlot(context, parent, next, this);
-  }
-
   useState(componentClass = this.constructor) {
     let context = this[contextSymbol];
     while (context) {
@@ -32,9 +28,15 @@ class Component {
       }
       context = context.parent;
     }
-    let { defaultContext } = componentClass;
-    return defaultContext === undefined ? null : defaultContext;
+    let { defaultState } = componentClass;
+    return defaultState === undefined ? null : defaultState;
   }
+
+  [createSlotSymbol](context, parent, next) {
+    return new ComponentSlot(context, parent, next, this);
+  }
+
+  static defaultState = null;
 }
 
 class ComponentSlot {
@@ -159,7 +161,7 @@ function buttonSwitch({ options, selectedValue, onSelect }) {
   `;
 }
 
-class App extends Component {
+class StateProvider extends Component {
   constructor(value, content) {
     super();
     this.value = value;
@@ -171,9 +173,12 @@ class App extends Component {
   }
 
   render() {
+    this[contextSymbol].value = this.value;
     return this.content;
   }
 }
+
+class App extends StateProvider {}
 
 function createModel() {
   return {

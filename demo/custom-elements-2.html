@@ -5,6 +5,33 @@ import { html, applyTemplate } from '../dist/straylight.js';
 
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
 
+function createCustomElement(options) {
+  function render(elem) {
+    applyTemplate(elem.shadowRoot, options.render(elem));
+  }
+
+  customElements.define(options.name, class extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+    }
+
+    static observedAttributes = options.observedAttributes;
+
+    connectedCallback() {
+      render(this);
+    }
+
+    attributeChangedCallback() {
+      render(this);
+    }
+  });
+
+  return (props) => html`
+    <${options.name} ${{props}} />
+  `;
+}
+
 customElements.define('new-tab-link', class extends HTMLElement {
 
   constructor() {

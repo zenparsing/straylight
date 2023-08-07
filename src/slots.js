@@ -5,21 +5,21 @@ import * as dom from './dom.js';
 
 export const createSlotSymbol = Symbol('createSlot');
 
-export function createSlot(context, parent, next, value) {
+export function createSlot(parent, next, value) {
   if (isTextLike(value)) {
-    return new TextSlot(context, parent, next, value);
+    return new TextSlot(parent, next, value);
   }
 
   if (value instanceof TemplateResult) {
-    return new TemplateSlot(context, parent, next, value);
+    return new TemplateSlot(parent, next, value);
   }
 
   if (typeof value[createSlotSymbol] === 'function') {
-    return value[createSlotSymbol](context, parent, next);
+    return value[createSlotSymbol](parent, next);
   }
 
   if (isIterable(value)) {
-    return new MapSlot(context, parent, next, value);
+    return new MapSlot(parent, next, value);
   }
 
   throw new TypeError('Invalid child slot value');
@@ -31,7 +31,7 @@ export function updateSlot(slot, value) {
     return slot;
   }
   let next = slot.start;
-  let newSlot = createSlot(slot.context, dom.parent(next), next, value);
+  let newSlot = createSlot(dom.parent(next), next, value);
   removeSlot(slot);
   return newSlot;
 }
@@ -60,10 +60,9 @@ function isIterable(value) {
 }
 
 class TextSlot {
-  constructor(context, parent, next, value) {
+  constructor(parent, next, value) {
     let node = dom.createText(value, parent);
     dom.insertChild(node, parent, next);
-    this.context = context;
     this.start = node;
     this.end = node;
     this.last = value;
@@ -140,11 +139,10 @@ class MapSlotList {
 }
 
 class MapSlot {
-  constructor(context, parent, next, value) {
-    this.context = context;
+  constructor(parent, next, value) {
     this.parent = parent;
     this.map = new Map();
-    this.list = new MapSlotList(createSlot(this.context, parent, next), null);
+    this.list = new MapSlotList(createSlot(parent, next), null);
     this.update(value);
   }
 
@@ -191,7 +189,7 @@ class MapSlot {
         item.insertBefore(next);
       }
     } else {
-      let slot = createSlot(this.context, this.parent, next.slot.start, value);
+      let slot = createSlot(this.parent, next.slot.start, value);
       item = new MapSlotList(slot, key);
       item.insertBefore(next);
       this.map.set(key, item);
@@ -209,14 +207,13 @@ class MapSlot {
 }
 
 class TemplateSlot {
-  constructor(context, parent, next, template) {
-    this.context = context;
+  constructor(parent, next, template) {
     // The first and last nodes of the template could be dynamic,
     // so create stable marker nodes before and after the content.
     this.start = dom.insertMarker(parent, next);
     this.end = dom.insertMarker(parent, next);
     this.source = template.source;
-    this.updaters = template.evaluate(new Actions(context, parent, this.end));
+    this.updaters = template.evaluate(new Actions(parent, this.end));
     this.pending = Array(this.updaters.length);
     this.update(template);
   }

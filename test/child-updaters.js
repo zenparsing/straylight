@@ -272,14 +272,13 @@ describe('Child updaters', () => {
           this.value = value;
         }
 
-        [createSlotSymbol](context, parent, next) {
-          return new CustomSlot(context, parent, next, this);
+        [createSlotSymbol](parent, next) {
+          return new CustomSlot(parent, next, this);
         }
       }
 
       class CustomSlot {
-        constructor(context, parent, next, wrapped) {
-          this.context = context;
+        constructor(parent, next, wrapped) {
           this.start = document.createTextNode('start');
           this.end = document.createTextNode('end');
           parent.insertBefore(this.start, next);

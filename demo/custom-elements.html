@@ -5,8 +5,16 @@ import { html, applyTemplate } from '../dist/straylight.js';
 
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
 
-customElements.define('new-tab-link', class extends HTMLElement {
+function findParent(elem, constructor) {
+  for (; elem; elem = elem.parentNode) {
+    if (elem instanceof constructor) {
+      return elem;
+    }
+  }
+  return null
+}
 
+class NewTabLink extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -30,30 +38,73 @@ customElements.define('new-tab-link', class extends HTMLElement {
         }
       </style>
       <a href=${this.getAttribute('href')} target='_blank' rel='noopener noreferrer'>
-        <slot></slot>
+        <slot />
       </a>
     `);
   }
 
-});
+  static {
+    customElements.define('new-tab-link', this);
+  }
+}
 
-let store = new Store({
-  href: 'https://www.google.com',
-  text: 'A search engine'
-});
+class AppLocale extends HTMLElement {
+  _locale = {
+    getString(key) { return key; }
+  };
+
+  static getLocale(elem) {
+    elem = findParent(elem, this);
+    return elem ? elem._locale : null
+  }
+
+  static {
+    customElements.define('app-locale', this);
+  }
+}
+
+class AppMain extends HTMLElement {
+  _store = new Store({
+    href: 'https://www.google.com',
+    text: 'A search engine'
+  });
+
+  connectedCallback() {
+    this.render();
+  }
+
+  render() {
+    let store = this._store;
+    let { getString } = AppLocale.getLocale(this);
+
+    applyTemplate(this, html`
+      <new-tab-link href=${store.map(state => state.href)}>
+        ${store.map(state => state.text)}
+      </new-tab-link>
+      <div style='padding-top: 10px;'>
+        <button
+          ${{ onclick: () => store.update({ href: 'https://brave.com' }) }}
+        >
+          Switch link
+        </button>
+        <button
+          ${{ onclick: () => store.update({ text: 'A browser' }) }}
+        >
+          Switch text
+        </button>
+      </div>
+    `);
+  }
+
+  static {
+    customElements.define('app-main', this);
+  }
+}
 
 applyTemplate('#mount', html`
-  <new-tab-link href=${store.stream.map(state => state.href)}>
-    ${store.stream.map(state => state.text)}
-  </new-tab-link>
-  <div style='padding-top: 10px;'>
-    <button ${{ onclick() { store.update({ href: 'https://brave.com' }) } }}>
-      Switch link
-    </button>
-    <button ${{ onclick() { store.update({ text: 'A browser' }) } }}>
-      Switch text
-    </button>
-  </div>
+  <app-locale>
+    <app-main />
+  </app-locale>
 `);
 
 </script>

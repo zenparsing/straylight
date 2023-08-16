@@ -45,7 +45,7 @@
     "semi": ["error", "always"],
     "object-curly-spacing": ["error", "always"],
     "array-bracket-spacing": ["error"],
-    "max-len": ["error", 100]
+    "max-len": ["error", 90]
   },
 
   "parserOptions": {

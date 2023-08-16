@@ -1,6 +1,6 @@
 {
   "name": "straylight",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "HTML templating and update engine",
   "license": "MIT",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "homepage": "https://github.com/zenparsing/straylight",
   "dependencies": {
-    "htmltag": "^0.6.6"
+    "htmltag": "^0.7.0"
   },
   "devDependencies": {
     "async-iteration-buffer": "^0.2.1",

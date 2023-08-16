@@ -1,5 +1,5 @@
 import { TemplateResult } from 'htmltag';
-import { Actions } from './actions.js';
+import { buildTemplate } from './builder.js';
 
 import * as dom from './dom.js';
 
@@ -207,15 +207,15 @@ class MapSlot {
 }
 
 class TemplateSlot {
-  constructor(parent, next, template) {
+  constructor(parent, next, value) {
     // The first and last nodes of the template could be dynamic,
     // so create stable marker nodes before and after the content.
     this.start = dom.insertMarker(parent, next);
     this.end = dom.insertMarker(parent, next);
-    this.source = template.source;
-    this.updaters = template.evaluate(new Actions(parent, this.end));
+    this.template = value.template;
+    this.updaters = buildTemplate(this.template, parent, this.end);
     this.pending = Array(this.updaters.length);
-    this.update(template);
+    this.update(value);
   }
 
   cancelUpdates() {
@@ -231,13 +231,13 @@ class TemplateSlot {
   matches(value) {
     return (
       value instanceof TemplateResult &&
-      value.source === this.source
+      value.template === this.template
     );
   }
 
-  update(template) {
-    // Assert: template.source === this.updater.source
-    let { values } = template;
+  update(value) {
+    // Assert: value.template === this.template
+    let { values } = value;
     for (let i = 0; i < this.updaters.length; ++i) {
       let value = values[i];
       if (value && value[Symbol.asyncIterator]) {

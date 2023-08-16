@@ -36,6 +36,7 @@ function applyTemplate(target, template) {
 
 export {
   html,
+  TemplateResult,
   applyTemplate,
   createSlotSymbol,
   createSlot,

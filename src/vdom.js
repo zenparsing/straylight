@@ -84,7 +84,9 @@ class TextNode extends Node {
   }
 
   get innerHTML() {
-    return rawTags.test(this.parentNode.nodeName) ? this.nodeValue : esc(this.nodeValue);
+    return rawTags.test(this.parentNode.nodeName)
+      ? this.nodeValue
+      : esc(this.nodeValue);
   }
 
   get outerHTML() {

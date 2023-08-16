@@ -18,12 +18,14 @@ describe('HTML stringification', () => {
       <div class='y'>
         <span>2</span>
       </div>
-    `), `<div class="x">
+    `), `
+      <div class="x">
         <span>1</span>
       </div>
       <div class="y">
         <span>2</span>
-      </div>`);
+      </div>
+    `);
   });
 
   it('escapes text', () => {
@@ -47,7 +49,10 @@ describe('HTML stringification', () => {
   });
 
   it('stringifies attribute parts', () => {
-    assert.strictEqual(stringify(html`<x a="foo ${ 'bar' } baz" />`), '<x a="foo bar baz"></x>');
+    assert.strictEqual(
+      stringify(html`<x a="foo ${ 'bar' } baz" />`),
+      '<x a="foo bar baz"></x>'
+    );
   });
 
   it('stringifies flag attributes', () => {

@@ -1,0 +1,64 @@
+<div id='mount'></div>
+<script type='module'>
+
+import { html, applyTemplate, TemplateResult } from '../dist/straylight.js';
+import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
+
+class TimeStore extends Store {
+  constructor() {
+    super({ time: new Date() });
+  }
+
+  wakeCallback() {
+    this.update({ time: new Date() });
+    this.interval = setInterval(() => this.update({ time: new Date() }), 1000);
+  }
+
+  sleepCallback() {
+    clearInterval(this.interval);
+  }
+}
+
+let timeStore = new TimeStore();
+
+let H = {
+  root: children => ({
+    kind: 'root',
+    tag: '',
+    attributes: [],
+    children
+  }),
+
+  elem: (tag, attributes, children) => ({
+    kind: 'element',
+    tag,
+    attributes,
+    children
+  }),
+
+  node: (kind) => ({
+    kind,
+    tag: '',
+    attributes: [],
+    children: []
+  }),
+
+  attr: (kind, name, value) => ({
+    kind,
+    name,
+    value
+  })
+};
+
+let template = H.root([
+  H.elem('div',
+    [H.attr('static', 'class', 'clock')],
+    [H.node('child-slot')]
+  )
+]);
+
+applyTemplate('#mount', new TemplateResult(template, [
+  timeStore.stream.map(x => x.time.toLocaleString())
+]));
+
+</script>

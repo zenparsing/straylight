@@ -3,6 +3,7 @@
 
 import { applyTemplate, html } from '../dist/straylight.js';
 import { generateBigDocument } from './big-document.js';
+import { writeNode } from './template-transformer.js';
 
 console.time('htmltag-total');
 
@@ -15,5 +16,7 @@ applyTemplate('#mount', result);
 console.timeEnd('htmltag-build');
 
 console.timeEnd('htmltag-total');
+
+self.serializeTemplate = () => writeNode(result.template)
 
 </script>

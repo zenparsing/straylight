@@ -3,6 +3,7 @@
 
 import { html, applyTemplate, TemplateResult } from '../dist/straylight.js';
 import { Store } from 'https://cdn.jsdelivr.net/npm/storelax/dist/storelax.js';
+import { H } from './template-transformer.js';
 
 class TimeStore extends Store {
   constructor() {
@@ -21,38 +22,9 @@ class TimeStore extends Store {
 
 let timeStore = new TimeStore();
 
-let H = {
-  root: children => ({
-    kind: 'root',
-    tag: '',
-    attributes: [],
-    children
-  }),
-
-  elem: (tag, attributes, children) => ({
-    kind: 'element',
-    tag,
-    attributes,
-    children
-  }),
-
-  node: (kind) => ({
-    kind,
-    tag: '',
-    attributes: [],
-    children: []
-  }),
-
-  attr: (kind, name, value) => ({
-    kind,
-    name,
-    value
-  })
-};
-
 let template = H.root([
   H.elem('div',
-    [H.attr('static', 'class', 'clock')],
+    [H.attr('class', 'clock')],
     [H.node('child-slot')]
   )
 ]);

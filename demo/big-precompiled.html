@@ -1,0 +1,20 @@
+<div id='mount'></div>
+<script type='module'>
+
+import { applyTemplate, TemplateResult } from '../dist/straylight.js';
+import { generateBigDocument } from './big-document-precompiled.js';
+import { writeNode } from './template-transformer.js';
+
+console.time('precompiled-total');
+
+console.time('precompiled-parse');
+let template = generateBigDocument();
+console.timeEnd('precompiled-parse');
+
+console.time('precompiled-build');
+applyTemplate('#mount', new TemplateResult(template, []));
+console.timeEnd('precompiled-build');
+
+console.timeEnd('precompiled-total');
+
+</script>

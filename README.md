@@ -258,40 +258,24 @@ function renderWithAddedClass(className) {
 }
 ```
 
-### Property Collections
-
-In some situations you might want to assign a value to an element **property** instead of an attribute.
- A collection of property values can be supplied as an object:
+An object can be supplied as a template value inside of a tag in order to update a collection of attributes:
 
 ```js
 import { html } from 'straylight';
 
-function usernameInput() {
-  const properties = {
-    id: 'username-input',
-    type: 'text',
-    name: 'username',
-    autocomplete: false,
-    className: 'rounded'
+function renderWithAttributeCollection() {
+  let values = {
+    id: 'element-id',
+    className: 'class-name',
   };
-  return html`<input ${properties} />`;
+
+  return html`<div ${values} />`
 }
 ```
 
-Property collections can be used to attach event handlers to elements:
+### Attributes vs. Properties
 
-```js
-import { html } from 'straylight';
-
-function formButton() {
-  function onButtonClick() {
-    console.log('button clicked!');
-  }
-  return html`
-    <button ${{ onclick: onButtonClick }}>Go</button>
-  `;
-}
-```
+If the element has a named property matching the attribute name found in the template, then it will set the property value on the DOM object. Otherwise, it will set the attribute using the `setAttribute` method of the `Element` interface.
 
 ### SVG
 

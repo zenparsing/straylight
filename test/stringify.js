@@ -44,8 +44,8 @@ describe('HTML stringification', () => {
     assert.strictEqual(stringify(html`<x a=1 />`), '<x a="1"></x>');
   });
 
-  it('does not stringify property maps', () => {
-    assert.strictEqual(stringify(html`<x ${{ a: 1, b: 2 }} />`), '<x></x>');
+  it('does not stringify property maps with property names', () => {
+    assert.strictEqual(stringify(html`<x ${{ className: 1, id: 2 }} />`), '<x></x>');
   });
 
   it('stringifies attribute parts', () => {

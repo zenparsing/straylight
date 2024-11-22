@@ -178,6 +178,8 @@ class Element extends ParentNode {
   constructor(doc, tag) {
     super(doc, 1, tag);
     this._attributes = new Map();
+    this.id = '';
+    this.className = '';
   }
 
   getAttribute(name) {

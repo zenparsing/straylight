@@ -4,7 +4,7 @@ import {
   CommentUpdater,
   AttributeUpdater,
   AttributePartUpdater,
-  PropertyMapUpdater,
+  AttributeMapUpdater,
   ChildUpdater } from './updaters.js';
 
 class Builder {
@@ -12,9 +12,9 @@ class Builder {
     this.updaters = null;
   }
 
-  build(template, parent, next) {
+  build(template, parent, next, context) {
     this.updaters = [];
-    this.buildNode(template, parent, next);
+    this.buildNode(template, parent, next, context);
     return this.updaters;
   }
 
@@ -30,10 +30,10 @@ class Builder {
     }
   }
 
-  buildNode(node, parent, next) {
+  buildNode(node, parent, next, context) {
     switch (node.kind) {
       case 'root':
-        this.buildChildren(node, parent, next);
+        this.buildChildren(node, parent, next, context);
         return;
       case 'child-slot':
         this.updaters.push(new ChildUpdater(parent, next));
@@ -43,18 +43,22 @@ class Builder {
         return;
     }
 
-    let elem = dom.createElement(node.tag, parent);
+    let elem = dom.createElement(node.tag, context);
 
     for (let attr of node.attributes) {
       switch (attr.kind) {
         case 'static':
-          dom.setAttr(elem, attr.name, attr.value);
+          if (attr.name in elem) {
+            elem[attr.name] = attr.value;
+          } else {
+            dom.setAttr(elem, attr.name, attr.value);
+          }
           break;
         case 'value':
           this.updaters.push(new AttributeUpdater(elem, attr.name));
           break;
         case 'map':
-          this.updaters.push(new PropertyMapUpdater(elem));
+          this.updaters.push(new AttributeMapUpdater(elem));
           break;
         case 'null':
           this.updaters.push(new CommentUpdater());
@@ -65,22 +69,22 @@ class Builder {
       }
     }
 
-    this.buildChildren(node, elem, null);
+    this.buildChildren(node, elem, null, elem);
     dom.insertChild(elem, parent, next);
   }
 
-  buildChildren(node, parent, next) {
+  buildChildren(node, parent, next, context) {
     for (let child of node.children) {
       if (typeof child === 'string') {
-        let text = dom.createText(child, parent);
+        let text = dom.createText(child, context);
         dom.insertChild(text, parent, next);
       } else {
-        this.buildNode(child, parent, next);
+        this.buildNode(child, parent, next, context);
       }
     }
   }
 }
 
-export function buildTemplate(template, parent, next) {
-  return new Builder().build(template, parent, next);
+export function buildTemplate(template, parent, next, context) {
+  return new Builder().build(template, parent, next, context);
 }

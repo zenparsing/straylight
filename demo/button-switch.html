@@ -98,27 +98,26 @@ customElements.define('button-switch', class extends HTMLElement {
 applyTemplate('#mount', html`
   <main>
     <button-switch
-      ${{
-        options: [
-          {
-            value: 1,
-            content: 'Try 1',
-            caption: '1.000'
-          },
-          {
-            value: 2,
-            content: 'Try 2',
-            caption: '2.000'
-          },
-          {
-            value: 3,
-            content: 'Try 3',
-            caption: '3.000'
-          }
-        ],
-        selectedValue: 1,
-        onSelect: value => { console.log(`Selected ${value}`); }
-      }} />
+      options=${[
+        {
+          value: 1,
+          content: 'Try 1',
+          caption: '1.000'
+        },
+        {
+          value: 2,
+          content: 'Try 2',
+          caption: '2.000'
+        },
+        {
+          value: 3,
+          content: 'Try 3',
+          caption: '3.000'
+        }
+      ]}
+      selectedValue=${1}
+      onSelect=${value => { console.log(`Selected ${value}`); }}
+    />
   </main>
 `);
 

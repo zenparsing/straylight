@@ -19,6 +19,14 @@ function toAttributeValue(value) {
   throw new TypeError('Invalid attribute value');
 }
 
+function setPropertyOrAttribute(elem, name, value) {
+  if (name in elem) {
+    elem[name] = value;
+  } else {
+    dom.setAttr(elem, name, toAttributeValue(value));
+  }
+}
+
 export class CommentUpdater {
   update() {
     // Empty
@@ -33,10 +41,9 @@ export class AttributeUpdater {
   }
 
   update(value) {
-    let attrValue = toAttributeValue(value);
-    if (attrValue !== this.last) {
-      this.last = attrValue;
-      dom.setAttr(this.node, this.name, attrValue);
+    if (value !== this.last) {
+      this.last = value;
+      setPropertyOrAttribute(this.node, this.name, value);
     }
   }
 }
@@ -66,12 +73,12 @@ export class AttributePartUpdater {
   update(value) {
     this.parts[this.pos] = toAttributeValue(value);
     if (this.isReady()) {
-      dom.setAttr(this.node, this.name, this.parts.join(''));
+      setPropertyOrAttribute(this.node, this.name, this.parts.join(''));
     }
   }
 }
 
-export class PropertyMapUpdater {
+export class AttributeMapUpdater {
   constructor(node) {
     this.node = node;
   }
@@ -86,7 +93,9 @@ export class PropertyMapUpdater {
     if (typeof map !== 'object') {
       throw new Error('Invalid property map value');
     }
-    Object.assign(this.node, map);
+    for (let [key, value] of Object.entries(map)) {
+      setPropertyOrAttribute(this.node, key, value);
+    }
   }
 }
 

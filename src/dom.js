@@ -41,6 +41,10 @@ export function createElement(tag, context) {
     : doc(context).createElementNS(namespace, tag);
 }
 
+export function createFragment(context) {
+  return doc(context).createDocumentFragment();
+}
+
 export function firstChild(node) {
   return node.firstChild;
 }

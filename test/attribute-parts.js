@@ -46,4 +46,11 @@ describe('Attribute part updaters', () => {
     assert.deepStrictEqual(div.toDataObject().attributes, { x: 'abCd' });
   });
 
+  it('sets property values for existing property names', () => {
+    let target = document.createElement('div');
+    applyTemplate(target, html`<div className='a ${['b', 'c']} d' />`);
+    let elem = target.firstElementChild;
+    assert.equal(elem.className, 'a b c d');
+  });
+
 });

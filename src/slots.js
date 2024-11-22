@@ -213,9 +213,11 @@ class TemplateSlot {
     this.start = dom.insertMarker(parent, next);
     this.end = dom.insertMarker(parent, next);
     this.template = value.template;
-    this.updaters = buildTemplate(this.template, parent, this.end);
+    let fragment = dom.createFragment(parent);
+    this.updaters = buildTemplate(this.template, fragment, null, parent);
     this.pending = Array(this.updaters.length);
     this.update(value);
+    dom.insertChild(fragment, parent, this.end);
   }
 
   cancelUpdates() {

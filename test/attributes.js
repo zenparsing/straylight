@@ -56,4 +56,11 @@ describe('Attribute updaters', () => {
     assertResult(render(g()), { x: 'a b' });
   });
 
+  it('sets property values for existing property names', () => {
+    let target = document.createElement('div');
+    applyTemplate(target, html`<div className=${'a'} />`);
+    let elem = target.firstElementChild;
+    assert.equal(elem.className, 'a');
+  });
+
 });

@@ -1,0 +1,84 @@
+<div id='mount'></div>
+<script type='module'>
+
+import {
+  LightElement,
+  html,
+  applyTemplate,
+  useState,
+  useParent,
+  useEffect } from './light-element.js';
+
+class NewTabLink extends LightElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
+  static observedAttributes = ['href'];
+
+  render() {
+    return html`
+      <style>
+        a {
+          color: green;
+        }
+      </style>
+      <a href=${this.getAttribute('href')} target='_blank' rel='noopener noreferrer'>
+        <slot />
+      </a>
+    `;
+  }
+
+  static {
+    customElements.define('new-tab-link', this);
+  }
+}
+
+class AppLocale extends LightElement {
+  getString(key) {
+    return key;
+  }
+
+  static {
+    customElements.define('app-locale', this);
+  }
+}
+
+class AppMain extends LightElement {
+  render() {
+    let locale = useParent(AppLocale);
+    let [href, setHref] = useState('https://www.google.com');
+    let [text, setText] = useState('A search engine');
+
+    useEffect([], () => {
+      console.log('hello from an effect');
+    });
+
+    return html`
+      <new-tab-link href=${href}>
+        ${text}
+      </new-tab-link>
+      <div style='padding-top: 10px;'>
+        <button onclick=${() => setHref('https://brave.com')}>
+          Switch link
+        </button>
+        <button onclick=${() => setText('A browser')}>
+          Switch text
+        </button>
+      </div>
+    `;
+  }
+
+  static {
+    customElements.define('app-main', this);
+  }
+}
+
+applyTemplate('#mount', html`
+  <app-locale>
+    <app-main />
+  </app-locale>
+`);
+
+</script>

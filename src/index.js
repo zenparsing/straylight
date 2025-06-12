@@ -18,9 +18,6 @@ function applyTemplate(target, template) {
   if (!target || typeof target.appendChild !== 'function') {
     throw new TypeError(`${target} is not a valid DOM target`);
   }
-  if (!(template instanceof TemplateResult)) {
-    throw new TypeError(`${template} is not a TemplateResult object`);
-  }
   let slot = slotMap.get(target);
   if (slot) {
     slot = updateSlot(slot, template);

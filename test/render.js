@@ -26,12 +26,6 @@ describe('Render', () => {
     });
   });
 
-  it('throws if template is not a TemplateResult object', () => {
-    assert.throws(() => {
-      applyTemplate(document.createElement('div', {}));
-    });
-  });
-
   it('uses querySelector if argument is a string and window is available', () => {
     let selector = null;
     global.document = {
@@ -46,6 +40,16 @@ describe('Render', () => {
     } finally {
       global.document = undefined;
     }
+  });
+
+  it('accepts text-like values', () => {
+    let target = document.createElement('div');
+    applyTemplate(target, null);
+    assert.deepStrictEqual(target.toDataObject().childNodes, []);
+    applyTemplate(target, 'hello');
+    assert.deepStrictEqual(target.toDataObject().childNodes, ['hello']);
+    applyTemplate(target, 0);
+    assert.deepStrictEqual(target.toDataObject().childNodes, ['0']);
   });
 
   it('removes content on first render', () => {

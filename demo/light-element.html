@@ -2,14 +2,14 @@
 <script type='module'>
 
 import {
-  LightElement,
+  Element,
   html,
   applyTemplate,
   useState,
-  useParent,
+  useClosest,
   useEffect } from './light-element.js';
 
-class NewTabLink extends LightElement {
+class NewTabLink extends Element {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -35,9 +35,13 @@ class NewTabLink extends LightElement {
   }
 }
 
-class AppLocale extends LightElement {
+class AppLocale extends Element {
   getString(key) {
-    return key;
+    switch (key) {
+      case 'switch-link': return 'Switch link';
+      case 'switch-text': return 'Switch text';
+      default: return key;
+    }
   }
 
   static {
@@ -45,9 +49,9 @@ class AppLocale extends LightElement {
   }
 }
 
-class AppMain extends LightElement {
+class AppMain extends Element {
   render() {
-    let locale = useParent(AppLocale);
+    let { getString } = useClosest(AppLocale);
     let [href, setHref] = useState('https://www.google.com');
     let [text, setText] = useState('A search engine');
 
@@ -61,10 +65,10 @@ class AppMain extends LightElement {
       </new-tab-link>
       <div style='padding-top: 10px;'>
         <button onclick=${() => setHref('https://brave.com')}>
-          Switch link
+          ${getString('switch-link')}
         </button>
         <button onclick=${() => setText('A browser')}>
-          Switch text
+          ${getString('switch-text')}
         </button>
       </div>
     `;

@@ -13,13 +13,13 @@
   },
   "devDependencies": {
     "async-iteration-buffer": "^0.2.1",
-    "eslint": "^9.28.0",
+    "eslint": "^9.39.1",
     "express": "^5.1.0",
     "gzip-size-cli": "^5.1.0",
-    "moon-unit": "^0.3.2",
-    "rollup": "^4.43.0",
+    "moon-unit": "^0.3.3",
+    "rollup": "^4.53.3",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "terser": "^5.42.0"
+    "terser": "^5.44.1"
   },
   "main": "src/index.js",
   "type": "module",

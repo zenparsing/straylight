@@ -30,10 +30,10 @@ export function updateSlot(slot, value) {
     slot.update(value);
     return slot;
   }
-  let next = slot.start;
-  let newSlot = createSlot(dom.parent(next), next, value);
-  removeSlot(slot);
-  return newSlot;
+  let parent = dom.parent(slot.start);
+  let next = dom.nextSibling(slot.end);
+  let fragment = removeSlot(slot);
+  return createSlot(parent, next, value);
 }
 
 export function removeSlot(slot) {
@@ -114,7 +114,6 @@ class ListSlot {
   }
 
   updateItem(value, i) {
-    // TODO: findMatch is O(n^2). Can we use some kind of map lookup instead?
     let pos = this.findMatch(value, i);
     if (pos === -1) {
       this.insertSlot(value, i);

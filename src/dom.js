@@ -53,6 +53,10 @@ export function parent(node) {
   return node ? node.parentNode : null;
 }
 
+export function nextSibling(node) {
+  return node ? node.nextSibling : null;
+}
+
 export function insertChild(node, parent, next = null) {
   parent.insertBefore(node, next);
 }
@@ -69,14 +73,15 @@ export function insertSiblings(first, last, nextNode) {
 }
 
 export function removeSiblings(first, last) {
-  let parent = first.parentNode;
+  let fragment = createFragment(first);
   for (let next; first; first = next) {
     next = first.nextSibling;
-    parent.removeChild(first);
+    fragment.appendChild(first);
     if (first === last) {
       break;
     }
   }
+  return fragment;
 }
 
 function getNamespace(tag, context) {

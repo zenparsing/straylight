@@ -6,7 +6,7 @@ function isObjectLike(value) {
   return value && (typeof value === 'function' || typeof value === 'object');
 }
 
-function toAttributeValue(value) {
+function toAttributeValue(name, value) {
   if (!isObjectLike(value)) {
     return value;
   }
@@ -16,14 +16,14 @@ function toAttributeValue(value) {
   if (value[Symbol.iterator]) {
     return Array.from(value).join(' ');
   }
-  throw new TypeError('Invalid attribute value');
+  throw new TypeError(`Invalid value for attribute ${name}`);
 }
 
 function setPropertyOrAttribute(elem, name, value) {
   if (name in elem) {
     elem[name] = value;
   } else {
-    dom.setAttr(elem, name, toAttributeValue(value));
+    dom.setAttr(elem, name, toAttributeValue(name, value));
   }
 }
 
@@ -71,7 +71,7 @@ export class AttributePartUpdater {
   }
 
   update(value) {
-    this.parts[this.pos] = toAttributeValue(value);
+    this.parts[this.pos] = toAttributeValue(this.name, value);
     if (this.isReady()) {
       setPropertyOrAttribute(this.node, this.name, this.parts.join(''));
     }

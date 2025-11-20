@@ -19,7 +19,7 @@ export function createSlot(parent, next, value) {
   }
 
   if (isIterable(value)) {
-    return new MapSlot(parent, next, value);
+    return new ListSlot(parent, next, value);
   }
 
   throw new TypeError('Invalid child slot value');
@@ -39,10 +39,6 @@ export function updateSlot(slot, value) {
 export function removeSlot(slot) {
   slot.cancelUpdates();
   dom.removeSiblings(slot.start, slot.end);
-}
-
-export function withKey(key, value) {
-  return new KeyedValue(key, value);
 }
 
 function isTextLike(value) {
@@ -84,79 +80,20 @@ class TextSlot {
   }
 }
 
-class KeyedValue {
-  constructor(key, value) {
-    this.key = key;
-    this.value = value;
-  }
-}
-
-const positionKeyPrefix = 'wyxOoLpzQhihTM6QZ83HVA0';
-
-function convertValueToMap(value) {
-  if (value instanceof Map) {
-    return value;
-  }
-  let map = new Map();
-  let i = 0;
-  for (let item of value) {
-    if (item instanceof KeyedValue) {
-      map.set(item.key, item.value);
-    } else {
-      map.set(`${positionKeyPrefix}:${i}`, item);
-    }
-    i++;
-  }
-  return map;
-}
-
-class MapSlotList {
-  constructor(slot, key) {
-    this.slot = slot;
-    this.key = key;
-    this.next = this;
-    this.previous = this;
-    this.end = true;
-  }
-
-  insertBefore(next) {
-    this.remove();
-    let previous = next.previous;
-    previous.next = this;
-    next.previous = this;
-    this.previous = previous;
-    this.next = next;
-    this.end = false;
-  }
-
-  remove() {
-    this.next.previous = this.previous;
-    this.previous.next = this.next;
-    this.next = this;
-    this.previous = this;
-    this.end = true;
-  }
-}
-
-class MapSlot {
+class ListSlot {
   constructor(parent, next, value) {
-    this.parent = parent;
-    this.map = new Map();
-    this.list = new MapSlotList(createSlot(parent, next), null);
+    this.end = dom.insertMarker(parent, next);
+    this.slots = [];
     this.update(value);
   }
 
   get start() {
-    return this.list.next.slot.start;
-  }
-
-  get end() {
-    return this.list.slot.end;
+    return this.slots.length > 0 ? this.slots[0].start : this.end;
   }
 
   cancelUpdates() {
-    for (let item = this.list.next; !item.end; item = item.next) {
-      item.slot.cancelUpdates();
+    for (let i = 0; i < this.slots.length; ++i) {
+      this.slots[i].cancelUpdates();
     }
   }
 
@@ -164,45 +101,53 @@ class MapSlot {
     return isIterable(value);
   }
 
-  update(value) {
-    let map = convertValueToMap(value);
-    let next = this.list.next;
-    map.forEach((value, key) => {
-      while (!next.end && !map.has(next.key)) {
-        next = this.removeItem(next);
-      }
-      next = this.updateItem(key, value, next);
-    });
-    while (!next.end) {
-      next = this.removeItem(next);
+  update(list) {
+    let i = 0;
+    for (let item of list) {
+      this.updateItem(item, i++);
     }
+    let length = i;
+    while (i < this.slots.length) {
+      removeSlot(this.slots[i++]);
+    }
+    this.slots.length = length;
   }
 
-  updateItem(key, value, next) {
-    let item = this.map.get(key);
-    if (item && item.slot.matches(value)) {
-      item.slot.update(value);
-      if (item === next) {
-        next = next.next;
-      } else {
-        dom.insertSiblings(item.slot.start, item.slot.end, next.slot.start);
-        item.insertBefore(next);
-      }
+  updateItem(value, i) {
+    // TODO: findMatch is O(n^2). Can we use some kind of map lookup instead?
+    let pos = this.findMatch(value, i);
+    if (pos === -1) {
+      this.insertSlot(value, i);
     } else {
-      let slot = createSlot(this.parent, next.slot.start, value);
-      item = new MapSlotList(slot, key);
-      item.insertBefore(next);
-      this.map.set(key, item);
+      if (pos !== i) {
+        this.moveSlot(pos, i);
+      }
+      this.slots[i].update(value);
     }
-    return next;
   }
 
-  removeItem(item) {
-    let next = item.next;
-    item.remove();
-    this.map.delete(item.key);
-    removeSlot(item.slot);
-    return next;
+  findMatch(input, i) {
+    for (; i < this.slots.length; ++i) {
+      if (this.slots[i].matches(input)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  insertSlot(value, pos) {
+    let next = pos >= this.slots.length ? this.end : this.slots[pos].start;
+    let slot = createSlot(dom.parent(next), next, value);
+    this.slots.splice(pos, 0, slot);
+  }
+
+  moveSlot(from, to) {
+    // Assert: from > to
+    let slot = this.slots[from];
+    let next = this.slots[to].start;
+    this.slots.splice(from, 1);
+    this.slots.splice(to, 0, slot);
+    dom.insertSiblings(slot.start, slot.end, next);
   }
 }
 

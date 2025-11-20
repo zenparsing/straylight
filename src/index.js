@@ -4,8 +4,7 @@ import {
   createSlotSymbol,
   createSlot,
   updateSlot,
-  removeSlot,
-  withKey } from './slots.js';
+  removeSlot } from './slots.js';
 
 import * as dom from './dom.js';
 
@@ -39,5 +38,4 @@ export {
   createSlot,
   updateSlot,
   removeSlot,
-  withKey,
 };

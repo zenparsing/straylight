@@ -1,7 +1,7 @@
 import './attribute-parts.js';
 import './attributes.js';
 import './child-updaters.js';
-import './map-slot.js';
+import './list-slot.js';
 import './pending.js';
 import './property-maps.js';
 import './render.js';

@@ -43,6 +43,7 @@ class Builder {
         return;
     }
 
+    // TODO: Here we could pull in a keyed element from a node recycler.
     let elem = dom.createElement(node.tag, context);
 
     for (let attr of node.attributes) {

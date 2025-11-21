@@ -1,5 +1,5 @@
 import { TemplateResult } from 'htmltag';
-import { TreeBuilder } from './builder.js';
+import { buildTemplate } from './builder.js';
 
 import * as dom from './dom.js';
 
@@ -25,9 +25,6 @@ export function createSlot(parent, next, value) {
   throw new TypeError('Invalid child slot value');
 }
 
-
-let freeElements = null;
-
 export function updateSlot(slot, value) {
   if (slot.matches(value)) {
     slot.update(value);
@@ -35,11 +32,8 @@ export function updateSlot(slot, value) {
   }
   let parent = dom.parent(slot.start);
   let next = dom.nextSibling(slot.end);
-  freeElements = slot.keyedElements;
   removeSlot(slot);
-  let newSlot = createSlot(parent, next, value);
-  freeElements = null;
-  return newSlot;
+  return createSlot(parent, next, value);
 }
 
 export function removeSlot(slot) {
@@ -165,11 +159,7 @@ class TemplateSlot {
     this.template = value.template;
 
     let fragment = dom.createFragment(parent);
-    let builder = new TreeBuilder(freeElements);
-    builder.build(this.template, fragment, null, parent);
-
-    this.updaters = builder.updaters;
-    this.keyedElements = builder.keyedElements;
+    this.updaters = buildTemplate(this.template, fragment, null, parent);
     this.pending = Array(this.updaters.length);
 
     this.update(value);

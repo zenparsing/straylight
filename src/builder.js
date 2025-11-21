@@ -1,4 +1,5 @@
 import * as dom from './dom.js';
+import * as recycler from './recycler.js';
 
 import {
   CommentUpdater,
@@ -14,17 +15,15 @@ function getKey(node) {
   return attr ? attr.value : '';
 }
 
-export class TreeBuilder {
-  constructor(freeMap) {
-    this.freeMap = freeMap;
+class Builder {
+  constructor() {
     this.updaters = null;
-    this.keyedElements = null;
   }
 
   build(template, parent, next, context) {
     this.updaters = [];
-    this.keyedElements = new Map();
     this.buildNode(template, parent, next, context);
+    return this.updaters;
   }
 
   addAttributePartUpdater(element, name, parts) {
@@ -55,8 +54,8 @@ export class TreeBuilder {
     let elem = null;
     let key = getKey(node);
 
-    if (key && this.freeMap) {
-      elem = this.freeMap.get(key);
+    if (key) {
+      elem = recycler.get(key, node.tag);
       if (elem) {
         dom.removeChildren(elem);
       }
@@ -67,7 +66,7 @@ export class TreeBuilder {
     }
 
     if (key) {
-      this.keyedElements.set(key, elem);
+      recycler.add(key, elem);
     }
 
     for (let attr of node.attributes) {
@@ -108,4 +107,8 @@ export class TreeBuilder {
       }
     }
   }
+}
+
+export function buildTemplate(template, parent, next, context) {
+  return new Builder().build(template, parent, next, context);
 }

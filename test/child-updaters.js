@@ -303,4 +303,20 @@ describe('Child updaters', () => {
     });
   });
 
+  describe('Node pinning', () => {
+    it('reuses node from a different template', () => {
+      let target = document.createElement('div');
+      applyTemplate(target, html`<div data-key='a'>A</div>`);
+      let elem = target.firstElementChild;
+      assert.deepStrictEqual(target.toDataObject().childNodes, [
+        { nodeName: 'div', attributes: { 'data-key': 'a' }, childNodes: ['A'] },
+      ]);
+      applyTemplate(target, html`<div data-key='a'>B</div>`);
+      assert.strictEqual(elem, target.firstElementChild);
+      assert.deepStrictEqual(target.toDataObject().childNodes, [
+        { nodeName: 'div', attributes: { 'data-key': 'a' }, childNodes: ['B'] },
+      ]);
+    });
+  });
+
 });

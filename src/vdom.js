@@ -132,6 +132,15 @@ class ParentNode extends Node {
     node.nextSibling = null;
   }
 
+  replaceChildren(...args) {
+    while (this.firstChild) {
+      this.removeChild(this.firstChild);
+    }
+    for (let arg of args) {
+      this.appendChild(arg);
+    }
+  }
+
   appendChild(node) {
     this.insertBefore(node, null);
   }

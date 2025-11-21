@@ -71,6 +71,26 @@ describe('vdom', () => {
       });
     });
 
+    describe('replaceChildren', () => {
+      it('replaces children', () => {
+        let elem = create();
+        elem.insertBefore(create('div'), null);
+        elem.replaceChildren(create('span'), create('span'));
+        assert.deepStrictEqual(elem.toDataObject().childNodes, [
+          { nodeName: 'span', attributes: {}, childNodes: [] },
+          { nodeName: 'span', attributes: {}, childNodes: [] },
+        ]);
+      });
+
+      it('removes all children when no args are provided', () => {
+        let elem = create();
+        elem.insertBefore(create(), null);
+        elem.insertBefore(create(), null);
+        elem.replaceChildren();
+        assert.strictEqual(elem.firstChild, null);
+      });
+    });
+
     describe('insertBefore', () => {
       it('results in no change when the new node is identical to the next node', () => {
         let elem = create();

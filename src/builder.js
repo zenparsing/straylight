@@ -7,61 +7,24 @@ import {
   AttributeMapUpdater,
   ChildUpdater } from './updaters.js';
 
-let pinMap = new WeakMap();
-
-function getPinKey(node) {
+function getKey(node) {
   let attr = node.attributes.find((attr) => (
     attr.kind === 'static' && attr.name === 'data-key'
   ));
   return attr ? attr.value : '';
 }
 
-function getPinnedElements(context) {
-  let entry = pinMap.get(context);
-  if (!entry) {
-    entry = new Map();
-    pinMap.set(context, entry);
-  }
-  return entry;
-}
-
-function getPinnedElement(key, tag, context) {
-  let elem = getPinnedElements(context).get(key);
-  if (elem && elem.nodeName === tag) {
-    return elem;
-  }
-  return null;
-}
-
-function pinElement(key, elem, context) {
-  getPinnedElements(context).set(key, elem);
-}
-
-function createElement(key, tag, context) {
-  let elem = null;
-  if (key) {
-    elem = getPinnedElement(key, tag, context);
-    if (elem) {
-      dom.removeSiblings(dom.firstChild(elem), null);
-      return elem;
-    }
-  }
-  elem = dom.createElement(tag, context);
-  if (key) {
-    pinElement(key, elem, context);
-  }
-  return elem;
-}
-
-class Builder {
-  constructor() {
+export class TreeBuilder {
+  constructor(freeMap) {
+    this.freeMap = freeMap;
     this.updaters = null;
+    this.keyedElements = null;
   }
 
   build(template, parent, next, context) {
     this.updaters = [];
+    this.keyedElements = new Map();
     this.buildNode(template, parent, next, context);
-    return this.updaters;
   }
 
   addAttributePartUpdater(element, name, parts) {
@@ -89,7 +52,23 @@ class Builder {
         return;
     }
 
-    let elem = createElement(getPinKey(node), node.tag, context);
+    let elem = null;
+    let key = getKey(node);
+
+    if (key && this.freeMap) {
+      elem = this.freeMap.get(key);
+      if (elem) {
+        dom.removeChildren(elem);
+      }
+    }
+
+    if (!elem) {
+      elem = dom.createElement(node.tag, context);
+    }
+
+    if (key) {
+      this.keyedElements.set(key, elem);
+    }
 
     for (let attr of node.attributes) {
       switch (attr.kind) {
@@ -129,8 +108,4 @@ class Builder {
       }
     }
   }
-}
-
-export function buildTemplate(template, parent, next, context) {
-  return new Builder().build(template, parent, next, context);
 }

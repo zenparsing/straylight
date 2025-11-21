@@ -73,15 +73,18 @@ export function insertSiblings(first, last, nextNode) {
 }
 
 export function removeSiblings(first, last) {
-  let fragment = createFragment(first);
+  let parent = first.parentNode;
   for (let next; first; first = next) {
     next = first.nextSibling;
-    fragment.appendChild(first);
+    parent.removeChild(first);
     if (first === last) {
       break;
     }
   }
-  return fragment;
+}
+
+export function removeChildren(node) {
+  node.replaceChildren();
 }
 
 function getNamespace(tag, context) {

@@ -1,5 +1,5 @@
 import { TemplateResult } from 'htmltag';
-import { buildTemplate } from './builder.js';
+import { TreeBuilder } from './builder.js';
 
 import * as dom from './dom.js';
 
@@ -25,6 +25,9 @@ export function createSlot(parent, next, value) {
   throw new TypeError('Invalid child slot value');
 }
 
+
+let freeElements = null;
+
 export function updateSlot(slot, value) {
   if (slot.matches(value)) {
     slot.update(value);
@@ -32,8 +35,11 @@ export function updateSlot(slot, value) {
   }
   let parent = dom.parent(slot.start);
   let next = dom.nextSibling(slot.end);
-  let fragment = removeSlot(slot);
-  return createSlot(parent, next, value);
+  freeElements = slot.keyedElements;
+  removeSlot(slot);
+  let newSlot = createSlot(parent, next, value);
+  freeElements = null;
+  return newSlot;
 }
 
 export function removeSlot(slot) {
@@ -152,14 +158,20 @@ class ListSlot {
 
 class TemplateSlot {
   constructor(parent, next, value) {
-    // The first and last nodes of the template could be dynamic,
-    // so create stable marker nodes before and after the content.
+    // The first and last nodes of the template could be dynamic, so create
+    // stable marker nodes before and after the content.
     this.start = dom.insertMarker(parent, next);
     this.end = dom.insertMarker(parent, next);
     this.template = value.template;
+
     let fragment = dom.createFragment(parent);
-    this.updaters = buildTemplate(this.template, fragment, null, parent);
+    let builder = new TreeBuilder(freeElements);
+    builder.build(this.template, fragment, null, parent);
+
+    this.updaters = builder.updaters;
+    this.keyedElements = builder.keyedElements;
     this.pending = Array(this.updaters.length);
+
     this.update(value);
     dom.insertChild(fragment, parent, this.end);
   }
